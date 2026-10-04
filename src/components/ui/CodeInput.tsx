@@ -4,6 +4,7 @@ import { clsx } from 'clsx';
 interface CodeInputProps {
   length?: number;
   onComplete: (code: string) => void;
+  onChange?: (code: string) => void;
   isLoading?: boolean;
   error?: string | null;
   autoFocus?: boolean;
@@ -13,6 +14,7 @@ interface CodeInputProps {
 export const CodeInput: React.FC<CodeInputProps> = ({
   length = 6,
   onComplete,
+  onChange,
   isLoading = false,
   error = null,
   autoFocus = false,
@@ -27,15 +29,9 @@ export const CodeInput: React.FC<CodeInputProps> = ({
     }
   }, [autoFocus]);
 
-  // When error changes or clears, re-focus
-  useEffect(() => {
-    if (error) {
-      // Keep input for correction or user can re-enter
-    }
-  }, [error]);
-
   const triggerCompleteIfFull = (newDigits: string[]) => {
     const fullCode = newDigits.join('');
+    if (onChange) onChange(fullCode);
     if (fullCode.length === length && /^\d+$/.test(fullCode)) {
       onComplete(fullCode);
     }
@@ -51,10 +47,11 @@ export const CodeInput: React.FC<CodeInputProps> = ({
       const newDigits = [...digits];
       newDigits[index] = '';
       setDigits(newDigits);
+      if (onChange) onChange(newDigits.join(''));
       return;
     }
 
-    // If multiple digits were typed (e.g. autofill)
+    // If multiple digits were typed (e.g. autofill or paste)
     if (numericChar.length > 1) {
       handlePastedString(numericChar);
       return;
@@ -81,12 +78,14 @@ export const CodeInput: React.FC<CodeInputProps> = ({
         const newDigits = [...digits];
         newDigits[index - 1] = '';
         setDigits(newDigits);
+        if (onChange) onChange(newDigits.join(''));
         inputRefs.current[index - 1]?.focus();
         e.preventDefault();
       } else {
         const newDigits = [...digits];
         newDigits[index] = '';
         setDigits(newDigits);
+        if (onChange) onChange(newDigits.join(''));
       }
     } else if (e.key === 'ArrowLeft' && index > 0) {
       inputRefs.current[index - 1]?.focus();
@@ -130,10 +129,12 @@ export const CodeInput: React.FC<CodeInputProps> = ({
             ref={el => (inputRefs.current[index] = el)}
             type="text"
             inputMode="numeric"
+            autoComplete={index === 0 ? 'one-time-code' : 'off'}
             pattern="[0-9]*"
             maxLength={1}
             value={digits[index]}
             disabled={disabled || isLoading}
+            onFocus={e => e.target.select()}
             onChange={e => handleChange(index, e)}
             onKeyDown={e => handleKeyDown(index, e)}
             aria-label={`Digit ${index + 1} of ${length}`}

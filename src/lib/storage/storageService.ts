@@ -1,5 +1,5 @@
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
-import { storage } from '../firebase/config';
+import { storage } from '../firebase/config.ts';
 
 export const MAX_PDF_SIZE_BYTES = 25 * 1024 * 1024; // 25 MB
 export const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024; // 5 MB

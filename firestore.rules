@@ -28,7 +28,10 @@ service cloud.firestore {
                     || (
                       resource.data.status == 'active' &&
                       request.resource.data.diff(resource.data).affectedKeys()
-                        .hasOnly(['totalViews', 'uniqueViews', 'totalDownloads', 'lastAccessedAt'])
+                        .hasOnly(['totalViews', 'uniqueViews', 'totalDownloads', 'lastAccessedAt']) &&
+                      request.resource.data.totalViews >= resource.data.totalViews &&
+                      request.resource.data.uniqueViews >= resource.data.uniqueViews &&
+                      request.resource.data.totalDownloads >= resource.data.totalDownloads
                     );
 
       allow delete: if request.auth != null && resource.data.creatorId == request.auth.uid;
@@ -36,14 +39,23 @@ service cloud.firestore {
 
     // Audit logs for views
     match /resource_views/{viewId} {
-      allow create: if true;
+      allow create: if request.resource.data.keys().hasOnly(['resourceId', 'creatorId', 'visitorId', 'viewedAt', 'isUnique'])
+                    && request.resource.data.resourceId is string
+                    && request.resource.data.creatorId is string
+                    && request.resource.data.visitorId is string
+                    && request.resource.data.viewedAt is number
+                    && request.resource.data.isUnique is bool;
       allow read: if request.auth != null && resource.data.creatorId == request.auth.uid;
       allow update, delete: if false;
     }
 
     // Audit logs for downloads
     match /resource_downloads/{downloadId} {
-      allow create: if true;
+      allow create: if request.resource.data.keys().hasOnly(['resourceId', 'creatorId', 'visitorId', 'downloadedAt'])
+                    && request.resource.data.resourceId is string
+                    && request.resource.data.creatorId is string
+                    && request.resource.data.visitorId is string
+                    && request.resource.data.downloadedAt is number;
       allow read: if request.auth != null && resource.data.creatorId == request.auth.uid;
       allow update, delete: if false;
     }

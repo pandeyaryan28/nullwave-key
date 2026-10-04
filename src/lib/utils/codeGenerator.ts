@@ -1,5 +1,5 @@
 import { collection, query, where, getDocs } from 'firebase/firestore';
-import { db } from '../firebase/config';
+import { db } from '../firebase/config.ts';
 
 /**
  * Generates a random 6-digit numeric string from 100000 to 999999
@@ -7,9 +7,18 @@ import { db } from '../firebase/config';
 export function generateSixDigitCode(): string {
   const min = 100000;
   const max = 999999;
+  const range = max - min + 1;
+  const cryptoObj = typeof globalThis !== 'undefined' && globalThis.crypto
+    ? globalThis.crypto
+    : (typeof window !== 'undefined' ? window.crypto : null);
+
+  if (!cryptoObj?.getRandomValues) {
+    return Math.floor(min + Math.random() * range).toString();
+  }
+
   const array = new Uint32Array(1);
-  window.crypto.getRandomValues(array);
-  const codeNum = min + (array[0] % (max - min + 1));
+  cryptoObj.getRandomValues(array);
+  const codeNum = min + (array[0] % range);
   return codeNum.toString();
 }
 

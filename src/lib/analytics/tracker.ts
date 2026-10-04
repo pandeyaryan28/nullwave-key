@@ -5,7 +5,7 @@ import {
   addDoc,
   collection,
 } from 'firebase/firestore';
-import { db } from '../firebase/config';
+import { db } from '../firebase/config.ts';
 
 const VISITOR_ID_KEY = 'unlockr_visitor_id';
 const VIEW_HISTORY_PREFIX = 'unlockr_viewed_';
@@ -28,6 +28,19 @@ export function getOrCreateVisitorId(): string {
   }
 }
 
+export interface UniquenessResult {
+  isUnique: boolean;
+  now: number;
+  commit: () => void;
+  rollback: () => void;
+}
+
+export interface StorageLike {
+  getItem: (key: string) => string | null;
+  setItem: (key: string, value: string) => void;
+  removeItem?: (key: string) => void;
+}
+
 /**
  * Evaluates whether a view by this visitor on this resource is considered unique.
  * Rule:
@@ -35,28 +48,58 @@ export function getOrCreateVisitorId(): string {
  * - If last viewed within 24 hours: Unique = false (repeat view).
  * - If last viewed > 24 hours ago: Unique = true (new measurement window).
  */
-export function evaluateUniquenessWindow(resourceId: string): { isUnique: boolean; now: number } {
-  const now = Date.now();
+export function evaluateUniquenessWindow(
+  resourceId: string,
+  currentTime?: number,
+  storageOverride?: StorageLike
+): UniquenessResult {
+  const now = currentTime ?? Date.now();
+  const storage: StorageLike | null = storageOverride ?? (typeof localStorage !== 'undefined' ? localStorage : null);
   const storageKey = `${VIEW_HISTORY_PREFIX}${resourceId}`;
+
+  let lastViewedStr: string | null = null;
   try {
-    const lastViewedStr = localStorage.getItem(storageKey);
-    if (!lastViewedStr) {
-      localStorage.setItem(storageKey, now.toString());
-      return { isUnique: true, now };
-    }
+    lastViewedStr = storage ? storage.getItem(storageKey) : null;
+  } catch {}
 
-    const lastViewed = parseInt(lastViewedStr, 10);
-    if (isNaN(lastViewed) || now - lastViewed >= UNIQUENESS_WINDOW_MS) {
-      // Window expired; count as new unique view and reset timestamp
-      localStorage.setItem(storageKey, now.toString());
-      return { isUnique: true, now };
-    }
+  const previousTimestamp = lastViewedStr;
 
-    // Within 24-hour window: count as repeat view
-    return { isUnique: false, now };
-  } catch {
-    return { isUnique: true, now };
+  if (!lastViewedStr) {
+    return {
+      isUnique: true,
+      now,
+      commit: () => {
+        try { storage?.setItem(storageKey, now.toString()); } catch {}
+      },
+      rollback: () => {
+        try { storage?.removeItem?.(storageKey); } catch {}
+      },
+    };
   }
+
+  const lastViewed = parseInt(lastViewedStr, 10);
+  if (isNaN(lastViewed) || now - lastViewed >= UNIQUENESS_WINDOW_MS) {
+    return {
+      isUnique: true,
+      now,
+      commit: () => {
+        try { storage?.setItem(storageKey, now.toString()); } catch {}
+      },
+      rollback: () => {
+        try {
+          if (previousTimestamp) storage?.setItem(storageKey, previousTimestamp);
+          else storage?.removeItem?.(storageKey);
+        } catch {}
+      },
+    };
+  }
+
+  return {
+    isUnique: false,
+    now,
+    commit: () => {},
+    rollback: () => {},
+  };
 }
 
 /**
@@ -69,7 +112,7 @@ export async function trackResourceView(
   creatorId: string
 ): Promise<{ totalViewsIncremented: boolean; uniqueViewsIncremented: boolean }> {
   const visitorId = getOrCreateVisitorId();
-  const { isUnique, now } = evaluateUniquenessWindow(resourceId);
+  const { isUnique, now, commit, rollback } = evaluateUniquenessWindow(resourceId);
 
   try {
     const resourceRef = doc(db, 'resources', resourceId);
@@ -85,6 +128,8 @@ export async function trackResourceView(
     }
 
     await updateDoc(resourceRef, updates);
+    // Successfully written to Firestore; commit the local uniqueness timestamp
+    commit();
 
     // Write audit log (non-blocking)
     addDoc(collection(db, 'resource_views'), {
@@ -97,6 +142,7 @@ export async function trackResourceView(
 
     return { totalViewsIncremented: true, uniqueViewsIncremented: isUnique };
   } catch (error) {
+    rollback();
     console.error('Failed to track resource view in Firestore:', error);
     return { totalViewsIncremented: false, uniqueViewsIncremented: false };
   }

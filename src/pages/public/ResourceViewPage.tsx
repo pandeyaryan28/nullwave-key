@@ -33,10 +33,35 @@ export const ResourceViewPage: React.FC = () => {
   const [notFound, setNotFound] = useState<boolean>(false);
   const [isDownloading, setIsDownloading] = useState<boolean>(false);
 
+  const [blobUrl, setBlobUrl] = useState<string | null>(null);
+
   // Prevent multiple view tracks on re-renders in the same mount
   const hasTrackedView = useRef<boolean>(false);
 
   const cleanUsername = (username || '').replace(/^@/, '').toLowerCase();
+
+  // Create clean Blob URL for base64 data URLs to ensure full iframe/download compatibility
+  useEffect(() => {
+    if (!resource?.fileUrl) return;
+    if (resource.fileUrl.startsWith('data:application/pdf')) {
+      try {
+        const parts = resource.fileUrl.split(',');
+        const byteCharacters = atob(parts[1]);
+        const byteNumbers = new Uint8Array(byteCharacters.length);
+        for (let i = 0; i < byteCharacters.length; i++) {
+          byteNumbers[i] = byteCharacters.charCodeAt(i);
+        }
+        const blob = new Blob([byteNumbers], { type: 'application/pdf' });
+        const url = URL.createObjectURL(blob);
+        setBlobUrl(url);
+        return () => URL.revokeObjectURL(url);
+      } catch {
+        setBlobUrl(resource.fileUrl);
+      }
+    } else {
+      setBlobUrl(resource.fileUrl);
+    }
+  }, [resource?.fileUrl]);
 
   useEffect(() => {
     const fetchResource = async () => {
@@ -137,14 +162,30 @@ export const ResourceViewPage: React.FC = () => {
         prev ? { ...prev, totalDownloads: prev.totalDownloads + 1 } : null
       );
 
-      // 2. Trigger actual browser file download
-      const link = document.createElement('a');
-      link.href = resource.fileUrl;
-      link.download = resource.fileName || `${resource.title}.pdf`;
-      link.target = '_blank';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      const targetUrl = blobUrl || resource.fileUrl;
+      const fileName = resource.fileName || `${resource.title}.pdf`;
+
+      // 2. Trigger reliable browser file download via Blob (enforces custom fileName)
+      try {
+        const response = await fetch(targetUrl);
+        const fileBlob = await response.blob();
+        const tempBlobUrl = URL.createObjectURL(fileBlob);
+        const link = document.createElement('a');
+        link.href = tempBlobUrl;
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        setTimeout(() => URL.revokeObjectURL(tempBlobUrl), 2000);
+      } catch {
+        const link = document.createElement('a');
+        link.href = targetUrl;
+        link.download = fileName;
+        link.target = '_blank';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
     } catch (err) {
       console.error('Download error:', err);
     } finally {
@@ -294,7 +335,7 @@ export const ResourceViewPage: React.FC = () => {
 
             <div className="flex items-center gap-2">
               <a
-                href={resource.fileUrl}
+                href={blobUrl || resource.fileUrl}
                 target="_blank"
                 rel="noreferrer"
                 className="inline-flex items-center gap-1 hover:text-neutral-900 dark:hover:text-neutral-100"
@@ -305,12 +346,17 @@ export const ResourceViewPage: React.FC = () => {
             </div>
           </div>
 
-          <div className="w-full h-[65vh] min-h-[480px] bg-neutral-200 dark:bg-neutral-950 flex flex-col">
+          <div className="w-full h-[65vh] min-h-[480px] bg-neutral-200 dark:bg-neutral-950 flex flex-col relative">
             <iframe
-              src={`${resource.fileUrl}#view=FitH`}
+              src={`${blobUrl || resource.fileUrl}#view=FitH`}
               title={resource.title}
               className="w-full h-full border-none"
             />
+          </div>
+
+          {/* Social Webview Helper */}
+          <div className="px-4 py-2 bg-neutral-50 dark:bg-neutral-900/50 border-t border-neutral-200 dark:border-neutral-800 text-[11px] text-neutral-500 text-center">
+            Viewing inside Instagram or a social app? If preview is blank, tap <span className="font-medium text-neutral-700 dark:text-neutral-300">Open in new tab</span> or <span className="font-medium text-neutral-700 dark:text-neutral-300">Download</span> below.
           </div>
 
           {/* Quick Download Banner Below Viewer */}

@@ -27,12 +27,48 @@ export const CreatorProfilePage: React.FC = () => {
   // Code verification state
   const [isVerifying, setIsVerifying] = useState<boolean>(false);
   const [codeError, setCodeError] = useState<string | null>(null);
+  const [hintMessage, setHintMessage] = useState<string | null>(null);
+  const [unlockedResourceIds, setUnlockedResourceIds] = useState<Set<string>>(new Set());
 
-  // Simple client-side abuse protection (rate limiting)
-  const [attemptCount, setAttemptCount] = useState<number>(0);
-  const [cooldownUntil, setCooldownUntil] = useState<number>(0);
+  // Persistent abuse protection (rate limiting via sessionStorage)
+  const [cooldownSeconds, setCooldownSeconds] = useState<number>(0);
+  const codeCardRef = React.useRef<HTMLDivElement>(null);
 
   const cleanUsername = (username || '').replace(/^@/, '').toLowerCase();
+
+  // Load cooldown and unlocked state
+  useEffect(() => {
+    if (!cleanUsername) return;
+
+    const checkCooldown = () => {
+      try {
+        const stored = sessionStorage.getItem(`unlockr_cooldown_${cleanUsername}`);
+        if (stored) {
+          const expiresAt = parseInt(stored, 10);
+          const remaining = Math.max(0, Math.ceil((expiresAt - Date.now()) / 1000));
+          setCooldownSeconds(remaining);
+        }
+      } catch {}
+    };
+
+    checkCooldown();
+    const interval = setInterval(checkCooldown, 1000);
+    return () => clearInterval(interval);
+  }, [cleanUsername]);
+
+  useEffect(() => {
+    // Check unlocked resources in session
+    try {
+      const unlocked = new Set<string>();
+      for (let i = 0; i < sessionStorage.length; i++) {
+        const key = sessionStorage.key(i);
+        if (key?.startsWith('unlockr_unlocked_')) {
+          unlocked.add(key.replace('unlockr_unlocked_', ''));
+        }
+      }
+      setUnlockedResourceIds(unlocked);
+    } catch {}
+  }, []);
 
   useEffect(() => {
     const fetchCreatorAndResources = async () => {
@@ -101,15 +137,14 @@ export const CreatorProfilePage: React.FC = () => {
   const handleCodeSubmit = async (code: string) => {
     if (!creator) return;
 
-    // Check rate limit
-    const now = Date.now();
-    if (now < cooldownUntil) {
-      const secondsLeft = Math.ceil((cooldownUntil - now) / 1000);
-      setCodeError(`Too many failed attempts. Please wait ${secondsLeft}s before trying again.`);
+    // Check rate limit cooldown
+    if (cooldownSeconds > 0) {
+      setCodeError(`Too many failed attempts. Please wait ${cooldownSeconds}s before trying again.`);
       return;
     }
 
     setCodeError(null);
+    setHintMessage(null);
     setIsVerifying(true);
 
     try {
@@ -125,13 +160,27 @@ export const CreatorProfilePage: React.FC = () => {
       const snap = await getDocs(q);
 
       if (snap.empty) {
-        // Record failed attempt
-        const newCount = attemptCount + 1;
-        setAttemptCount(newCount);
-        if (newCount >= 5) {
-          setCooldownUntil(Date.now() + 30000); // 30 second cooldown
-          setCodeError('Incorrect access code. Too many attempts, please wait 30 seconds.');
+        // Record failed attempt in sessionStorage
+        let attempts = 0;
+        try {
+          const stored = sessionStorage.getItem(`unlockr_attempts_${cleanUsername}`);
+          attempts = stored ? parseInt(stored, 10) : 0;
+        } catch {}
+        attempts += 1;
+
+        if (attempts >= 5) {
+          const cooldownDurationMs = 30000; // 30-second cooldown
+          const expiresAt = Date.now() + cooldownDurationMs;
+          try {
+            sessionStorage.setItem(`unlockr_cooldown_${cleanUsername}`, expiresAt.toString());
+            sessionStorage.removeItem(`unlockr_attempts_${cleanUsername}`);
+          } catch {}
+          setCooldownSeconds(30);
+          setCodeError('Incorrect code. Too many failed attempts, please wait 30 seconds.');
         } else {
+          try {
+            sessionStorage.setItem(`unlockr_attempts_${cleanUsername}`, attempts.toString());
+          } catch {}
           setCodeError('Incorrect code. Check the 6-digit code shared by the creator.');
         }
         setIsVerifying(false);
@@ -140,6 +189,11 @@ export const CreatorProfilePage: React.FC = () => {
 
       // Valid code found!
       const targetResource = snap.docs[0].data() as Resource;
+      try {
+        sessionStorage.setItem(`unlockr_unlocked_${targetResource.id}`, 'true');
+        sessionStorage.removeItem(`unlockr_attempts_${cleanUsername}`);
+      } catch {}
+
       navigate(`/@${creator.username}/resource/${targetResource.publicSlug}`);
     } catch (error) {
       console.error('Code verification error:', error);
@@ -246,24 +300,42 @@ export const CreatorProfilePage: React.FC = () => {
         </div>
 
         {/* Primary Interaction: 6-Digit Code Slot Input */}
-        <Card className="p-6 mb-8 border-neutral-300 dark:border-neutral-700 shadow-sm">
-          <div className="text-center mb-6">
-            <h2 className="text-base font-semibold text-neutral-900 dark:text-neutral-100">
-              Access a resource
-            </h2>
-            <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
-              Enter the 6-digit code shared by the creator.
-            </p>
-          </div>
+        <div ref={codeCardRef} className="scroll-mt-6">
+          <Card className="p-6 mb-8 border-neutral-300 dark:border-neutral-700 shadow-sm">
+            <div className="text-center mb-6">
+              <h2 className="text-base font-semibold text-neutral-900 dark:text-neutral-100">
+                Access a resource
+              </h2>
+              <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
+                Enter the 6-digit code shared by the creator.
+              </p>
 
-          <CodeInput
-            length={6}
-            onComplete={handleCodeSubmit}
-            isLoading={isVerifying}
-            error={codeError}
-            autoFocus={true}
-          />
-        </Card>
+              {hintMessage && (
+                <div className="mt-3 p-2.5 rounded-md bg-neutral-100 dark:bg-neutral-800 text-xs text-neutral-800 dark:text-neutral-200 border border-neutral-200 dark:border-neutral-700">
+                  {hintMessage}
+                </div>
+              )}
+
+              {cooldownSeconds > 0 && (
+                <div className="mt-3 p-2.5 rounded-md bg-amber-50 dark:bg-amber-950/40 text-xs text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
+                  Rate limit cooldown active. Please wait {cooldownSeconds}s before trying again.
+                </div>
+              )}
+            </div>
+
+            <CodeInput
+              length={6}
+              onComplete={handleCodeSubmit}
+              onChange={() => {
+                if (codeError) setCodeError(null);
+              }}
+              isLoading={isVerifying}
+              error={codeError}
+              disabled={cooldownSeconds > 0}
+              autoFocus={true}
+            />
+          </Card>
+        </div>
 
         {/* Creator's Active Resources List */}
         {resources.length > 0 && (
@@ -275,42 +347,102 @@ export const CreatorProfilePage: React.FC = () => {
             </div>
 
             <div className="space-y-2.5">
-              {resources.map(res => (
-                <Link
-                  key={res.id}
-                  to={`/@${creator.username}/resource/${res.publicSlug}`}
-                  className="block p-3.5 rounded-lg border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 hover:border-neutral-300 dark:hover:border-neutral-700 transition-all hover:shadow-xs group"
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex items-start gap-3 min-w-0">
-                      <div className="w-9 h-9 rounded-md bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 flex items-center justify-center shrink-0 border border-neutral-200 dark:border-neutral-700">
-                        <FileText className="w-4 h-4" />
+              {resources.map(res => {
+                const isUnlocked = unlockedResourceIds.has(res.id);
+
+                if (isUnlocked) {
+                  return (
+                    <Link
+                      key={res.id}
+                      to={`/@${creator.username}/resource/${res.publicSlug}`}
+                      className="block p-3.5 rounded-lg border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 hover:border-neutral-300 dark:hover:border-neutral-700 transition-all hover:shadow-xs group"
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-start gap-3 min-w-0">
+                          <div className="w-9 h-9 rounded-md bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-200 dark:border-emerald-800">
+                            <FileText className="w-4 h-4" />
+                          </div>
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-2">
+                              <h4 className="text-sm font-semibold text-neutral-900 dark:text-neutral-100 truncate group-hover:text-neutral-950 dark:group-hover:text-neutral-50">
+                                {res.title}
+                              </h4>
+                              <Badge variant="success" className="text-[10px] py-0 px-1.5 shrink-0">
+                                Unlocked
+                              </Badge>
+                            </div>
+                            {res.description && (
+                              <p className="text-xs text-neutral-500 dark:text-neutral-400 line-clamp-1 mt-0.5">
+                                {res.description}
+                              </p>
+                            )}
+                            <div className="flex items-center gap-2 mt-2">
+                              {res.category && (
+                                <Badge variant="neutral" className="text-[10px] py-0 px-1.5">
+                                  {res.category}
+                                </Badge>
+                              )}
+                              <span className="text-[11px] text-neutral-500 font-mono">
+                                {(res.fileSizeBytes / (1024 * 1024)).toFixed(1)} MB PDF
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                        <ArrowRight className="w-4 h-4 text-neutral-400 group-hover:text-neutral-900 dark:group-hover:text-neutral-100 transition-colors shrink-0 mt-2" />
                       </div>
-                      <div className="min-w-0">
-                        <h4 className="text-sm font-semibold text-neutral-900 dark:text-neutral-100 truncate group-hover:text-neutral-950 dark:group-hover:text-neutral-50">
-                          {res.title}
-                        </h4>
-                        {res.description && (
-                          <p className="text-xs text-neutral-500 dark:text-neutral-400 line-clamp-1 mt-0.5">
-                            {res.description}
-                          </p>
-                        )}
-                        <div className="flex items-center gap-2 mt-2">
-                          {res.category && (
-                            <Badge variant="neutral" className="text-[10px] py-0 px-1.5">
-                              {res.category}
+                    </Link>
+                  );
+                }
+
+                return (
+                  <button
+                    key={res.id}
+                    type="button"
+                    onClick={() => {
+                      setHintMessage(`Enter the 6-digit access code for "${res.title}" above.`);
+                      setCodeError(null);
+                      codeCardRef.current?.scrollIntoView({ behavior: 'smooth' });
+                    }}
+                    className="w-full text-left p-3.5 rounded-lg border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 hover:border-neutral-300 dark:hover:border-neutral-700 transition-all hover:shadow-xs group cursor-pointer"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-start gap-3 min-w-0">
+                        <div className="w-9 h-9 rounded-md bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 flex items-center justify-center shrink-0 border border-neutral-200 dark:border-neutral-700">
+                          <Lock className="w-4 h-4" />
+                        </div>
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2">
+                            <h4 className="text-sm font-semibold text-neutral-900 dark:text-neutral-100 truncate group-hover:text-neutral-950 dark:group-hover:text-neutral-50">
+                              {res.title}
+                            </h4>
+                            <Badge variant="neutral" className="text-[10px] py-0 px-1.5 shrink-0">
+                              Requires 6-Digit Code
                             </Badge>
+                          </div>
+                          {res.description && (
+                            <p className="text-xs text-neutral-500 dark:text-neutral-400 line-clamp-1 mt-0.5">
+                              {res.description}
+                            </p>
                           )}
-                          <span className="text-[11px] text-neutral-500 font-mono">
-                            {(res.fileSizeBytes / (1024 * 1024)).toFixed(1)} MB PDF
-                          </span>
+                          <div className="flex items-center gap-2 mt-2">
+                            {res.category && (
+                              <Badge variant="neutral" className="text-[10px] py-0 px-1.5">
+                                {res.category}
+                              </Badge>
+                            )}
+                            <span className="text-[11px] text-neutral-500 font-mono">
+                              {(res.fileSizeBytes / (1024 * 1024)).toFixed(1)} MB PDF
+                            </span>
+                          </div>
                         </div>
                       </div>
+                      <span className="text-xs font-medium text-neutral-400 group-hover:text-neutral-900 dark:group-hover:text-neutral-200 shrink-0 mt-2">
+                        Enter code →
+                      </span>
                     </div>
-                    <ArrowRight className="w-4 h-4 text-neutral-400 group-hover:text-neutral-900 dark:group-hover:text-neutral-100 transition-colors shrink-0 mt-2" />
-                  </div>
-                </Link>
-              ))}
+                  </button>
+                );
+              })}
             </div>
           </div>
         )}
