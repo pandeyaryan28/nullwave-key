@@ -7,9 +7,8 @@ test('generateSixDigitCode produces valid 6-digit numeric string', () => {
     const min = 100000;
     const max = 999999;
     const array = new Uint32Array(1);
-    // Use Web Crypto if available or Math.random
-    const rand = Math.floor(Math.random() * (max - min + 1)) + min;
-    const code = rand.toString();
+    const rand = min + (Math.floor(Math.random() * (max - min + 1)));
+    const code = (min + (rand % (max - min + 1))).toString();
 
     assert.equal(code.length, 6, 'Code must be exactly 6 digits');
     assert.match(code, /^\d{6}$/, 'Code must contain only digits');
