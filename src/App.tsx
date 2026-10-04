@@ -48,6 +48,24 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
   return <>{children}</>;
 };
 
+// Home Route: redirects authenticated creators to dashboard / onboarding, displays marketing LandingPage for guests
+const HomeRoute: React.FC = () => {
+  const { user, profile, loading } = useAuth();
+
+  if (loading) {
+    return <PageLoader />;
+  }
+
+  if (user) {
+    if (profile && !profile.username) {
+      return <Navigate to="/onboarding" replace />;
+    }
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  return <LandingPage />;
+};
+
 // Legacy redirect components for backwards compatibility with legacy URL schemes
 const LegacyProfileRedirect: React.FC = () => {
   const { username } = useParams<{ username: string }>();
@@ -80,7 +98,7 @@ export const App: React.FC = () => {
         <Suspense fallback={<PageLoader />}>
           <Routes>
             {/* Public Home & Auth */}
-            <Route path="/" element={<LandingPage />} />
+            <Route path="/" element={<HomeRoute />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/signup" element={<SignupPage />} />
 

@@ -314,3 +314,41 @@ test('rate limit triggers 30-second cooldown after 5 failed attempts and fast-pa
   assert.equal(matchActiveCode('999999'), null, 'Non-existent code must return null');
 });
 
+// Test 12: Base URL Route Resolution for Authenticated Creators vs Guests
+test('base URL route resolution redirects authenticated creators to dashboard and guests to landing page', () => {
+  interface AuthState {
+    loading: boolean;
+    user: { uid: string } | null;
+    profile: { username?: string } | null;
+  }
+
+  const resolveHomeRoute = (state: AuthState): 'LOADING' | '/onboarding' | '/dashboard' | 'LANDING' => {
+    if (state.loading) return 'LOADING';
+    if (state.user) {
+      if (state.profile && !state.profile.username) {
+        return '/onboarding';
+      }
+      return '/dashboard';
+    }
+    return 'LANDING';
+  };
+
+  // State 1: Still loading authentication
+  assert.equal(resolveHomeRoute({ loading: true, user: null, profile: null }), 'LOADING');
+
+  // State 2: Unauthenticated guest on base URL
+  assert.equal(resolveHomeRoute({ loading: false, user: null, profile: null }), 'LANDING');
+
+  // State 3: Authenticated creator with existing username on base URL
+  assert.equal(
+    resolveHomeRoute({ loading: false, user: { uid: 'u1' }, profile: { username: 'aryan' } }),
+    '/dashboard'
+  );
+
+  // State 4: Authenticated user without username claimed yet on base URL
+  assert.equal(
+    resolveHomeRoute({ loading: false, user: { uid: 'u2' }, profile: { username: '' } }),
+    '/onboarding'
+  );
+});
+

@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../lib/auth/authContext';
 import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 import { Input } from '../components/ui/Input';
@@ -15,8 +16,20 @@ import {
 } from 'lucide-react';
 
 export const LandingPage: React.FC = () => {
+  const { user, profile } = useAuth();
   const navigate = useNavigate();
   const [demoUsername, setDemoUsername] = useState('');
+
+  // If already logged in, redirect to dashboard or onboarding
+  useEffect(() => {
+    if (user) {
+      if (profile && !profile.username) {
+        navigate('/onboarding', { replace: true });
+      } else {
+        navigate('/dashboard', { replace: true });
+      }
+    }
+  }, [user, profile, navigate]);
 
   const handleDemoLookup = (e: React.FormEvent) => {
     e.preventDefault();
