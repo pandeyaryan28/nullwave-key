@@ -131,11 +131,9 @@ export const NewResourcePage: React.FC = () => {
         code,
         title: title.trim(),
         description: description.trim(),
-        category: category.trim() || undefined,
         fileUrl,
         fileName: file.name,
         fileSizeBytes: file.size,
-        coverUrl,
         status: 'active',
         createdAt: now,
         updatedAt: now,
@@ -144,8 +142,18 @@ export const NewResourcePage: React.FC = () => {
         totalDownloads: 0,
       };
 
-      // 5. Save to Firestore
-      await setDoc(resourceRef, newResource);
+      if (category.trim()) {
+        newResource.category = category.trim();
+      }
+      if (coverUrl) {
+        newResource.coverUrl = coverUrl;
+      }
+
+      // 5. Cleanly serialize and save to Firestore
+      const firestorePayload = Object.fromEntries(
+        Object.entries(newResource).filter(([_, v]) => v !== undefined)
+      );
+      await setDoc(resourceRef, firestorePayload);
 
       setUploadProgress(100);
       setCreatedResource(newResource);

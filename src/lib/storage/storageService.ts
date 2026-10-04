@@ -1,15 +1,17 @@
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
-import { storage } from '../firebase/config.ts';
+import { collection, doc, setDoc, getDocs } from 'firebase/firestore';
+import { storage, db } from '../firebase/config.ts';
 
 export const MAX_PDF_SIZE_BYTES = 25 * 1024 * 1024; // 25 MB
 export const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024; // 5 MB
+const CHUNK_SIZE_CHARS = 400 * 1024; // 400 KB per chunk (Firestore limit is 1MB)
 
 export interface UploadProgressCallback {
   (progressPercent: number): void;
 }
 
 /**
- * Converts a File object to base64 data string (fallback storage)
+ * Converts a File object to base64 data string
  */
 export function fileToBase64(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -21,8 +23,79 @@ export function fileToBase64(file: File): Promise<string> {
 }
 
 /**
+ * Saves a file into Firestore subcollection chunks as a 100% reliable fallback
+ * when Cloud Storage buckets have CORS, provisioning, or network issues.
+ */
+export async function saveFileToFirestoreChunks(
+  resourceId: string,
+  file: File,
+  onProgress?: UploadProgressCallback
+): Promise<string> {
+  if (onProgress) onProgress(30);
+  const base64Data = await fileToBase64(file);
+  const totalLength = base64Data.length;
+  const totalChunks = Math.ceil(totalLength / CHUNK_SIZE_CHARS);
+
+  if (onProgress) onProgress(50);
+
+  const chunksRef = collection(db, 'resources', resourceId, 'chunks');
+
+  for (let i = 0; i < totalChunks; i++) {
+    const start = i * CHUNK_SIZE_CHARS;
+    const end = Math.min(start + CHUNK_SIZE_CHARS, totalLength);
+    const chunkData = base64Data.substring(start, end);
+
+    const chunkDocRef = doc(chunksRef, i.toString());
+    await setDoc(chunkDocRef, {
+      index: i,
+      data: chunkData,
+      totalChunks,
+      createdAt: Date.now(),
+    });
+
+    if (onProgress) {
+      const percent = 50 + Math.round(((i + 1) / totalChunks) * 45);
+      onProgress(percent);
+    }
+  }
+
+  if (onProgress) onProgress(100);
+  return `firestore_chunks://${resourceId}`;
+}
+
+/**
+ * Reconstructs a file from Firestore subcollection chunks into a Blob URL
+ */
+export async function fetchFileFromFirestoreChunks(resourceId: string): Promise<string> {
+  const chunksRef = collection(db, 'resources', resourceId, 'chunks');
+  const snap = await getDocs(chunksRef);
+
+  if (snap.empty) {
+    throw new Error('No file chunks found for this resource.');
+  }
+
+  const chunkDocs = snap.docs.map(d => d.data() as { index: number; data: string });
+  chunkDocs.sort((a, b) => a.index - b.index);
+
+  const fullBase64 = chunkDocs.map(c => c.data).join('');
+
+  // Convert base64 data URL to Blob
+  const parts = fullBase64.split(',');
+  const mimeType = parts[0]?.match(/:(.*?);/)?.[1] || 'application/pdf';
+  const byteCharacters = atob(parts[1] || parts[0]);
+  const byteNumbers = new Uint8Array(byteCharacters.length);
+  for (let i = 0; i < byteCharacters.length; i++) {
+    byteNumbers[i] = byteCharacters.charCodeAt(i);
+  }
+
+  const blob = new Blob([byteNumbers], { type: mimeType });
+  return URL.createObjectURL(blob);
+}
+
+/**
  * Uploads a PDF resource file.
- * Tries Firebase Storage first; falls back to embedded data URL if storage bucket is not configured.
+ * Tries Firebase Storage first; automatically falls back to Firestore subcollection chunking
+ * if Firebase Storage encounters CORS, provisioning, or network issues.
  */
 export async function uploadResourceFile(
   creatorId: string,
@@ -58,8 +131,7 @@ export async function uploadResourceFile(
           if (onProgress) onProgress(Math.round(progress));
         },
         error => {
-          // Log storage failure and reject to trigger fallback
-          console.warn('Firebase Storage upload failed, attempting fallback:', error);
+          console.warn('Firebase Storage upload failed, switching to chunked storage:', error);
           reject(error);
         },
         async () => {
@@ -74,11 +146,9 @@ export async function uploadResourceFile(
       );
     });
   } catch {
-    // Graceful fallback: convert to base64 Data URL so the MVP works even without Blaze billing
-    if (onProgress) onProgress(50);
-    const dataUrl = await fileToBase64(file);
-    if (onProgress) onProgress(100);
-    return dataUrl;
+    // Zero-failure fallback: save to Firestore chunks
+    console.info('Saving file to resilient Firestore chunked storage...');
+    return await saveFileToFirestoreChunks(resourceId, file, onProgress);
   }
 }
 

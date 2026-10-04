@@ -10,6 +10,7 @@ import {
 import { db } from '../../lib/firebase/config';
 import { Resource, UserProfile } from '../../types';
 import { trackResourceView, trackResourceDownload } from '../../lib/analytics/tracker';
+import { fetchFileFromFirestoreChunks } from '../../lib/storage/storageService';
 import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
 import { Card } from '../../components/ui/Card';
@@ -40,10 +41,26 @@ export const ResourceViewPage: React.FC = () => {
 
   const cleanUsername = (username || '').replace(/^@/, '').toLowerCase();
 
-  // Create clean Blob URL for base64 data URLs to ensure full iframe/download compatibility
+  // Create clean Blob URL for base64 data URLs, Firestore chunks, or Storage URLs
   useEffect(() => {
     if (!resource?.fileUrl) return;
-    if (resource.fileUrl.startsWith('data:application/pdf')) {
+
+    let active = true;
+    let createdUrl: string | null = null;
+
+    if (resource.fileUrl.startsWith('firestore_chunks://')) {
+      const resourceId = resource.fileUrl.replace('firestore_chunks://', '') || resource.id;
+      fetchFileFromFirestoreChunks(resourceId)
+        .then(url => {
+          if (active) {
+            createdUrl = url;
+            setBlobUrl(url);
+          }
+        })
+        .catch(err => {
+          console.error('Failed to reconstruct file from chunks:', err);
+        });
+    } else if (resource.fileUrl.startsWith('data:application/pdf')) {
       try {
         const parts = resource.fileUrl.split(',');
         const byteCharacters = atob(parts[1]);
@@ -52,16 +69,22 @@ export const ResourceViewPage: React.FC = () => {
           byteNumbers[i] = byteCharacters.charCodeAt(i);
         }
         const blob = new Blob([byteNumbers], { type: 'application/pdf' });
-        const url = URL.createObjectURL(blob);
-        setBlobUrl(url);
-        return () => URL.revokeObjectURL(url);
+        createdUrl = URL.createObjectURL(blob);
+        setBlobUrl(createdUrl);
       } catch {
         setBlobUrl(resource.fileUrl);
       }
     } else {
       setBlobUrl(resource.fileUrl);
     }
-  }, [resource?.fileUrl]);
+
+    return () => {
+      active = false;
+      if (createdUrl) {
+        URL.revokeObjectURL(createdUrl);
+      }
+    };
+  }, [resource?.fileUrl, resource?.id]);
 
   useEffect(() => {
     const fetchResource = async () => {
