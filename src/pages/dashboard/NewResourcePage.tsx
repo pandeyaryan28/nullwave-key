@@ -155,6 +155,13 @@ export const NewResourcePage: React.FC = () => {
       );
       await setDoc(resourceRef, firestorePayload);
 
+      // Cache in localStorage for offline / mock testing resilience
+      try {
+        const localKey = `unlockr_resources_${user.uid}`;
+        const existing = JSON.parse(localStorage.getItem(localKey) || '[]');
+        localStorage.setItem(localKey, JSON.stringify([newResource, ...existing]));
+      } catch {}
+
       setUploadProgress(100);
       setCreatedResource(newResource);
     } catch (err: unknown) {
@@ -174,7 +181,7 @@ export const NewResourcePage: React.FC = () => {
 
   const copyCreatorLink = () => {
     if (!profile?.username) return;
-    const url = `${window.location.origin}/@${profile.username}`;
+    const url = `${window.location.origin}/${profile.username}`;
     navigator.clipboard.writeText(url);
     setCopiedLink(true);
     setTimeout(() => setCopiedLink(false), 2000);
@@ -223,7 +230,7 @@ export const NewResourcePage: React.FC = () => {
               How to share on Instagram Reels & Stories:
             </p>
             <p className="italic">
-              &quot;Link in bio (unlockr.com/@{profile?.username}). Enter code <span className="font-mono font-bold text-neutral-900 dark:text-neutral-100">{createdResource.code}</span> to get the guide.&quot;
+              &quot;Link in bio (unlockr.com/{profile?.username}). Enter code <span className="font-mono font-bold text-neutral-900 dark:text-neutral-100">{createdResource.code}</span> to get the guide.&quot;
             </p>
           </div>
 
@@ -237,7 +244,7 @@ export const NewResourcePage: React.FC = () => {
             </Button>
 
             <Link
-              to={`/@${profile?.username}/resource/${createdResource.publicSlug}`}
+              to={`/${profile?.username}/resource/${createdResource.publicSlug}`}
               target="_blank"
             >
               <Button variant="subtle" size="sm">

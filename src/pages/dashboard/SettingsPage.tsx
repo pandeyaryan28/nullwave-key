@@ -129,12 +129,12 @@ export const SettingsPage: React.FC = () => {
               <input
                 type="text"
                 disabled
-                value={`@${profile?.username || ''}`}
+                value={profile?.username || ''}
                 className="w-full h-10 px-3 py-2 text-sm rounded-md border border-neutral-200 dark:border-neutral-800 bg-neutral-100 dark:bg-neutral-800/50 text-neutral-500 dark:text-neutral-400 font-mono select-none"
               />
               {profile?.username && (
                 <Link
-                  to={`/@${profile.username}`}
+                  to={`/${profile.username}`}
                   target="_blank"
                   className="px-3 h-10 inline-flex items-center gap-1.5 rounded-md border border-neutral-300 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800 text-xs font-medium shrink-0"
                 >
@@ -144,7 +144,7 @@ export const SettingsPage: React.FC = () => {
               )}
             </div>
             <p className="text-xs text-neutral-500">
-              Your public profile URL is {window.location.origin}/@{profile?.username}
+              Your public profile URL is {window.location.origin}/{profile?.username}
             </p>
           </div>
 

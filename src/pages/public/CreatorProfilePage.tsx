@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate, Link, Navigate } from 'react-router-dom';
 import {
   collection,
   query,
   where,
   getDocs,
   limit,
+  doc,
+  getDoc,
 } from 'firebase/firestore';
 import { db } from '../../lib/firebase/config';
 import { UserProfile, Resource } from '../../types';
@@ -18,6 +20,12 @@ import { Lock, FileText, ArrowRight, Instagram, Globe } from 'lucide-react';
 export const CreatorProfilePage: React.FC = () => {
   const { username } = useParams<{ username: string }>();
   const navigate = useNavigate();
+
+  // Redirect legacy @, encoded %40, or mixed-case handles immediately to clean canonical URL
+  if (username && (username !== username.toLowerCase() || /^[@%40]/.test(username))) {
+    const clean = username.replace(/^[@%40]+/, '').toLowerCase();
+    return <Navigate to={`/${clean}`} replace />;
+  }
 
   const [creator, setCreator] = useState<UserProfile | null>(null);
   const [resources, setResources] = useState<Resource[]>([]);
@@ -34,7 +42,7 @@ export const CreatorProfilePage: React.FC = () => {
   const [cooldownSeconds, setCooldownSeconds] = useState<number>(0);
   const codeCardRef = React.useRef<HTMLDivElement>(null);
 
-  const cleanUsername = (username || '').replace(/^@/, '').toLowerCase();
+  const cleanUsername = (username || '').replace(/^[@%40]+/, '').toLowerCase();
 
   // Load cooldown and unlocked state
   useEffect(() => {
@@ -80,7 +88,9 @@ export const CreatorProfilePage: React.FC = () => {
 
       setLoading(true);
       try {
-        // Query users by username
+        let creatorData: UserProfile | null = null;
+
+        // 1. Query users collection by username
         const usersQuery = query(
           collection(db, 'users'),
           where('username', '==', cleanUsername),
@@ -88,22 +98,64 @@ export const CreatorProfilePage: React.FC = () => {
         );
         const userSnap = await getDocs(usersQuery);
 
-        if (userSnap.empty) {
-          // Check local fallback
-          const localKey = `unlockr_profile_${cleanUsername}`;
-          const localData = localStorage.getItem(localKey);
-          if (localData) {
-            const parsed = JSON.parse(localData);
-            setCreator(parsed);
-            await fetchCreatorResources(parsed.uid);
-          } else {
-            setNotFound(true);
+        if (!userSnap.empty) {
+          const userDoc = userSnap.docs[0];
+          creatorData = {
+            ...(userDoc.data() as UserProfile),
+            uid: userDoc.id,
+          };
+        } else {
+          // 2. Direct lookup in usernames collection
+          try {
+            const usernameDocRef = doc(db, 'usernames', cleanUsername);
+            const usernameSnap = await getDoc(usernameDocRef);
+            if (usernameSnap.exists()) {
+              const uid = usernameSnap.data().uid;
+              const userRef = doc(db, 'users', uid);
+              const directUserSnap = await getDoc(userRef);
+              if (directUserSnap.exists()) {
+                creatorData = {
+                  ...(directUserSnap.data() as UserProfile),
+                  uid: directUserSnap.id,
+                };
+              }
+            }
+          } catch (e) {
+            console.warn('Username direct lookup fallback error:', e);
           }
+        }
+
+        // 3. Check local storage fallback if not found in Firestore
+        if (!creatorData) {
+          try {
+            const localKey = `unlockr_profile_${cleanUsername}`;
+            const localData = localStorage.getItem(localKey);
+            if (localData) {
+              creatorData = JSON.parse(localData);
+            } else {
+              for (let i = 0; i < localStorage.length; i++) {
+                const k = localStorage.key(i);
+                if (k?.startsWith('unlockr_profile_')) {
+                  const val = localStorage.getItem(k);
+                  if (val) {
+                    const parsed = JSON.parse(val);
+                    if (parsed.username?.toLowerCase() === cleanUsername) {
+                      creatorData = parsed;
+                      break;
+                    }
+                  }
+                }
+              }
+            }
+          } catch {}
+        }
+
+        if (!creatorData || !creatorData.uid) {
+          setNotFound(true);
           setLoading(false);
           return;
         }
 
-        const creatorData = userSnap.docs[0].data() as UserProfile;
         setCreator(creatorData);
         await fetchCreatorResources(creatorData.uid);
       } catch (err) {
@@ -125,12 +177,35 @@ export const CreatorProfilePage: React.FC = () => {
         where('status', '==', 'active')
       );
       const resSnap = await getDocs(resQuery);
-      const resList: Resource[] = resSnap.docs.map(
-        d => ({ id: d.id, ...d.data() } as Resource)
-      );
+      let resList: Resource[] = resSnap.docs
+        .map(d => ({ id: d.id, ...d.data() } as Resource))
+        .filter(r => r.status === 'active');
+
+      // Local storage fallback for offline/demo resources if list is empty
+      if (resList.length === 0) {
+        try {
+          const localListStr = localStorage.getItem(`unlockr_resources_${creatorId}`);
+          if (localListStr) {
+            const localList = JSON.parse(localListStr) as Resource[];
+            resList = localList.filter(r => r.status === 'active');
+          }
+        } catch {}
+      }
+
+      resList.sort((a, b) => b.createdAt - a.createdAt);
       setResources(resList);
     } catch (err) {
       console.warn('Error fetching creator resources:', err);
+      // Fallback to local storage if Firestore error
+      try {
+        const localListStr = localStorage.getItem(`unlockr_resources_${creatorId}`);
+        if (localListStr) {
+          const localList = JSON.parse(localListStr) as Resource[];
+          const filtered = localList.filter(r => r.status === 'active');
+          filtered.sort((a, b) => b.createdAt - a.createdAt);
+          setResources(filtered);
+        }
+      } catch {}
     }
   };
 
@@ -147,12 +222,27 @@ export const CreatorProfilePage: React.FC = () => {
     setHintMessage(null);
     setIsVerifying(true);
 
+    const trimmedCode = code.trim();
+
+    // 1. Fast-path: Check in-memory loaded active resources first!
+    const memoryMatch = resources.find(
+      r => r.code === trimmedCode && r.status === 'active'
+    );
+    if (memoryMatch) {
+      try {
+        sessionStorage.setItem(`unlockr_unlocked_${memoryMatch.id}`, 'true');
+        sessionStorage.removeItem(`unlockr_attempts_${cleanUsername}`);
+      } catch {}
+      navigate(`/${creator.username}/resource/${memoryMatch.publicSlug}`);
+      return;
+    }
+
+    // 2. Query Firestore with creatorId + code + status == 'active'
     try {
-      // Scoped query: creatorId + code + status == 'active'
       const q = query(
         collection(db, 'resources'),
         where('creatorId', '==', creator.uid),
-        where('code', '==', code.trim()),
+        where('code', '==', trimmedCode),
         where('status', '==', 'active'),
         limit(1)
       );
@@ -160,6 +250,25 @@ export const CreatorProfilePage: React.FC = () => {
       const snap = await getDocs(q);
 
       if (snap.empty) {
+        // Also check local storage fallback
+        let localMatch: Resource | null = null;
+        try {
+          const localListStr = localStorage.getItem(`unlockr_resources_${creator.uid}`);
+          if (localListStr) {
+            const localList = JSON.parse(localListStr) as Resource[];
+            localMatch = localList.find(r => r.code === trimmedCode && r.status === 'active') || null;
+          }
+        } catch {}
+
+        if (localMatch) {
+          try {
+            sessionStorage.setItem(`unlockr_unlocked_${localMatch.id}`, 'true');
+            sessionStorage.removeItem(`unlockr_attempts_${cleanUsername}`);
+          } catch {}
+          navigate(`/${creator.username}/resource/${localMatch.publicSlug}`);
+          return;
+        }
+
         // Record failed attempt in sessionStorage
         let attempts = 0;
         try {
@@ -188,13 +297,13 @@ export const CreatorProfilePage: React.FC = () => {
       }
 
       // Valid code found!
-      const targetResource = snap.docs[0].data() as Resource;
+      const targetResource = { id: snap.docs[0].id, ...snap.docs[0].data() } as Resource;
       try {
         sessionStorage.setItem(`unlockr_unlocked_${targetResource.id}`, 'true');
         sessionStorage.removeItem(`unlockr_attempts_${cleanUsername}`);
       } catch {}
 
-      navigate(`/@${creator.username}/resource/${targetResource.publicSlug}`);
+      navigate(`/${creator.username}/resource/${targetResource.publicSlug}`);
     } catch (error) {
       console.error('Code verification error:', error);
       setCodeError('Unable to verify code. Please check your network and try again.');
@@ -222,7 +331,7 @@ export const CreatorProfilePage: React.FC = () => {
           Creator Not Found
         </h1>
         <p className="text-sm text-neutral-600 dark:text-neutral-400 max-w-sm mb-6">
-          The creator profile <span className="font-semibold text-neutral-900 dark:text-neutral-200">@{cleanUsername}</span> does not exist or may have changed their username.
+          The creator profile <span className="font-semibold text-neutral-900 dark:text-neutral-200">{cleanUsername}</span> does not exist or may have changed their username.
         </p>
         <Link
           to="/"
@@ -268,8 +377,8 @@ export const CreatorProfilePage: React.FC = () => {
           <h1 className="text-xl font-bold tracking-tight text-neutral-900 dark:text-neutral-50">
             {creator.displayName || creator.username}
           </h1>
-          <p className="text-sm font-medium text-neutral-500 dark:text-neutral-400 mt-0.5">
-            @{creator.username}
+          <p className="text-sm font-medium text-neutral-500 dark:text-neutral-400 mt-0.5 font-mono">
+            {creator.username}
           </p>
 
           {creator.bio && (
@@ -354,7 +463,7 @@ export const CreatorProfilePage: React.FC = () => {
                   return (
                     <Link
                       key={res.id}
-                      to={`/@${creator.username}/resource/${res.publicSlug}`}
+                      to={`/${creator.username}/resource/${res.publicSlug}`}
                       className="block p-3.5 rounded-lg border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 hover:border-neutral-300 dark:hover:border-neutral-700 transition-all hover:shadow-xs group"
                     >
                       <div className="flex items-start justify-between gap-3">

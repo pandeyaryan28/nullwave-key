@@ -84,7 +84,7 @@ export const DashboardOverviewPage: React.FC = () => {
 
   const copyProfileUrl = () => {
     if (!profile?.username) return;
-    const url = `${window.location.origin}/@${profile.username}`;
+    const url = `${window.location.origin}/${profile.username}`;
     navigator.clipboard.writeText(url);
     setCopiedProfileLink(true);
     setTimeout(() => setCopiedProfileLink(false), 2000);
@@ -126,7 +126,7 @@ export const DashboardOverviewPage: React.FC = () => {
           {profile?.username && (
             <Button variant="outline" size="sm" onClick={copyProfileUrl}>
               {copiedProfileLink ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4" />}
-              <span>{copiedProfileLink ? 'Link Copied!' : `Copy /@${profile.username}`}</span>
+              <span>{copiedProfileLink ? 'Link Copied!' : `Copy /${profile.username}`}</span>
             </Button>
           )}
         </div>
@@ -172,7 +172,7 @@ export const DashboardOverviewPage: React.FC = () => {
           {profile?.username && (
             <Button variant="outline" size="sm" onClick={copyProfileUrl}>
               {copiedProfileLink ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4" />}
-              <span>{copiedProfileLink ? 'Copied' : `/@${profile.username}`}</span>
+              <span>{copiedProfileLink ? 'Copied' : `/${profile.username}`}</span>
             </Button>
           )}
 
@@ -293,7 +293,7 @@ export const DashboardOverviewPage: React.FC = () => {
 
                 {profile?.username && (
                   <Link
-                    to={`/@${profile.username}/resource/${res.publicSlug}`}
+                    to={`/${profile.username}/resource/${res.publicSlug}`}
                     target="_blank"
                     className="p-2 text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-100 rounded-md hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
                     title="View public resource page"

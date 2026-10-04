@@ -4,7 +4,7 @@ import { useAuth } from '../../lib/auth/authContext';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
-import { AtSign, Check, AlertCircle } from 'lucide-react';
+import { Globe, Check, AlertCircle } from 'lucide-react';
 
 export const OnboardingPage: React.FC = () => {
   const { user, profile, claimUsername } = useAuth();
@@ -59,7 +59,7 @@ export const OnboardingPage: React.FC = () => {
       <div className="w-full max-w-md space-y-6">
         <div className="text-center space-y-2">
           <div className="w-10 h-10 rounded-md bg-neutral-900 text-neutral-50 dark:bg-neutral-100 dark:text-neutral-900 flex items-center justify-center mx-auto mb-3">
-            <AtSign className="w-5 h-5" />
+            <Globe className="w-5 h-5" />
           </div>
           <h1 className="text-2xl font-bold tracking-tight text-neutral-900 dark:text-neutral-50">
             Choose Your Profile URL
@@ -90,10 +90,7 @@ export const OnboardingPage: React.FC = () => {
               <label className="block text-xs font-semibold uppercase tracking-wider text-neutral-700 dark:text-neutral-300">
                 Claim Username *
               </label>
-              <div className="relative">
-                <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-neutral-400 font-mono text-sm pointer-events-none select-none">
-                  @
-                </span>
+              <div>
                 <input
                   type="text"
                   value={username}
@@ -101,7 +98,7 @@ export const OnboardingPage: React.FC = () => {
                   placeholder="aryan"
                   maxLength={20}
                   required
-                  className="w-full h-10 pl-8 pr-3 py-2 text-sm rounded-md border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100 font-mono focus:outline-none focus:ring-1 focus:ring-neutral-900 dark:focus:ring-neutral-100"
+                  className="w-full h-10 px-3 py-2 text-sm rounded-md border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100 font-mono focus:outline-none focus:ring-1 focus:ring-neutral-900 dark:focus:ring-neutral-100"
                 />
               </div>
               <p className="text-xs text-neutral-500">
@@ -114,7 +111,7 @@ export const OnboardingPage: React.FC = () => {
               <div className="p-3 rounded-md bg-neutral-100 dark:bg-neutral-800/60 border border-neutral-200 dark:border-neutral-700 text-xs text-neutral-600 dark:text-neutral-300">
                 <span className="text-neutral-400">Your bio link will be: </span>
                 <span className="font-mono font-semibold text-neutral-900 dark:text-neutral-100">
-                  {window.location.origin}/@{username}
+                  {window.location.origin}/{username}
                 </span>
               </div>
             )}

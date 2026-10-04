@@ -21,8 +21,8 @@ export const LandingPage: React.FC = () => {
   const handleDemoLookup = (e: React.FormEvent) => {
     e.preventDefault();
     if (!demoUsername.trim()) return;
-    const clean = demoUsername.replace(/^@/, '').toLowerCase().trim();
-    navigate(`/@${clean}`);
+    const clean = demoUsername.replace(/^[@%40]+/, '').toLowerCase().trim();
+    navigate(`/${clean}`);
   };
 
   return (
@@ -103,7 +103,7 @@ export const LandingPage: React.FC = () => {
                 2. Share Reel & Bio Link
               </h3>
               <p className="text-xs sm:text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed">
-                Direct your followers to your bio link <span className="font-mono text-neutral-900 dark:text-neutral-200">/@username</span> with the 6-digit code in your video or caption.
+                Direct your followers to your bio link <span className="font-mono text-neutral-900 dark:text-neutral-200">/username</span> with the 6-digit code in your video or caption.
               </p>
             </div>
           </Card>

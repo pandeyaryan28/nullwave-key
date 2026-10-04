@@ -66,12 +66,12 @@ export const Navbar: React.FC = () => {
             <div className="flex items-center gap-3">
               {profile?.username && (
                 <Link
-                  to={`/@${profile.username}`}
+                  to={`/${profile.username}`}
                   target="_blank"
                   rel="noreferrer"
                   className="flex items-center gap-1.5 text-xs font-medium text-neutral-600 dark:text-neutral-400 hover:text-neutral-950 dark:hover:text-neutral-100 px-2.5 py-1.5 rounded-md border border-neutral-200 dark:border-neutral-800 hover:border-neutral-300 dark:hover:border-neutral-700 transition-colors"
                 >
-                  <span>/@{profile.username}</span>
+                  <span>/{profile.username}</span>
                   <ExternalLink className="w-3 h-3" />
                 </Link>
               )}
@@ -145,11 +145,11 @@ export const Navbar: React.FC = () => {
 
               {profile?.username && (
                 <Link
-                  to={`/@${profile.username}`}
+                  to={`/${profile.username}`}
                   onClick={() => setMobileMenuOpen(false)}
                   className="flex items-center justify-between px-3 py-2 text-sm font-medium text-neutral-600 dark:text-neutral-400 border border-neutral-200 dark:border-neutral-800 rounded-md"
                 >
-                  <span>View Public Page (/@{profile.username})</span>
+                  <span>View Public Page (/{profile.username})</span>
                   <ExternalLink className="w-4 h-4" />
                 </Link>
               )}

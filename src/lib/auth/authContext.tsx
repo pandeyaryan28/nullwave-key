@@ -47,7 +47,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const userDocRef = doc(db, 'users', uid);
       const userSnap = await getDoc(userDocRef);
       if (userSnap.exists()) {
-        setProfile(userSnap.data() as UserProfile);
+        const data = userSnap.data() as UserProfile;
+        setProfile({ ...data, uid: userSnap.id });
         return;
       }
     } catch (err) {
@@ -220,6 +221,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         // Update user profile
         const userRef = doc(db, 'users', user.uid);
         const updatedData: Partial<UserProfile> = {
+          uid: user.uid,
           username,
           displayName: displayName || profile?.displayName || user.displayName || username,
           updatedAt: now,
@@ -241,6 +243,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       };
       setProfile(updatedProfile);
       localStorage.setItem(`unlockr_profile_${user.uid}`, JSON.stringify(updatedProfile));
+      localStorage.setItem(`unlockr_profile_${username}`, JSON.stringify(updatedProfile));
 
       return { success: true };
     } catch (err: unknown) {
@@ -267,6 +270,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setProfile(prev => {
       const merged = prev ? { ...prev, ...cleanData } : (cleanData as UserProfile);
       localStorage.setItem(`unlockr_profile_${user.uid}`, JSON.stringify(merged));
+      if (merged.username) {
+        localStorage.setItem(`unlockr_profile_${merged.username}`, JSON.stringify(merged));
+      }
       return merged;
     });
   };

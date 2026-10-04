@@ -1,19 +1,23 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, Navigate } from 'react-router-dom';
 import {
   collection,
   query,
   where,
   getDocs,
   limit,
+  doc,
+  getDoc,
 } from 'firebase/firestore';
 import { db } from '../../lib/firebase/config';
 import { Resource, UserProfile } from '../../types';
+import { useAuth } from '../../lib/auth/authContext';
 import { trackResourceView, trackResourceDownload } from '../../lib/analytics/tracker';
 import { fetchFileFromFirestoreChunks } from '../../lib/storage/storageService';
 import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
 import { Card } from '../../components/ui/Card';
+import { CodeInput } from '../../components/ui/CodeInput';
 import { ThemeToggle } from '../../components/ui/ThemeToggle';
 import {
   ArrowLeft,
@@ -27,6 +31,13 @@ import {
 
 export const ResourceViewPage: React.FC = () => {
   const { username, publicSlug } = useParams<{ username: string; publicSlug: string }>();
+  const { user } = useAuth();
+
+  // Redirect legacy @, encoded %40, or mixed-case handles immediately to clean canonical URL
+  if (username && (username !== username.toLowerCase() || /^[@%40]/.test(username))) {
+    const clean = username.replace(/^[@%40]+/, '').toLowerCase();
+    return <Navigate to={`/${clean}/resource/${publicSlug || ''}`} replace />;
+  }
 
   const [creator, setCreator] = useState<UserProfile | null>(null);
   const [resource, setResource] = useState<Resource | null>(null);
@@ -34,16 +45,22 @@ export const ResourceViewPage: React.FC = () => {
   const [notFound, setNotFound] = useState<boolean>(false);
   const [isDownloading, setIsDownloading] = useState<boolean>(false);
 
+  // Verification & public unlock state
+  const [isUnlocked, setIsUnlocked] = useState<boolean>(false);
+  const [isVerifying, setIsVerifying] = useState<boolean>(false);
+  const [codeError, setCodeError] = useState<string | null>(null);
+  const [cooldownSeconds, setCooldownSeconds] = useState<number>(0);
+
   const [blobUrl, setBlobUrl] = useState<string | null>(null);
 
   // Prevent multiple view tracks on re-renders in the same mount
   const hasTrackedView = useRef<boolean>(false);
 
-  const cleanUsername = (username || '').replace(/^@/, '').toLowerCase();
+  const cleanUsername = (username || '').replace(/^[@%40]+/, '').toLowerCase();
 
   // Create clean Blob URL for base64 data URLs, Firestore chunks, or Storage URLs
   useEffect(() => {
-    if (!resource?.fileUrl) return;
+    if (!resource?.fileUrl || !isUnlocked) return;
 
     let active = true;
     let createdUrl: string | null = null;
@@ -84,7 +101,28 @@ export const ResourceViewPage: React.FC = () => {
         URL.revokeObjectURL(createdUrl);
       }
     };
-  }, [resource?.fileUrl, resource?.id]);
+  }, [resource?.fileUrl, resource?.id, isUnlocked]);
+
+  // Check rate limit cooldown for this specific resource
+  useEffect(() => {
+    if (!cleanUsername || !publicSlug) return;
+    const cooldownKey = `unlockr_cooldown_${cleanUsername}_${publicSlug}`;
+
+    const checkCooldown = () => {
+      try {
+        const stored = sessionStorage.getItem(cooldownKey);
+        if (stored) {
+          const expiresAt = parseInt(stored, 10);
+          const remaining = Math.max(0, Math.ceil((expiresAt - Date.now()) / 1000));
+          setCooldownSeconds(remaining);
+        }
+      } catch {}
+    };
+
+    checkCooldown();
+    const interval = setInterval(checkCooldown, 1000);
+    return () => clearInterval(interval);
+  }, [cleanUsername, publicSlug]);
 
   useEffect(() => {
     const fetchResource = async () => {
@@ -96,7 +134,8 @@ export const ResourceViewPage: React.FC = () => {
 
       setLoading(true);
       try {
-        // First get creator
+        // 1. Get creator profile
+        let creatorData: UserProfile | null = null;
         const userQ = query(
           collection(db, 'users'),
           where('username', '==', cleanUsername),
@@ -104,62 +143,119 @@ export const ResourceViewPage: React.FC = () => {
         );
         const userSnap = await getDocs(userQ);
 
-        let creatorData: UserProfile | null = null;
         if (!userSnap.empty) {
-          creatorData = userSnap.docs[0].data() as UserProfile;
+          const userDoc = userSnap.docs[0];
+          creatorData = {
+            ...(userDoc.data() as UserProfile),
+            uid: userDoc.id,
+          };
         } else {
-          const localProfile = localStorage.getItem(`unlockr_profile_${cleanUsername}`);
-          if (localProfile) creatorData = JSON.parse(localProfile);
+          // Direct lookup in usernames collection
+          try {
+            const usernameDocRef = doc(db, 'usernames', cleanUsername);
+            const usernameSnap = await getDoc(usernameDocRef);
+            if (usernameSnap.exists()) {
+              const uid = usernameSnap.data().uid;
+              const directUserSnap = await getDoc(doc(db, 'users', uid));
+              if (directUserSnap.exists()) {
+                creatorData = {
+                  ...(directUserSnap.data() as UserProfile),
+                  uid: directUserSnap.id,
+                };
+              }
+            }
+          } catch (e) {
+            console.warn('Fallback direct username lookup error in resource view:', e);
+          }
         }
 
+        // Local storage fallback for creator profile
         if (!creatorData) {
+          try {
+            const localProfile = localStorage.getItem(`unlockr_profile_${cleanUsername}`);
+            if (localProfile) {
+              creatorData = JSON.parse(localProfile);
+            } else {
+              for (let i = 0; i < localStorage.length; i++) {
+                const k = localStorage.key(i);
+                if (k?.startsWith('unlockr_profile_')) {
+                  const val = localStorage.getItem(k);
+                  if (val) {
+                    const parsed = JSON.parse(val);
+                    if (parsed.username?.toLowerCase() === cleanUsername) {
+                      creatorData = parsed;
+                      break;
+                    }
+                  }
+                }
+              }
+            }
+          } catch {}
+        }
+
+        if (!creatorData || !creatorData.uid) {
           setNotFound(true);
           setLoading(false);
           return;
         }
         setCreator(creatorData);
 
-        // Fetch resource by creatorId + publicSlug
-        const resQ = query(
-          collection(db, 'resources'),
+        // 2. Fetch resource by creatorId + publicSlug (+ status == 'active' for public viewers)
+        const isOwner = user?.uid === creatorData.uid;
+        const constraints = [
           where('creatorId', '==', creatorData.uid),
           where('publicSlug', '==', publicSlug),
-          where('status', '==', 'active'),
-          limit(1)
-        );
-        const resSnap = await getDocs(resQ);
+        ];
+        if (!isOwner) {
+          constraints.push(where('status', '==', 'active'));
+        }
 
-        if (resSnap.empty) {
+        let resData: Resource | null = null;
+        try {
+          const resQ = query(
+            collection(db, 'resources'),
+            ...constraints,
+            limit(1)
+          );
+          const resSnap = await getDocs(resQ);
+          if (!resSnap.empty) {
+            resData = {
+              id: resSnap.docs[0].id,
+              ...resSnap.docs[0].data(),
+            } as Resource;
+          }
+        } catch (err) {
+          console.warn('Firestore query failed for resource, trying fallback:', err);
+        }
+
+        // Fallback to local storage if not found in Firestore
+        if (!resData) {
+          try {
+            const localListStr = localStorage.getItem(`unlockr_resources_${creatorData.uid}`);
+            if (localListStr) {
+              const localList = JSON.parse(localListStr) as Resource[];
+              resData = localList.find(
+                r => r.publicSlug === publicSlug && (isOwner || r.status === 'active')
+              ) || null;
+            }
+          } catch {}
+        }
+
+        if (!resData || (!isOwner && resData.status !== 'active')) {
           setNotFound(true);
           setLoading(false);
           return;
         }
 
-        const resData = {
-          id: resSnap.docs[0].id,
-          ...resSnap.docs[0].data(),
-        } as Resource;
-
         setResource(resData);
 
-        // Track page view once per mount
-        if (!hasTrackedView.current) {
-          hasTrackedView.current = true;
-          trackResourceView(resData.id, resData.creatorId).then(res => {
-            if (res.totalViewsIncremented) {
-              setResource(prev =>
-                prev
-                  ? {
-                      ...prev,
-                      totalViews: prev.totalViews + 1,
-                      uniqueViews: res.uniqueViewsIncremented
-                        ? prev.uniqueViews + 1
-                        : prev.uniqueViews,
-                    }
-                  : null
-              );
-            }
-          });
+        // Check if unlocked in session or if logged in creator owns the resource
+        const alreadyUnlocked =
+          sessionStorage.getItem(`unlockr_unlocked_${resData.id}`) === 'true' ||
+          user?.uid === resData.creatorId;
+
+        if (alreadyUnlocked) {
+          setIsUnlocked(true);
         }
       } catch (err) {
         console.error('Error fetching resource:', err);
@@ -170,7 +266,79 @@ export const ResourceViewPage: React.FC = () => {
     };
 
     fetchResource();
-  }, [cleanUsername, publicSlug]);
+  }, [cleanUsername, publicSlug, user?.uid]);
+
+  // Track page view once unlocked
+  useEffect(() => {
+    if (!resource || !isUnlocked) return;
+
+    if (!hasTrackedView.current) {
+      hasTrackedView.current = true;
+      trackResourceView(resource.id, resource.creatorId).then(res => {
+        if (res.totalViewsIncremented) {
+          setResource(prev =>
+            prev
+              ? {
+                  ...prev,
+                  totalViews: prev.totalViews + 1,
+                  uniqueViews: res.uniqueViewsIncremented
+                    ? prev.uniqueViews + 1
+                    : prev.uniqueViews,
+                }
+              : null
+          );
+        }
+      });
+    }
+  }, [resource, isUnlocked]);
+
+  const handleInlineCodeSubmit = (enteredCode: string) => {
+    if (!resource) return;
+
+    const cooldownKey = `unlockr_cooldown_${cleanUsername}_${publicSlug}`;
+    const attemptsKey = `unlockr_attempts_${cleanUsername}_${publicSlug}`;
+
+    if (cooldownSeconds > 0) {
+      setCodeError(`Too many failed attempts. Please wait ${cooldownSeconds}s before trying again.`);
+      return;
+    }
+
+    setCodeError(null);
+    setIsVerifying(true);
+
+    if (enteredCode.trim() === resource.code) {
+      try {
+        sessionStorage.setItem(`unlockr_unlocked_${resource.id}`, 'true');
+        sessionStorage.removeItem(attemptsKey);
+      } catch {}
+      setIsUnlocked(true);
+      setIsVerifying(false);
+    } else {
+      let attempts = 0;
+      try {
+        const stored = sessionStorage.getItem(attemptsKey);
+        attempts = stored ? parseInt(stored, 10) : 0;
+      } catch {}
+      attempts += 1;
+
+      if (attempts >= 5) {
+        const cooldownDurationMs = 30000;
+        const expiresAt = Date.now() + cooldownDurationMs;
+        try {
+          sessionStorage.setItem(cooldownKey, expiresAt.toString());
+          sessionStorage.removeItem(attemptsKey);
+        } catch {}
+        setCooldownSeconds(30);
+        setCodeError('Incorrect code. Too many failed attempts, please wait 30 seconds.');
+      } else {
+        try {
+          sessionStorage.setItem(attemptsKey, attempts.toString());
+        } catch {}
+        setCodeError('Incorrect 6-digit access code. Please check the code shared by the creator.');
+      }
+      setIsVerifying(false);
+    }
+  };
 
   const handleDownload = async () => {
     if (!resource) return;
@@ -236,12 +404,12 @@ export const ResourceViewPage: React.FC = () => {
           Resource Unavailable
         </h1>
         <p className="text-sm text-neutral-600 dark:text-neutral-400 max-w-sm mb-6">
-          This resource is either disabled, has been removed, or does not exist under @{cleanUsername}.
+          This resource is either disabled, has been removed, or does not exist under {cleanUsername}.
         </p>
-        <Link to={`/@${cleanUsername}`}>
+        <Link to={`/${cleanUsername}`}>
           <Button variant="outline" size="sm">
             <ArrowLeft className="w-4 h-4" />
-            <span>Back to @{cleanUsername}</span>
+            <span>Back to {cleanUsername}</span>
           </Button>
         </Link>
       </div>
@@ -260,24 +428,31 @@ export const ResourceViewPage: React.FC = () => {
       <header className="sticky top-0 z-40 border-b border-neutral-200 dark:border-neutral-800 bg-white/90 dark:bg-neutral-950/90 backdrop-blur-md">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
           <Link
-            to={`/@${creator.username}`}
+            to={`/${creator.username}`}
             className="inline-flex items-center gap-2 text-xs font-semibold text-neutral-700 dark:text-neutral-300 hover:text-neutral-950 dark:hover:text-neutral-50 transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
-            <span>Back to @{creator.username}</span>
+            <span>Back to {creator.displayName || creator.username}</span>
           </Link>
 
           <div className="flex items-center gap-3">
             <ThemeToggle />
-            <Button
-              size="sm"
-              variant="primary"
-              onClick={handleDownload}
-              isLoading={isDownloading}
-            >
-              <Download className="w-4 h-4" />
-              <span>Download PDF</span>
-            </Button>
+            {isUnlocked ? (
+              <Button
+                size="sm"
+                variant="primary"
+                onClick={handleDownload}
+                isLoading={isDownloading}
+              >
+                <Download className="w-4 h-4" />
+                <span>Download PDF</span>
+              </Button>
+            ) : (
+              <div className="text-xs text-neutral-500 flex items-center gap-1.5 font-medium">
+                <Lock className="w-3.5 h-3.5" />
+                <span>Protected</span>
+              </div>
+            )}
           </div>
         </div>
       </header>
@@ -314,7 +489,7 @@ export const ResourceViewPage: React.FC = () => {
               {/* Creator Bylines */}
               <div className="pt-2 flex items-center gap-3 border-t border-neutral-100 dark:border-neutral-800">
                 <Link
-                  to={`/@${creator.username}`}
+                  to={`/${creator.username}`}
                   className="flex items-center gap-2 group"
                 >
                   {creator.photoURL ? (
@@ -329,7 +504,7 @@ export const ResourceViewPage: React.FC = () => {
                     </div>
                   )}
                   <span className="text-xs font-semibold text-neutral-800 dark:text-neutral-200 group-hover:underline">
-                    {creator.displayName} (@{creator.username})
+                    {creator.displayName} <span className="text-neutral-500 font-normal">({creator.username})</span>
                   </span>
                 </Link>
               </div>
@@ -348,66 +523,108 @@ export const ResourceViewPage: React.FC = () => {
           </div>
         </Card>
 
-        {/* Embedded In-Browser PDF Viewer */}
-        <Card className="overflow-hidden border-neutral-300 dark:border-neutral-700">
-          <div className="p-3 bg-neutral-100 dark:bg-neutral-900 border-b border-neutral-200 dark:border-neutral-800 flex items-center justify-between text-xs text-neutral-600 dark:text-neutral-400">
-            <span className="font-medium flex items-center gap-1.5">
-              <FileText className="w-3.5 h-3.5" />
-              <span>{resource.fileName || `${resource.title}.pdf`}</span>
-            </span>
-
-            <div className="flex items-center gap-2">
-              <a
-                href={blobUrl || resource.fileUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center gap-1 hover:text-neutral-900 dark:hover:text-neutral-100"
-              >
-                <span>Open in new tab</span>
-                <ExternalLink className="w-3 h-3" />
-              </a>
+        {/* Gated Access: Inline 6-Digit Code Verification OR Unlocked Document Viewer */}
+        {!isUnlocked ? (
+          <Card className="p-8 text-center border-neutral-300 dark:border-neutral-700 shadow-sm max-w-lg mx-auto">
+            <div className="w-12 h-12 rounded-md bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 flex items-center justify-center mx-auto mb-4 border border-neutral-200 dark:border-neutral-700">
+              <Lock className="w-6 h-6" />
             </div>
-          </div>
+            <h2 className="text-lg font-bold text-neutral-900 dark:text-neutral-100 mb-1">
+              Enter 6-digit access code
+            </h2>
+            <p className="text-xs text-neutral-500 dark:text-neutral-400 mb-6 max-w-sm mx-auto">
+              This document is protected. Enter the 6-digit code shared by {creator.displayName || creator.username} to view and download it.
+            </p>
 
-          <div className="w-full h-[65vh] min-h-[480px] bg-neutral-200 dark:bg-neutral-950 flex flex-col relative">
-            <iframe
-              src={`${blobUrl || resource.fileUrl}#view=FitH`}
-              title={resource.title}
-              className="w-full h-full border-none"
+            {cooldownSeconds > 0 && (
+              <div className="mb-4 p-2.5 rounded-md bg-amber-50 dark:bg-amber-950/40 text-xs text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
+                Rate limit cooldown active. Please wait {cooldownSeconds}s before trying again.
+              </div>
+            )}
+
+            <CodeInput
+              length={6}
+              onComplete={handleInlineCodeSubmit}
+              onChange={() => {
+                if (codeError) setCodeError(null);
+              }}
+              isLoading={isVerifying}
+              error={codeError}
+              disabled={cooldownSeconds > 0}
+              autoFocus={true}
             />
-          </div>
 
-          {/* Social Webview Helper */}
-          <div className="px-4 py-2 bg-neutral-50 dark:bg-neutral-900/50 border-t border-neutral-200 dark:border-neutral-800 text-[11px] text-neutral-500 text-center">
-            Viewing inside Instagram or a social app? If preview is blank, tap <span className="font-medium text-neutral-700 dark:text-neutral-300">Open in new tab</span> or <span className="font-medium text-neutral-700 dark:text-neutral-300">Download</span> below.
-          </div>
+            <div className="mt-6 pt-4 border-t border-neutral-100 dark:border-neutral-800">
+              <Link
+                to={`/${creator.username}`}
+                className="text-xs text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors"
+              >
+                Looking for other resources? View {creator.displayName || creator.username}&apos;s profile →
+              </Link>
+            </div>
+          </Card>
+        ) : (
+          /* Embedded In-Browser PDF Viewer & Direct Download (No Sign-in Required) */
+          <Card className="overflow-hidden border-neutral-300 dark:border-neutral-700">
+            <div className="p-3 bg-neutral-100 dark:bg-neutral-900 border-b border-neutral-200 dark:border-neutral-800 flex items-center justify-between text-xs text-neutral-600 dark:text-neutral-400">
+              <span className="font-medium flex items-center gap-1.5">
+                <FileText className="w-3.5 h-3.5" />
+                <span>{resource.fileName || `${resource.title}.pdf`}</span>
+              </span>
 
-          {/* Quick Download Banner Below Viewer */}
-          <div className="p-4 bg-white dark:bg-neutral-900 border-t border-neutral-200 dark:border-neutral-800 flex flex-col sm:flex-row items-center justify-between gap-3">
-            <div className="text-xs text-neutral-500 dark:text-neutral-400 flex items-center gap-3">
-              <span className="flex items-center gap-1">
-                <Eye className="w-3.5 h-3.5" />
-                <span>{resource.totalViews} views</span>
-              </span>
-              <span>•</span>
-              <span className="flex items-center gap-1">
-                <Download className="w-3.5 h-3.5" />
-                <span>{resource.totalDownloads} downloads</span>
-              </span>
+              <div className="flex items-center gap-2">
+                <a
+                  href={blobUrl || resource.fileUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-1 hover:text-neutral-900 dark:hover:text-neutral-100"
+                >
+                  <span>Open in new tab</span>
+                  <ExternalLink className="w-3 h-3" />
+                </a>
+              </div>
             </div>
 
-            <Button
-              size="md"
-              variant="primary"
-              onClick={handleDownload}
-              isLoading={isDownloading}
-              className="w-full sm:w-auto"
-            >
-              <Download className="w-4 h-4" />
-              <span>Download Original PDF</span>
-            </Button>
-          </div>
-        </Card>
+            <div className="w-full h-[65vh] min-h-[480px] bg-neutral-200 dark:bg-neutral-950 flex flex-col relative">
+              <iframe
+                src={`${blobUrl || resource.fileUrl}#view=FitH`}
+                title={resource.title}
+                className="w-full h-full border-none"
+              />
+            </div>
+
+            {/* Social Webview Helper */}
+            <div className="px-4 py-2 bg-neutral-50 dark:bg-neutral-900/50 border-t border-neutral-200 dark:border-neutral-800 text-[11px] text-neutral-500 text-center">
+              Viewing inside Instagram or a social app? If preview is blank, tap <span className="font-medium text-neutral-700 dark:text-neutral-300">Open in new tab</span> or <span className="font-medium text-neutral-700 dark:text-neutral-300">Download</span> below.
+            </div>
+
+            {/* Quick Download Banner Below Viewer */}
+            <div className="p-4 bg-white dark:bg-neutral-900 border-t border-neutral-200 dark:border-neutral-800 flex flex-col sm:flex-row items-center justify-between gap-3">
+              <div className="text-xs text-neutral-500 dark:text-neutral-400 flex items-center gap-3">
+                <span className="flex items-center gap-1">
+                  <Eye className="w-3.5 h-3.5" />
+                  <span>{resource.totalViews} views</span>
+                </span>
+                <span>•</span>
+                <span className="flex items-center gap-1">
+                  <Download className="w-3.5 h-3.5" />
+                  <span>{resource.totalDownloads} downloads</span>
+                </span>
+              </div>
+
+              <Button
+                size="md"
+                variant="primary"
+                onClick={handleDownload}
+                isLoading={isDownloading}
+                className="w-full sm:w-auto"
+              >
+                <Download className="w-4 h-4" />
+                <span>Download Original PDF</span>
+              </Button>
+            </div>
+          </Card>
+        )}
       </main>
 
       {/* Clean Footer */}

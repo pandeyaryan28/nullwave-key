@@ -1,5 +1,5 @@
 import React, { Suspense, lazy } from 'react';
-import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation, useParams } from 'react-router-dom';
 import { useAuth } from './lib/auth/authContext';
 import { Navbar } from './components/ui/Navbar';
 import { Footer } from './components/ui/Footer';
@@ -48,14 +48,29 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
   return <>{children}</>;
 };
 
+// Legacy redirect components for backwards compatibility with legacy URL schemes
+const LegacyProfileRedirect: React.FC = () => {
+  const { username } = useParams<{ username: string }>();
+  const cleanUsername = (username || '').replace(/^[@%40]+/, '').toLowerCase();
+  return <Navigate to={`/${cleanUsername}`} replace />;
+};
+
+const LegacyResourceRedirect: React.FC = () => {
+  const { username, publicSlug } = useParams<{ username: string; publicSlug: string }>();
+  const cleanUsername = (username || '').replace(/^[@%40]+/, '').toLowerCase();
+  return <Navigate to={`/${cleanUsername}/resource/${publicSlug || ''}`} replace />;
+};
+
 export const App: React.FC = () => {
   const location = useLocation();
 
-  // Public standalone screens that don't need the main creator navbar/footer
-  const isPublicViewerRoute =
-    location.pathname.startsWith('/@') ||
-    location.pathname.startsWith('/%40') ||
-    location.pathname.startsWith('/creator/');
+  // Non-viewer routes that should show the main creator navbar/footer
+  const isMainAppRoute =
+    ['/', '/login', '/signup', '/onboarding'].includes(location.pathname) ||
+    location.pathname.startsWith('/dashboard');
+
+  // Standalone public screens (creator profiles and resource views) omit main nav/footer
+  const isPublicViewerRoute = !isMainAppRoute;
 
   return (
     <div className="min-h-screen flex flex-col bg-neutral-50 dark:bg-neutral-950 text-neutral-900 dark:text-neutral-100">
@@ -131,15 +146,17 @@ export const App: React.FC = () => {
               }
             />
 
-            {/* Public Creator and Resource Routes */}
-            <Route path="/@:username" element={<CreatorProfilePage />} />
-            <Route path="/@:username/resource/:publicSlug" element={<ResourceViewPage />} />
-            
-            {/* Handling URL-encoded @ (%40) and friendly /creator/ alias */}
-            <Route path="/%40:username" element={<CreatorProfilePage />} />
-            <Route path="/%40:username/resource/:publicSlug" element={<ResourceViewPage />} />
-            <Route path="/creator/:username" element={<CreatorProfilePage />} />
-            <Route path="/creator/:username/resource/:publicSlug" element={<ResourceViewPage />} />
+            {/* Clean Public Creator and Resource Routes */}
+            <Route path="/:username" element={<CreatorProfilePage />} />
+            <Route path="/:username/resource/:publicSlug" element={<ResourceViewPage />} />
+
+            {/* Backwards Compatibility: Redirect Legacy @ and /creator/ Routes to Clean Routes */}
+            <Route path="/@:username" element={<LegacyProfileRedirect />} />
+            <Route path="/@:username/resource/:publicSlug" element={<LegacyResourceRedirect />} />
+            <Route path="/%40:username" element={<LegacyProfileRedirect />} />
+            <Route path="/%40:username/resource/:publicSlug" element={<LegacyResourceRedirect />} />
+            <Route path="/creator/:username" element={<LegacyProfileRedirect />} />
+            <Route path="/creator/:username/resource/:publicSlug" element={<LegacyResourceRedirect />} />
 
             {/* 404 Catch-All */}
             <Route path="*" element={<NotFoundPage />} />
