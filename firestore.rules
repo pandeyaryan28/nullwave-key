@@ -1,0 +1,51 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Creator Profiles
+    match /users/{userId} {
+      allow read: if true;
+      allow create, update: if request.auth != null && request.auth.uid == userId;
+      allow delete: if false;
+    }
+
+    // Username reservation collection
+    match /usernames/{username} {
+      allow read: if true;
+      allow create: if request.auth != null && request.resource.data.uid == request.auth.uid;
+      allow update, delete: if request.auth != null && resource.data.uid == request.auth.uid;
+    }
+
+    // Resources
+    match /resources/{resourceId} {
+      allow read: if (request.auth != null && resource.data.creatorId == request.auth.uid)
+                  || (resource.data.status == 'active');
+
+      allow create: if request.auth != null
+                    && request.resource.data.creatorId == request.auth.uid;
+
+      allow update: if (request.auth != null && resource.data.creatorId == request.auth.uid)
+                    || (
+                      resource.data.status == 'active' &&
+                      request.resource.data.diff(resource.data).affectedKeys()
+                        .hasOnly(['totalViews', 'uniqueViews', 'totalDownloads', 'lastAccessedAt'])
+                    );
+
+      allow delete: if request.auth != null && resource.data.creatorId == request.auth.uid;
+    }
+
+    // Audit logs for views
+    match /resource_views/{viewId} {
+      allow create: if true;
+      allow read: if request.auth != null && resource.data.creatorId == request.auth.uid;
+      allow update, delete: if false;
+    }
+
+    // Audit logs for downloads
+    match /resource_downloads/{downloadId} {
+      allow create: if true;
+      allow read: if request.auth != null && resource.data.creatorId == request.auth.uid;
+      allow update, delete: if false;
+    }
+  }
+}

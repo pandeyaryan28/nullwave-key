@@ -1,0 +1,60 @@
+export interface UserProfile {
+  uid: string;
+  email: string;
+  displayName: string;
+  username: string; // lowercase, alphanumeric + underscore
+  photoURL?: string;
+  bio?: string;
+  socialLink?: string; // e.g. instagram.com/username
+  createdAt: number; // unix timestamp ms
+  updatedAt: number; // unix timestamp ms
+}
+
+export interface UsernameDoc {
+  uid: string;
+  createdAt: number;
+}
+
+export type ResourceStatus = 'active' | 'disabled';
+
+export interface Resource {
+  id: string; // Firebase auto-generated doc ID
+  creatorId: string; // creator uid
+  creatorUsername: string; // for query convenience
+  publicSlug: string; // safe public URL slug (e.g. "startup-gtm-guide-8k2p")
+  code: string; // 6-digit numeric string, e.g. "482731"
+  title: string;
+  description: string;
+  category?: string;
+  fileUrl: string; // Storage URL or data payload
+  fileName: string;
+  fileSizeBytes: number;
+  coverUrl?: string; // Optional cover image URL
+  status: ResourceStatus;
+  createdAt: number;
+  updatedAt: number;
+  lastAccessedAt?: number;
+  // Aggregate Counters
+  totalViews: number;
+  uniqueViews: number;
+  totalDownloads: number;
+}
+
+export interface ResourceViewAudit {
+  id?: string;
+  resourceId: string;
+  creatorId: string;
+  visitorId: string; // anonymous local UUID
+  viewedAt: number;
+  isUnique: boolean;
+}
+
+export interface ResourceDownloadAudit {
+  id?: string;
+  resourceId: string;
+  creatorId: string;
+  visitorId: string;
+  downloadedAt: number;
+}
+
+export type ThemeMode = 'light' | 'dark' | 'system';
