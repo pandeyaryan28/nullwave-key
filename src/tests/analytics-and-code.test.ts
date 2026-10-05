@@ -128,19 +128,25 @@ test('storage limits enforce reasonable 25MB PDF ceiling and 5MB cover ceiling',
 
 // Test 6: Clean URL Generation & Handle Sanitization without @
 test('username sanitization strips @ prefix and normalizes to clean public URL path', () => {
-  const sanitize = (raw: string) => raw.replace(/^[@%40]+/, '').toLowerCase().trim();
+  const sanitize = (raw: string) => raw.replace(/^(?:@|%40)+/, '').toLowerCase().trim();
 
   assert.equal(sanitize('@aryan'), 'aryan', 'Leading @ must be stripped');
   assert.equal(sanitize('@@aryan'), 'aryan', 'Multiple leading @ must be stripped');
   assert.equal(sanitize('%40aryan'), 'aryan', 'URL encoded %40 must be stripped');
   assert.equal(sanitize('Aryan_28'), 'aryan_28', 'Should lowercase handle');
   assert.equal(sanitize('aryan'), 'aryan', 'Clean handle should remain unchanged');
+  // Critical regression test: usernames starting with 4 or 0 (prevent character class [@%40] bug)
+  assert.equal(sanitize('4creator'), '4creator', 'Numeric-prefixed handles must NOT strip digits');
+  assert.equal(sanitize('007agent'), '007agent', 'Handles starting with 0 must NOT strip digits');
+  assert.equal(sanitize('@4creator'), '4creator', 'Leading @ on numeric handle must strip only @');
+  assert.equal(sanitize('%404creator'), '4creator', 'Leading %40 on numeric handle must strip only %40');
 
   const getProfileUrl = (origin: string, username: string) => `${origin}/${sanitize(username)}`;
   const getResourceUrl = (origin: string, username: string, slug: string) =>
     `${origin}/${sanitize(username)}/resource/${slug}`;
 
   assert.equal(getProfileUrl('https://unlockr.com', '@aryan'), 'https://unlockr.com/aryan');
+  assert.equal(getProfileUrl('https://unlockr.com', '@4creator'), 'https://unlockr.com/4creator');
   assert.equal(
     getResourceUrl('https://unlockr.com', '@aryan', 'my-cv-4k2x'),
     'https://unlockr.com/aryan/resource/my-cv-4k2x'
@@ -199,7 +205,7 @@ test('canonical URL redirect accurately maps legacy prefixes and uppercase paths
     // If it starts with /creator/
     if (pathname.startsWith('/creator/')) {
       const parts = pathname.replace(/^\/creator\//, '').split('/');
-      const cleanUser = parts[0].replace(/^[@%40]+/, '').toLowerCase();
+      const cleanUser = parts[0].replace(/^(?:@|%40)+/, '').toLowerCase();
       if (parts.length > 2 && parts[1] === 'resource') {
         return `/${cleanUser}/resource/${parts[2]}`;
       }
@@ -210,9 +216,9 @@ test('canonical URL redirect accurately maps legacy prefixes and uppercase paths
     const pathParts = pathname.split('/').filter(Boolean);
     if (pathParts.length > 0) {
       const rawUser = pathParts[0];
-      const hasLegacyOrUpper = /^[@%40]/.test(rawUser) || rawUser !== rawUser.toLowerCase();
+      const hasLegacyOrUpper = /^(?:@|%40)/.test(rawUser) || rawUser !== rawUser.toLowerCase();
       if (hasLegacyOrUpper) {
-        const cleanUser = rawUser.replace(/^[@%40]+/, '').toLowerCase();
+        const cleanUser = rawUser.replace(/^(?:@|%40)+/, '').toLowerCase();
         if (pathParts.length === 1) {
           return `/${cleanUser}`;
         }
@@ -245,6 +251,13 @@ test('canonical URL redirect accurately maps legacy prefixes and uppercase paths
   // Canonical paths should NOT redirect
   assert.equal(resolveRedirect('/aryan'), null, 'Canonical /aryan should not trigger redirect');
   assert.equal(resolveRedirect('/aryan/resource/growth-guide-991a'), null, 'Canonical resource view should not trigger redirect');
+
+  // Regression tests for usernames starting with digits
+  assert.equal(resolveRedirect('/4creator'), null, 'Canonical /4creator should not trigger redirect');
+  assert.equal(resolveRedirect('/007agent'), null, 'Canonical /007agent should not trigger redirect');
+  assert.equal(resolveRedirect('/@4creator'), '/4creator', '/@4creator must redirect to /4creator');
+  assert.equal(resolveRedirect('/%404creator'), '/4creator', '/%404creator must redirect to /4creator');
+  assert.equal(resolveRedirect('/creator/4creator'), '/4creator', '/creator/4creator must redirect to /4creator');
 });
 
 // Test 10: Security Rules Compliance: Unauthenticated Queries Require status == 'active'
@@ -350,5 +363,399 @@ test('base URL route resolution redirects authenticated creators to dashboard an
     resolveHomeRoute({ loading: false, user: { uid: 'u2' }, profile: { username: '' } }),
     '/onboarding'
   );
+});
+
+// Test 13: Distribution Control: allowDownload Permission Evaluation
+test('allowDownload evaluation permits in-browser viewing but suppresses downloads when false', () => {
+  interface ResourceDownloadCheck {
+    allowDownload?: boolean;
+  }
+
+  const canDownload = (r: ResourceDownloadCheck): boolean => r.allowDownload !== false;
+
+  // Backwards compatibility: undefined / true allows download
+  assert.equal(canDownload({}), true, 'Legacy resource without allowDownload must default to downloadable');
+  assert.equal(canDownload({ allowDownload: true }), true, 'Explicit true must allow download');
+
+  // View-Only mode: allowDownload === false
+  assert.equal(canDownload({ allowDownload: false }), false, 'allowDownload: false must suppress download permission');
+});
+
+// Test 14: Distribution Control: expiresAt Drop Expiration Checking Logic
+test('expiresAt accurately enforces time-limited drop expiration and backwards compatibility', () => {
+  interface ResourceExpirationCheck {
+    expiresAt?: number | null;
+  }
+
+  const isDropExpired = (r: ResourceExpirationCheck, currentTime: number): boolean => {
+    if (!r.expiresAt) return false;
+    return currentTime > r.expiresAt;
+  };
+
+  const t0 = 1700000000000;
+  const ONE_DAY = 24 * 60 * 60 * 1000;
+  const expiry = t0 + ONE_DAY;
+
+  // Active drop before deadline
+  assert.equal(isDropExpired({ expiresAt: expiry }, t0), false, 'Drop before deadline must NOT be expired');
+  assert.equal(isDropExpired({ expiresAt: expiry }, t0 + ONE_DAY - 1000), false, 'Drop 1s before deadline must NOT be expired');
+
+  // Expired drop after deadline
+  assert.equal(isDropExpired({ expiresAt: expiry }, t0 + ONE_DAY + 1), true, 'Drop after deadline must be expired');
+  assert.equal(isDropExpired({ expiresAt: expiry }, t0 + ONE_DAY + 3600000), true, 'Drop 1 hour after deadline must be expired');
+
+  // Backwards compatibility: null or undefined expiresAt never expires
+  assert.equal(isDropExpired({}, t0 + 10 * ONE_DAY), false, 'Resource without expiresAt never expires');
+  assert.equal(isDropExpired({ expiresAt: null }, t0 + 10 * ONE_DAY), false, 'Resource with null expiresAt never expires');
+});
+
+// Test 15: Distribution Control: maxUnlocks Capacity Checking Logic
+test('maxUnlocks cap checking restricts new unlocks when capacity limit is reached', () => {
+  interface ResourceCapCheck {
+    uniqueViews: number;
+    maxUnlocks?: number | null;
+  }
+
+  const isCapacityReached = (r: ResourceCapCheck): boolean => {
+    if (r.maxUnlocks === null || r.maxUnlocks === undefined) return false;
+    return r.uniqueViews >= r.maxUnlocks;
+  };
+
+  // Unlimited resources
+  assert.equal(isCapacityReached({ uniqueViews: 100 }), false, 'Undefined maxUnlocks allows unlimited unlocks');
+  assert.equal(isCapacityReached({ uniqueViews: 500, maxUnlocks: null }), false, 'Null maxUnlocks allows unlimited unlocks');
+
+  // Capped drop: capacity 100
+  assert.equal(isCapacityReached({ uniqueViews: 0, maxUnlocks: 100 }), false, '0/100 must be open');
+  assert.equal(isCapacityReached({ uniqueViews: 99, maxUnlocks: 100 }), false, '99/100 must be open');
+  assert.equal(isCapacityReached({ uniqueViews: 100, maxUnlocks: 100 }), true, '100/100 must be capped');
+  assert.equal(isCapacityReached({ uniqueViews: 105, maxUnlocks: 100 }), true, 'Over 100 must be capped');
+});
+
+// Test 16: Distribution Control: isPublicListing Filtering Logic
+test('isPublicListing hides unlisted resources from public station feed unless unlocked', () => {
+  interface ResourceListingCheck {
+    id: string;
+    isPublicListing?: boolean;
+  }
+
+  const filterForStationFeed = (
+    resources: ResourceListingCheck[],
+    unlockedIds: Set<string>
+  ): ResourceListingCheck[] => {
+    return resources.filter(r => {
+      const isPublic = r.isPublicListing !== false;
+      const isUnlocked = unlockedIds.has(r.id);
+      return isPublic || isUnlocked;
+    });
+  };
+
+  const r1: ResourceListingCheck = { id: 'r1', isPublicListing: true };
+  const r2: ResourceListingCheck = { id: 'r2', isPublicListing: false }; // unlisted
+  const r3: ResourceListingCheck = { id: 'r3' }; // default public
+
+  // Public visitor without session unlock
+  const feed1 = filterForStationFeed([r1, r2, r3], new Set());
+  assert.equal(feed1.length, 2, 'Feed should only include 2 public items');
+  assert.ok(feed1.some(r => r.id === 'r1'));
+  assert.ok(feed1.some(r => r.id === 'r3'));
+  assert.ok(!feed1.some(r => r.id === 'r2'), 'Unlisted item r2 must be hidden');
+
+  // Visitor who unlocked r2 via direct code/link
+  const feed2 = filterForStationFeed([r1, r2, r3], new Set(['r2']));
+  assert.equal(feed2.length, 3, 'Feed should now include unlocked r2');
+});
+
+// Test 17: Custom 6-Digit Access Code Validation
+test('custom 6-digit access code validator enforces exactly 6 numeric digits', () => {
+  const validateCustomCode = (raw: string): { valid: boolean; code?: string; error?: string } => {
+    const trimmed = raw.trim();
+    if (!/^\d{6}$/.test(trimmed)) {
+      return { valid: false, error: 'Code must be exactly 6 numeric digits' };
+    }
+    const num = parseInt(trimmed, 10);
+    if (num < 100000 || num > 999999) {
+      return { valid: false, error: 'Code must be in range 100000-999999' };
+    }
+    return { valid: true, code: trimmed };
+  };
+
+  // Valid codes
+  assert.equal(validateCustomCode('100000').valid, true);
+  assert.equal(validateCustomCode('582910').valid, true);
+  assert.equal(validateCustomCode('999999').valid, true);
+  assert.equal(validateCustomCode(' 482910 ').valid, true);
+
+  // Invalid codes
+  assert.equal(validateCustomCode('').valid, false);
+  assert.equal(validateCustomCode('12345').valid, false); // 5 digits
+  assert.equal(validateCustomCode('1234567').valid, false); // 7 digits
+  assert.equal(validateCustomCode('099999').valid, false); // < 100000
+  assert.equal(validateCustomCode('12a456').valid, false); // non-numeric
+  assert.equal(validateCustomCode('abcdef').valid, false); // letters
+});
+
+// Test 18: Multi-Social Links Normalization and Legacy Compatibility
+test('social links normalizer formats handles and links into valid canonical URLs', () => {
+  const normalizeSocialUrl = (url?: string, platform?: string): string => {
+    if (!url) return '';
+    let clean = url.trim();
+    if (!clean) return '';
+    if (clean.startsWith('http://') || clean.startsWith('https://')) return clean;
+    if (clean.startsWith('@')) clean = clean.substring(1);
+
+    if (platform === 'instagram' && !clean.includes('instagram.com')) {
+      return `https://instagram.com/${clean}`;
+    }
+    if (platform === 'twitter' && !clean.includes('twitter.com') && !clean.includes('x.com')) {
+      return `https://x.com/${clean}`;
+    }
+    if (platform === 'youtube' && !clean.includes('youtube.com')) {
+      return `https://youtube.com/@${clean}`;
+    }
+    if (platform === 'linkedin' && !clean.includes('linkedin.com')) {
+      return `https://linkedin.com/in/${clean}`;
+    }
+    if (platform === 'github' && !clean.includes('github.com')) {
+      return `https://github.com/${clean}`;
+    }
+    return `https://${clean}`;
+  };
+
+  // Instagram
+  assert.equal(normalizeSocialUrl('@creator', 'instagram'), 'https://instagram.com/creator');
+  assert.equal(normalizeSocialUrl('https://instagram.com/creator', 'instagram'), 'https://instagram.com/creator');
+
+  // Twitter / X
+  assert.equal(normalizeSocialUrl('@founder', 'twitter'), 'https://x.com/founder');
+  assert.equal(normalizeSocialUrl('https://x.com/founder', 'twitter'), 'https://x.com/founder');
+
+  // YouTube
+  assert.equal(normalizeSocialUrl('creatorchannel', 'youtube'), 'https://youtube.com/@creatorchannel');
+
+  // LinkedIn
+  assert.equal(normalizeSocialUrl('aryan-pandey', 'linkedin'), 'https://linkedin.com/in/aryan-pandey');
+
+  // GitHub
+  assert.equal(normalizeSocialUrl('aryan', 'github'), 'https://github.com/aryan');
+
+  // Website
+  assert.equal(normalizeSocialUrl('https://aryanpandey.dev'), 'https://aryanpandey.dev');
+  assert.equal(normalizeSocialUrl('aryanpandey.dev'), 'https://aryanpandey.dev');
+});
+
+// Test 19: Creator Code Uniqueness Evaluation Across Active Resources
+test('isCodeInUseByCreator correctly identifies duplicate codes among active creator drops', () => {
+  interface MockResource {
+    id: string;
+    creatorId: string;
+    code: string;
+    status: 'active' | 'disabled';
+  }
+
+  const mockDb: MockResource[] = [
+    { id: 'res_1', creatorId: 'user_a', code: '123456', status: 'active' },
+    { id: 'res_2', creatorId: 'user_a', code: '654321', status: 'disabled' }, // disabled
+    { id: 'res_3', creatorId: 'user_b', code: '123456', status: 'active' }, // different creator
+  ];
+
+  const checkCodeInUse = (
+    creatorId: string,
+    code: string,
+    excludeResourceId?: string
+  ): boolean => {
+    const clean = code.trim();
+    const matches = mockDb.filter(
+      r => r.creatorId === creatorId && r.code === clean && r.status === 'active'
+    );
+    if (matches.length === 0) return false;
+    if (excludeResourceId) {
+      return matches.some(r => r.id !== excludeResourceId);
+    }
+    return true;
+  };
+
+  // user_a checking 123456 (already used by active res_1) -> true
+  assert.equal(checkCodeInUse('user_a', '123456'), true, 'Code 123456 is already active for user_a');
+
+  // user_a checking 123456 while editing res_1 (excludeResourceId = 'res_1') -> false
+  assert.equal(
+    checkCodeInUse('user_a', '123456', 'res_1'),
+    false,
+    'Self-exclusion during edit allows keeping same code'
+  );
+
+  // user_a checking 654321 (disabled resource) -> false (available)
+  assert.equal(checkCodeInUse('user_a', '654321'), false, 'Disabled drop code is not considered in use');
+
+  // user_b checking 123456 while editing res_3 -> false
+  assert.equal(checkCodeInUse('user_b', '123456', 'res_3'), false);
+
+  // user_a checking 999999 (unused code) -> false
+  assert.equal(checkCodeInUse('user_a', '999999'), false, 'Unused code is available');
+});
+
+// Test 20: Profile Tuner & Modal Access Gate for Expired and Capacity-Capped Drops
+test('profile tuner and unlock modal block access when drop is expired or capacity cap is reached', () => {
+  interface DropAccessTarget {
+    id: string;
+    title: string;
+    code: string;
+    expiresAt?: number | null;
+    maxUnlocks?: number | null;
+    uniqueViews?: number;
+  }
+
+  const checkAccess = (
+    target: DropAccessTarget,
+    isOwner: boolean,
+    now: number
+  ): { allowed: boolean; error?: string } => {
+    if (isOwner) return { allowed: true };
+
+    if (target.expiresAt && now > target.expiresAt) {
+      return {
+        allowed: false,
+        error: `The drop "${target.title}" has expired and is no longer accessible.`,
+      };
+    }
+
+    if (target.maxUnlocks && (target.uniqueViews || 0) >= target.maxUnlocks) {
+      return {
+        allowed: false,
+        error: `The drop "${target.title}" has reached its maximum unlock capacity (${target.maxUnlocks}).`,
+      };
+    }
+
+    return { allowed: true };
+  };
+
+  const now = 1700000000000;
+  const expiredDrop: DropAccessTarget = {
+    id: 'res_exp',
+    title: 'Secret Blueprint',
+    code: '112233',
+    expiresAt: now - 5000, // expired 5s ago
+  };
+
+  const cappedDrop: DropAccessTarget = {
+    id: 'res_cap',
+    title: 'Limited Cohort',
+    code: '445566',
+    maxUnlocks: 50,
+    uniqueViews: 50,
+  };
+
+  const activeDrop: DropAccessTarget = {
+    id: 'res_ok',
+    title: 'Open Whitepaper',
+    code: '778899',
+    expiresAt: now + 100000,
+    maxUnlocks: 100,
+    uniqueViews: 12,
+  };
+
+  // Visitor attempts to unlock expired drop -> blocked
+  const res1 = checkAccess(expiredDrop, false, now);
+  assert.equal(res1.allowed, false);
+  assert.match(res1.error || '', /has expired/);
+
+  // Visitor attempts to unlock capped drop -> blocked
+  const res2 = checkAccess(cappedDrop, false, now);
+  assert.equal(res2.allowed, false);
+  assert.match(res2.error || '', /maximum unlock capacity/);
+
+  // Visitor unlocks healthy drop -> allowed
+  const res3 = checkAccess(activeDrop, false, now);
+  assert.equal(res3.allowed, true);
+
+  // Owner accessing expired or capped drop -> always allowed
+  assert.equal(checkAccess(expiredDrop, true, now).allowed, true, 'Owner should always bypass expiration');
+  assert.equal(checkAccess(cappedDrop, true, now).allowed, true, 'Owner should always bypass capacity cap');
+});
+
+// Test 21: View-Only Mode Protection (Suppression of External Download Links)
+test('view-only mode suppresses raw PDF download button and open-in-new-tab external link', () => {
+  interface ViewState {
+    allowDownload?: boolean;
+    isOwner: boolean;
+    isUnlocked: boolean;
+  }
+
+  const getDownloadControls = (state: ViewState) => {
+    const canDownload = state.isUnlocked && (state.allowDownload !== false || state.isOwner);
+    const showOpenInNewTab = state.allowDownload !== false || state.isOwner;
+    return { canDownload, showOpenInNewTab };
+  };
+
+  // Standard downloadable drop, unlocked by guest
+  const guestUnlocked = getDownloadControls({ allowDownload: true, isOwner: false, isUnlocked: true });
+  assert.equal(guestUnlocked.canDownload, true);
+  assert.equal(guestUnlocked.showOpenInNewTab, true);
+
+  // View-only drop, unlocked by guest -> Download & external link MUST be suppressed
+  const viewOnlyGuest = getDownloadControls({ allowDownload: false, isOwner: false, isUnlocked: true });
+  assert.equal(viewOnlyGuest.canDownload, false, 'Download must be suppressed in view-only mode');
+  assert.equal(viewOnlyGuest.showOpenInNewTab, false, 'Open in new tab link must be suppressed in view-only mode');
+
+  // View-only drop viewed by owner -> Owner retains direct access
+  const viewOnlyOwner = getDownloadControls({ allowDownload: false, isOwner: true, isUnlocked: true });
+  assert.equal(viewOnlyOwner.canDownload, true, 'Owner can download even in view-only mode');
+  assert.equal(viewOnlyOwner.showOpenInNewTab, true, 'Owner can open in new tab even in view-only mode');
+});
+
+// Test 22: Firestore Profile Sanitization Deep undefined Stripping
+test('stripUndefined recursively purges undefined keys to prevent Firestore runtime errors', () => {
+  const stripUndefined = (obj: Record<string, unknown>): Record<string, unknown> => {
+    const result: Record<string, unknown> = {};
+    for (const [key, val] of Object.entries(obj)) {
+      if (val === undefined) continue;
+      if (val && typeof val === 'object' && !Array.isArray(val)) {
+        const cleanedChild = stripUndefined(val as Record<string, unknown>);
+        result[key] = cleanedChild;
+      } else {
+        result[key] = val;
+      }
+    }
+    return result;
+  };
+
+  const dirtyProfile = {
+    displayName: 'Aryan Pandey',
+    headline: 'Founder',
+    bio: '',
+    location: undefined,
+    photoURL: undefined,
+    bannerURL: 'https://example.com/banner.png',
+    socialLinks: {
+      twitter: '@aryan',
+      instagram: undefined,
+      youtube: undefined,
+      nested: {
+        website: 'https://aryan.dev',
+        emptyVal: undefined,
+      },
+    },
+    tags: ['tag1', 'tag2'],
+  };
+
+  const cleaned = stripUndefined(dirtyProfile);
+
+  assert.equal('location' in cleaned, false, 'Root undefined location must be stripped');
+  assert.equal('photoURL' in cleaned, false, 'Root undefined photoURL must be stripped');
+  assert.equal(cleaned.displayName, 'Aryan Pandey');
+  assert.equal(cleaned.bannerURL, 'https://example.com/banner.png');
+
+  const cleanedSocials = cleaned.socialLinks as Record<string, unknown>;
+  assert.equal(cleanedSocials.twitter, '@aryan');
+  assert.equal('instagram' in cleanedSocials, false, 'Nested undefined instagram must be stripped');
+  assert.equal('youtube' in cleanedSocials, false, 'Nested undefined youtube must be stripped');
+
+  const nested = cleanedSocials.nested as Record<string, unknown>;
+  assert.equal(nested.website, 'https://aryan.dev');
+  assert.equal('emptyVal' in nested, false, 'Deeply nested undefined key must be stripped');
+
+  // Arrays must remain intact
+  assert.deepEqual(cleaned.tags, ['tag1', 'tag2']);
 });
 

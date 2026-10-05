@@ -73,13 +73,13 @@ const HomeRoute: React.FC = () => {
 // Legacy redirect components for backwards compatibility with legacy URL schemes
 const LegacyProfileRedirect: React.FC = () => {
   const { username } = useParams<{ username: string }>();
-  const cleanUsername = (username || '').replace(/^[@%40]+/, '').toLowerCase();
+  const cleanUsername = (username || '').replace(/^(?:@|%40)+/, '').toLowerCase();
   return <Navigate to={`/${cleanUsername}`} replace />;
 };
 
 const LegacyResourceRedirect: React.FC = () => {
   const { username, publicSlug } = useParams<{ username: string; publicSlug: string }>();
-  const cleanUsername = (username || '').replace(/^[@%40]+/, '').toLowerCase();
+  const cleanUsername = (username || '').replace(/^(?:@|%40)+/, '').toLowerCase();
   return <Navigate to={`/${cleanUsername}/resource/${publicSlug || ''}`} replace />;
 };
 

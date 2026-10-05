@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { collection, doc, setDoc } from 'firebase/firestore';
 import { db } from '../../lib/firebase/config';
 import { useAuth } from '../../lib/auth/authContext';
-import { getUniqueCodeForCreator } from '../../lib/utils/codeGenerator';
+import { getUniqueCodeForCreator, generateSixDigitCode, isCodeInUseByCreator } from '../../lib/utils/codeGenerator';
 import { generatePublicSlug } from '../../lib/utils/slugify';
 import { uploadResourceFile, uploadImageFile, MAX_PDF_SIZE_BYTES } from '../../lib/storage/storageService';
 import { Resource } from '../../types';
@@ -20,18 +20,35 @@ import {
   ArrowLeft,
   X,
   AlertCircle,
+  SlidersHorizontal,
+  RefreshCw,
+  EyeOff,
+  Pin,
+  Clock,
+  Users,
 } from 'lucide-react';
 
 export const NewResourcePage: React.FC = () => {
   const { user, profile } = useAuth();
   const navigate = useNavigate();
 
-  // Form state
+  // Core Form state
   const [file, setFile] = useState<File | null>(null);
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [title, setTitle] = useState<string>('');
   const [description, setDescription] = useState<string>('');
   const [category, setCategory] = useState<string>('');
+
+  // Advanced Distribution Controls state
+  const [allowDownload, setAllowDownload] = useState<boolean>(true);
+  const [isPublicListing, setIsPublicListing] = useState<boolean>(true);
+  const [isPinned, setIsPinned] = useState<boolean>(false);
+  const [hasExpiration, setHasExpiration] = useState<boolean>(false);
+  const [expirationDate, setExpirationDate] = useState<string>('');
+  const [hasCapacityCap, setHasCapacityCap] = useState<boolean>(false);
+  const [maxUnlocks, setMaxUnlocks] = useState<string>('');
+  const [useCustomCode, setUseCustomCode] = useState<boolean>(false);
+  const [customCode, setCustomCode] = useState<string>('');
 
   // Processing state
   const [isUploading, setIsUploading] = useState<boolean>(false);
@@ -76,6 +93,10 @@ export const NewResourcePage: React.FC = () => {
     }
   };
 
+  const handleGenerateRandomCode = () => {
+    setCustomCode(generateSixDigitCode());
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user || !profile?.username) {
@@ -91,13 +112,61 @@ export const NewResourcePage: React.FC = () => {
       return;
     }
 
+    if (useCustomCode) {
+      const clean = customCode.trim();
+      if (!/^\d{6}$/.test(clean)) {
+        setError('Custom wave code must be exactly 6 numeric digits (e.g. 582910).');
+        return;
+      }
+      const num = parseInt(clean, 10);
+      if (num < 100000 || num > 999999) {
+        setError('Custom code must be between 100000 and 999999.');
+        return;
+      }
+    }
+
+    let expiresAtTimestamp: number | null = null;
+    if (hasExpiration) {
+      if (!expirationDate) {
+        setError('Please select an expiration date and time, or disable drop expiration.');
+        return;
+      }
+      const parsedTime = new Date(expirationDate).getTime();
+      if (isNaN(parsedTime)) {
+        setError('Invalid expiration date format.');
+        return;
+      }
+      expiresAtTimestamp = parsedTime;
+    }
+
+    let maxUnlocksCount: number | null = null;
+    if (hasCapacityCap) {
+      const capNum = parseInt(maxUnlocks, 10);
+      if (isNaN(capNum) || capNum <= 0) {
+        setError('Please enter a valid positive number for max unlock capacity.');
+        return;
+      }
+      maxUnlocksCount = capNum;
+    }
+
     setIsUploading(true);
     setError(null);
     setUploadProgress(10);
 
     try {
-      // 1. Generate unique 6-digit code scoped to this creator
-      const code = await getUniqueCodeForCreator(user.uid);
+      // 1. Determine 6-digit access code
+      let code = '';
+      if (useCustomCode) {
+        code = customCode.trim();
+        const codeTaken = await isCodeInUseByCreator(user.uid, code);
+        if (codeTaken) {
+          setError('This 6-digit wave code is already assigned to one of your active resources. Please choose a different code.');
+          setIsUploading(false);
+          return;
+        }
+      } else {
+        code = await getUniqueCodeForCreator(user.uid);
+      }
 
       // 2. Prepare internal Firestore document ID and safe public slug
       const resourceRef = doc(collection(db, 'resources'));
@@ -123,6 +192,7 @@ export const NewResourcePage: React.FC = () => {
       setUploadProgress(85);
 
       const now = Date.now();
+
       const newResource: Resource = {
         id: resourceId,
         creatorId: user.uid,
@@ -140,6 +210,11 @@ export const NewResourcePage: React.FC = () => {
         totalViews: 0,
         uniqueViews: 0,
         totalDownloads: 0,
+        allowDownload,
+        isPublicListing,
+        isPinned,
+        expiresAt: expiresAtTimestamp,
+        maxUnlocks: maxUnlocksCount,
       };
 
       if (category.trim()) {
@@ -190,7 +265,7 @@ export const NewResourcePage: React.FC = () => {
     setTimeout(() => setCopiedLink(false), 2000);
   };
 
-  // Confirmation Success View (Section 4 Requirement)
+  // Confirmation Success View
   if (createdResource) {
     return (
       <div className="max-w-xl mx-auto py-6 space-y-6">
@@ -227,10 +302,39 @@ export const NewResourcePage: React.FC = () => {
             </div>
           </div>
 
-          {/* Reel / Bio Script Helper */}
+          {/* Distribution Badges Summary */}
+          <div className="flex flex-wrap items-center justify-center gap-2 mb-6">
+            {!createdResource.allowDownload && (
+              <span className="px-2.5 py-1 text-xs font-medium rounded-md bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
+                View Only (Downloads Disabled)
+              </span>
+            )}
+            {!createdResource.isPublicListing && (
+              <span className="px-2.5 py-1 text-xs font-medium rounded-md bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 border border-neutral-200 dark:border-neutral-700">
+                Unlisted Drop
+              </span>
+            )}
+            {createdResource.isPinned && (
+              <span className="px-2.5 py-1 text-xs font-medium rounded-md bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                Pinned to Top
+              </span>
+            )}
+            {createdResource.expiresAt && (
+              <span className="px-2.5 py-1 text-xs font-medium rounded-md bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 border border-neutral-200 dark:border-neutral-700">
+                Expires: {new Date(createdResource.expiresAt).toLocaleDateString()}
+              </span>
+            )}
+            {createdResource.maxUnlocks && (
+              <span className="px-2.5 py-1 text-xs font-medium rounded-md bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 border border-neutral-200 dark:border-neutral-700">
+                Capacity: {createdResource.maxUnlocks} unlocks
+              </span>
+            )}
+          </div>
+
+          {/* Social Script Helper */}
           <div className="p-4 rounded-md bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 text-left mb-6 text-xs text-neutral-600 dark:text-neutral-400 space-y-1.5">
             <p className="font-semibold text-neutral-900 dark:text-neutral-200">
-              How to share on Instagram Reels & Stories:
+              How to share on Instagram Reels, Stories, or X:
             </p>
             <p className="italic">
               &quot;Link in bio (nullwave.com/{profile?.username}). Enter code <span className="font-mono font-bold text-neutral-900 dark:text-neutral-100">{createdResource.code}</span> to get the guide.&quot;
@@ -276,7 +380,7 @@ export const NewResourcePage: React.FC = () => {
             Upload Resource
           </h1>
           <p className="text-xs text-neutral-500 dark:text-neutral-400">
-            Upload a PDF document to generate an automatic 6-digit access code.
+            Upload a PDF document to generate an access code with precision distribution controls.
           </p>
         </div>
       </div>
@@ -377,6 +481,199 @@ export const NewResourcePage: React.FC = () => {
               onChange={handleCoverChange}
               className="text-xs text-neutral-600 dark:text-neutral-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-medium file:bg-neutral-100 dark:file:bg-neutral-800 file:text-neutral-900 dark:file:text-neutral-100 hover:file:bg-neutral-200"
             />
+          </div>
+
+          {/* Advanced Distribution Controls Section */}
+          <div className="p-5 rounded-lg border border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/50 space-y-5">
+            <div className="flex items-center gap-2 border-b border-neutral-200 dark:border-neutral-800 pb-3">
+              <SlidersHorizontal className="w-4 h-4 text-neutral-700 dark:text-neutral-300" />
+              <h2 className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">
+                Advanced Distribution Controls
+              </h2>
+            </div>
+
+            {/* 1. Download Permission */}
+            <div className="space-y-1">
+              <label className="flex items-start gap-2.5 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={allowDownload}
+                  onChange={e => setAllowDownload(e.target.checked)}
+                  className="mt-0.5 rounded border-neutral-300 dark:border-neutral-700 text-neutral-900 dark:text-neutral-100 focus:ring-neutral-500"
+                />
+                <div>
+                  <span className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
+                    Allow viewers to download PDF file
+                  </span>
+                  <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">
+                    When unchecked, turns on View-Only in-browser mode. Viewers can inspect the guide in the reader, but download buttons and raw PDF saving are suppressed.
+                  </p>
+                </div>
+              </label>
+            </div>
+
+            {/* 2. Station Listing Visibility */}
+            <div className="space-y-1 pt-2 border-t border-neutral-200/60 dark:border-neutral-800/60">
+              <label className="flex items-start gap-2.5 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={isPublicListing}
+                  onChange={e => setIsPublicListing(e.target.checked)}
+                  className="mt-0.5 rounded border-neutral-300 dark:border-neutral-700 text-neutral-900 dark:text-neutral-100 focus:ring-neutral-500"
+                />
+                <div>
+                  <span className="text-sm font-medium text-neutral-900 dark:text-neutral-100 flex items-center gap-1.5">
+                    <span>List publicly on Station Profile</span>
+                    {!isPublicListing && (
+                      <span className="text-[11px] font-normal text-neutral-500 flex items-center gap-1">
+                        <EyeOff className="w-3 h-3" /> Unlisted
+                      </span>
+                    )}
+                  </span>
+                  <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">
+                    When unchecked, this resource is hidden from your public station feed. Only visitors given the direct link or wave code can unlock it.
+                  </p>
+                </div>
+              </label>
+            </div>
+
+            {/* 3. Pin to Top */}
+            <div className="space-y-1 pt-2 border-t border-neutral-200/60 dark:border-neutral-800/60">
+              <label className="flex items-start gap-2.5 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={isPinned}
+                  onChange={e => setIsPinned(e.target.checked)}
+                  className="mt-0.5 rounded border-neutral-300 dark:border-neutral-700 text-neutral-900 dark:text-neutral-100 focus:ring-neutral-500"
+                />
+                <div>
+                  <span className="text-sm font-medium text-neutral-900 dark:text-neutral-100 flex items-center gap-1.5">
+                    <Pin className="w-3.5 h-3.5 text-neutral-500" />
+                    <span>Pin to top of Station as Featured</span>
+                  </span>
+                  <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">
+                    Highlighted at the top of your library for high-priority drops and flagship guides.
+                  </p>
+                </div>
+              </label>
+            </div>
+
+            {/* 4. Drop Expiration */}
+            <div className="space-y-2 pt-2 border-t border-neutral-200/60 dark:border-neutral-800/60">
+              <label className="flex items-start gap-2.5 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={hasExpiration}
+                  onChange={e => setHasExpiration(e.target.checked)}
+                  className="mt-0.5 rounded border-neutral-300 dark:border-neutral-700 text-neutral-900 dark:text-neutral-100 focus:ring-neutral-500"
+                />
+                <div>
+                  <span className="text-sm font-medium text-neutral-900 dark:text-neutral-100 flex items-center gap-1.5">
+                    <Clock className="w-3.5 h-3.5 text-neutral-500" />
+                    <span>Set drop expiration date & time</span>
+                  </span>
+                  <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">
+                    Perfect for 24-hour flash drops or cohort deadlines. Access is automatically closed after this timestamp.
+                  </p>
+                </div>
+              </label>
+
+              {hasExpiration && (
+                <div className="pl-6 pt-1 max-w-xs">
+                  <input
+                    type="datetime-local"
+                    value={expirationDate}
+                    onChange={e => setExpirationDate(e.target.value)}
+                    className="w-full h-10 px-3 py-2 text-xs rounded-md border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100"
+                  />
+                </div>
+              )}
+            </div>
+
+            {/* 5. Unlock Capacity Cap */}
+            <div className="space-y-2 pt-2 border-t border-neutral-200/60 dark:border-neutral-800/60">
+              <label className="flex items-start gap-2.5 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={hasCapacityCap}
+                  onChange={e => setHasCapacityCap(e.target.checked)}
+                  className="mt-0.5 rounded border-neutral-300 dark:border-neutral-700 text-neutral-900 dark:text-neutral-100 focus:ring-neutral-500"
+                />
+                <div>
+                  <span className="text-sm font-medium text-neutral-900 dark:text-neutral-100 flex items-center gap-1.5">
+                    <Users className="w-3.5 h-3.5 text-neutral-500" />
+                    <span>Limit maximum unlock capacity</span>
+                  </span>
+                  <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">
+                    Cap total unlocks (e.g., &quot;First 100 viewers only&quot;). Access closes once the unlock limit is reached.
+                  </p>
+                </div>
+              </label>
+
+              {hasCapacityCap && (
+                <div className="pl-6 pt-1 max-w-xs">
+                  <input
+                    type="number"
+                    min="1"
+                    placeholder="e.g. 100"
+                    value={maxUnlocks}
+                    onChange={e => setMaxUnlocks(e.target.value)}
+                    className="w-full h-10 px-3 py-2 text-xs rounded-md border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100 font-mono"
+                  />
+                </div>
+              )}
+            </div>
+
+            {/* 6. Custom 6-Digit Wave Code */}
+            <div className="space-y-2 pt-2 border-t border-neutral-200/60 dark:border-neutral-800/60">
+              <label className="flex items-start gap-2.5 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={useCustomCode}
+                  onChange={e => {
+                    setUseCustomCode(e.target.checked);
+                    if (e.target.checked && !customCode) {
+                      setCustomCode(generateSixDigitCode());
+                    }
+                  }}
+                  className="mt-0.5 rounded border-neutral-300 dark:border-neutral-700 text-neutral-900 dark:text-neutral-100 focus:ring-neutral-500"
+                />
+                <div>
+                  <span className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
+                    Set custom 6-digit access code
+                  </span>
+                  <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">
+                    Pick a memorable 6-digit numeric wave code for your audience (defaults to auto-generated).
+                  </p>
+                </div>
+              </label>
+
+              {useCustomCode && (
+                <div className="pl-6 pt-1 flex items-center gap-2 max-w-xs">
+                  <input
+                    type="text"
+                    maxLength={6}
+                    placeholder="e.g. 582910"
+                    value={customCode}
+                    onChange={e => {
+                      const val = e.target.value.replace(/\D/g, '').slice(0, 6);
+                      setCustomCode(val);
+                    }}
+                    className="w-36 h-10 px-3 py-2 text-base font-mono font-bold tracking-widest text-center rounded-md border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100"
+                  />
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={handleGenerateRandomCode}
+                    title="Generate random code"
+                  >
+                    <RefreshCw className="w-3.5 h-3.5" />
+                    <span>Random</span>
+                  </Button>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Upload Progress */}

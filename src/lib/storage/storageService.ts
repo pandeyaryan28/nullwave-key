@@ -153,10 +153,10 @@ export async function uploadResourceFile(
 }
 
 /**
- * Uploads an optional cover image or avatar.
+ * Uploads an optional cover image, avatar, or banner.
  */
 export async function uploadImageFile(
-  folder: 'covers' | 'avatars',
+  folder: 'covers' | 'avatars' | 'banners',
   creatorId: string,
   id: string,
   file: File

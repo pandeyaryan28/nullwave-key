@@ -25,6 +25,10 @@ import {
   Edit,
   Power,
   Link as LinkIcon,
+  Pin,
+  EyeOff,
+  Clock,
+  Users,
 } from 'lucide-react';
 
 export const ResourcesListPage: React.FC = () => {
@@ -180,13 +184,57 @@ export const ResourcesListPage: React.FC = () => {
                   )}
 
                   <div className="space-y-1.5 min-w-0 flex-1">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <h2 className="text-base font-bold text-neutral-900 dark:text-neutral-100 truncate">
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <h2 className="text-base font-bold text-neutral-900 dark:text-neutral-100 truncate mr-1">
                         {res.title}
                       </h2>
                       <Badge variant={res.status === 'active' ? 'success' : 'neutral'}>
                         {res.status}
                       </Badge>
+                      {res.isPinned && (
+                        <Badge variant="success" className="text-[10px] py-0 px-1.5 flex items-center gap-1">
+                          <Pin className="w-2.5 h-2.5" />
+                          <span>Pinned</span>
+                        </Badge>
+                      )}
+                      {res.allowDownload === false && (
+                        <Badge variant="warning" className="text-[10px] py-0 px-1.5 flex items-center gap-1">
+                          <EyeOff className="w-2.5 h-2.5" />
+                          <span>View Only</span>
+                        </Badge>
+                      )}
+                      {res.isPublicListing === false && (
+                        <Badge variant="neutral" className="text-[10px] py-0 px-1.5 flex items-center gap-1">
+                          <EyeOff className="w-2.5 h-2.5" />
+                          <span>Unlisted</span>
+                        </Badge>
+                      )}
+                      {res.expiresAt && (
+                        Date.now() > res.expiresAt ? (
+                          <Badge variant="error" className="text-[10px] py-0 px-1.5 flex items-center gap-1">
+                            <Clock className="w-2.5 h-2.5" />
+                            <span>Expired</span>
+                          </Badge>
+                        ) : (
+                          <Badge variant="neutral" className="text-[10px] py-0 px-1.5 flex items-center gap-1">
+                            <Clock className="w-2.5 h-2.5" />
+                            <span>Expires {new Date(res.expiresAt).toLocaleDateString()}</span>
+                          </Badge>
+                        )
+                      )}
+                      {res.maxUnlocks && (
+                        (res.uniqueViews || 0) >= res.maxUnlocks ? (
+                          <Badge variant="error" className="text-[10px] py-0 px-1.5 flex items-center gap-1">
+                            <Users className="w-2.5 h-2.5" />
+                            <span>Cap Reached ({res.uniqueViews}/{res.maxUnlocks})</span>
+                          </Badge>
+                        ) : (
+                          <Badge variant="neutral" className="text-[10px] py-0 px-1.5 flex items-center gap-1">
+                            <Users className="w-2.5 h-2.5" />
+                            <span>Cap: {res.uniqueViews}/{res.maxUnlocks}</span>
+                          </Badge>
+                        )
+                      )}
                       {res.category && (
                         <Badge variant="neutral">{res.category}</Badge>
                       )}

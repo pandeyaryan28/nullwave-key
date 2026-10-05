@@ -28,6 +28,11 @@ import {
   FileText,
   Eye,
   Calendar,
+  Clock,
+  Users,
+  EyeOff,
+  Lock,
+  Edit,
 } from 'lucide-react';
 
 export const ResourceViewPage: React.FC = () => {
@@ -35,8 +40,8 @@ export const ResourceViewPage: React.FC = () => {
   const { user } = useAuth();
 
   // Redirect legacy @, encoded %40, or mixed-case handles immediately to clean canonical URL
-  if (username && (username !== username.toLowerCase() || /^[@%40]/.test(username))) {
-    const clean = username.replace(/^[@%40]+/, '').toLowerCase();
+  if (username && (username !== username.toLowerCase() || /^(?:@|%40)/.test(username))) {
+    const clean = username.replace(/^(?:@|%40)+/, '').toLowerCase();
     return <Navigate to={`/${clean}/resource/${publicSlug || ''}`} replace />;
   }
 
@@ -57,7 +62,7 @@ export const ResourceViewPage: React.FC = () => {
   // Prevent multiple view tracks on re-renders in the same mount
   const hasTrackedView = useRef<boolean>(false);
 
-  const cleanUsername = (username || '').replace(/^[@%40]+/, '').toLowerCase();
+  const cleanUsername = (username || '').replace(/^(?:@|%40)+/, '').toLowerCase();
 
   // Create clean Blob URL for base64 data URLs, Firestore chunks, or Storage URLs
   useEffect(() => {
@@ -299,8 +304,27 @@ export const ResourceViewPage: React.FC = () => {
     }
   }, [resource, isUnlocked]);
 
+  // Expiration & Capacity evaluation
+  const isOwner = Boolean(user && resource && user.uid === resource.creatorId);
+  const isExpired = Boolean(resource?.expiresAt && Date.now() > resource.expiresAt);
+  const isCapacityReached = Boolean(
+    resource?.maxUnlocks && (resource.uniqueViews || 0) >= resource.maxUnlocks
+  );
+  const allowDownload = resource?.allowDownload !== false;
+
   const handleInlineCodeSubmit = (enteredCode: string) => {
     if (!resource) return;
+
+    // Check expiration and cap
+    if (isExpired && !isOwner) {
+      setCodeError('This drop has expired and is no longer accessible.');
+      return;
+    }
+
+    if (isCapacityReached && !isOwner) {
+      setCodeError(`Maximum unlock capacity (${resource.maxUnlocks}) has been reached for this drop.`);
+      return;
+    }
 
     const nullwaveCooldownKey = `nullwave_cooldown_${cleanUsername}_${publicSlug}`;
     const unlockrCooldownKey = `unlockr_cooldown_${cleanUsername}_${publicSlug}`;
@@ -355,7 +379,7 @@ export const ResourceViewPage: React.FC = () => {
   };
 
   const handleDownload = async () => {
-    if (!resource) return;
+    if (!resource || !allowDownload) return;
     setIsDownloading(true);
 
     try {
@@ -370,7 +394,7 @@ export const ResourceViewPage: React.FC = () => {
       const targetUrl = blobUrl || resource.fileUrl;
       const fileName = resource.fileName || `${resource.title}.pdf`;
 
-      // 2. Trigger reliable browser file download via Blob (enforces custom fileName)
+      // 2. Trigger reliable browser file download via Blob
       try {
         const response = await fetch(targetUrl);
         const fileBlob = await response.blob();
@@ -449,18 +473,35 @@ export const ResourceViewPage: React.FC = () => {
             <span>Back to {creator.displayName || creator.username}</span>
           </Link>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2.5">
+            {isOwner && resource && (
+              <Link to={`/dashboard/resources/${resource.id}/edit`}>
+                <Button size="sm" variant="outline" className="text-xs">
+                  <Edit className="w-3.5 h-3.5" />
+                  <span>Edit</span>
+                </Button>
+              </Link>
+            )}
             <ThemeToggle />
+
+            {/* Download Button (Only when downloads allowed AND resource is unlocked) */}
             {isUnlocked ? (
-              <Button
-                size="sm"
-                variant="primary"
-                onClick={handleDownload}
-                isLoading={isDownloading}
-              >
-                <Download className="w-4 h-4" />
-                <span>Download PDF</span>
-              </Button>
+              allowDownload ? (
+                <Button
+                  size="sm"
+                  variant="primary"
+                  onClick={handleDownload}
+                  isLoading={isDownloading}
+                >
+                  <Download className="w-4 h-4" />
+                  <span>Download PDF</span>
+                </Button>
+              ) : (
+                <Badge variant="warning" className="text-xs py-1 px-2.5 flex items-center gap-1.5">
+                  <EyeOff className="w-3.5 h-3.5" />
+                  <span>View Only</span>
+                </Badge>
+              )
             ) : (
               <div className="text-xs text-neutral-500 flex items-center gap-1.5 font-medium">
                 <Radio className="w-3.5 h-3.5" />
@@ -480,6 +521,24 @@ export const ResourceViewPage: React.FC = () => {
               <div className="flex flex-wrap items-center gap-2">
                 {resource.category && (
                   <Badge variant="neutral">{resource.category}</Badge>
+                )}
+                {!allowDownload && (
+                  <Badge variant="warning" className="flex items-center gap-1">
+                    <EyeOff className="w-3 h-3" />
+                    <span>View Only</span>
+                  </Badge>
+                )}
+                {isExpired && (
+                  <Badge variant="error" className="flex items-center gap-1">
+                    <Clock className="w-3 h-3" />
+                    <span>Expired Drop</span>
+                  </Badge>
+                )}
+                {isCapacityReached && (
+                  <Badge variant="error" className="flex items-center gap-1">
+                    <Users className="w-3 h-3" />
+                    <span>Capacity Cap Reached</span>
+                  </Badge>
                 )}
                 <span className="text-xs text-neutral-500 dark:text-neutral-400 flex items-center gap-1">
                   <Calendar className="w-3.5 h-3.5" />
@@ -518,9 +577,14 @@ export const ResourceViewPage: React.FC = () => {
                     </div>
                   )}
                   <span className="text-xs font-semibold text-neutral-800 dark:text-neutral-200 group-hover:underline">
-                    {creator.displayName} <span className="text-neutral-500 font-normal">({creator.username})</span>
+                    {creator.displayName} <span className="text-neutral-500 font-normal">(@{creator.username})</span>
                   </span>
                 </Link>
+                {creator.headline && (
+                  <span className="text-xs text-neutral-500 truncate hidden sm:inline">
+                    • {creator.headline}
+                  </span>
+                )}
               </div>
             </div>
 
@@ -537,17 +601,63 @@ export const ResourceViewPage: React.FC = () => {
           </div>
         </Card>
 
+        {/* Expired Drop Notice (when viewer visits expired resource) */}
+        {isExpired && !isOwner && (
+          <div className="p-4 rounded-md bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 text-xs text-red-700 dark:text-red-300 flex items-center gap-2.5">
+            <Clock className="w-4 h-4 shrink-0 text-red-600 dark:text-red-400" />
+            <span>
+              This time-limited drop expired on {new Date(resource.expiresAt!).toLocaleString()}. Access has closed.
+            </span>
+          </div>
+        )}
+
+        {/* Capacity Cap Notice (when viewer visits capped resource) */}
+        {isCapacityReached && !isUnlocked && !isOwner && (
+          <div className="p-4 rounded-md bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-xs text-amber-800 dark:text-amber-300 flex items-center gap-2.5">
+            <Users className="w-4 h-4 shrink-0 text-amber-600 dark:text-amber-400" />
+            <span>
+              This drop had a limit of {resource.maxUnlocks} viewers, and all slots have been claimed. Access is now closed.
+            </span>
+          </div>
+        )}
+
+        {/* View-Only Distribution Banner (when viewer has unlocked a view-only document) */}
+        {!allowDownload && isUnlocked && (
+          <div className="p-3.5 rounded-md bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/60 text-xs text-amber-800 dark:text-amber-300 flex items-center gap-2">
+            <EyeOff className="w-4 h-4 shrink-0 text-amber-600 dark:text-amber-400" />
+            <span>
+              This document is distributed in view-only mode by the creator. You can read the guide completely in the browser reader below, but file downloading is disabled.
+            </span>
+          </div>
+        )}
+
         {/* Gated Access: Inline 6-Digit Code Verification OR Unlocked Document Viewer */}
         {!isUnlocked ? (
           <Card className="p-8 text-center border-neutral-300 dark:border-neutral-700 shadow-sm max-w-lg mx-auto">
             <div className="w-12 h-12 rounded-md bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 flex items-center justify-center mx-auto mb-4 border border-neutral-200 dark:border-neutral-700">
-              <Radio className="w-6 h-6" />
+              {isExpired || (isCapacityReached && !isOwner) ? (
+                <Lock className="w-6 h-6 text-red-500" />
+              ) : (
+                <Radio className="w-6 h-6" />
+              )}
             </div>
+
             <h2 className="text-lg font-bold text-neutral-900 dark:text-neutral-100 mb-1">
-              Enter 6-Digit Wave Code
+              {isExpired
+                ? 'Drop Expired'
+                : isCapacityReached && !isOwner
+                ? 'Capacity Reached'
+                : 'Enter 6-Digit Wave Code'}
             </h2>
+
             <p className="text-xs text-neutral-500 dark:text-neutral-400 mb-6 max-w-sm mx-auto">
-              This document is protected. Enter the 6-digit wave code shared by {creator.displayName || creator.username} to view and download it.
+              {isExpired
+                ? 'This guide was time-limited and is no longer open for access.'
+                : isCapacityReached && !isOwner
+                ? 'This limited drop has reached maximum capacity.'
+                : `This document is protected. Enter the 6-digit wave code shared by ${
+                    creator.displayName || creator.username
+                  } to view.`}
             </p>
 
             {cooldownSeconds > 0 && (
@@ -556,17 +666,28 @@ export const ResourceViewPage: React.FC = () => {
               </div>
             )}
 
-            <CodeInput
-              length={6}
-              onComplete={handleInlineCodeSubmit}
-              onChange={() => {
-                if (codeError) setCodeError(null);
-              }}
-              isLoading={isVerifying}
-              error={codeError}
-              disabled={cooldownSeconds > 0}
-              autoFocus={true}
-            />
+            {/* Disable code input if drop is expired or capacity reached */}
+            {isExpired && !isOwner ? (
+              <div className="p-4 rounded-md bg-neutral-100 dark:bg-neutral-800 text-xs text-neutral-600 dark:text-neutral-400">
+                Drop availability has ended. Contact @{creator.username} for future drops.
+              </div>
+            ) : isCapacityReached && !isOwner ? (
+              <div className="p-4 rounded-md bg-neutral-100 dark:bg-neutral-800 text-xs text-neutral-600 dark:text-neutral-400">
+                All {resource.maxUnlocks} access slots have been redeemed.
+              </div>
+            ) : (
+              <CodeInput
+                length={6}
+                onComplete={handleInlineCodeSubmit}
+                onChange={() => {
+                  if (codeError) setCodeError(null);
+                }}
+                isLoading={isVerifying}
+                error={codeError}
+                disabled={cooldownSeconds > 0}
+                autoFocus={true}
+              />
+            )}
 
             <div className="mt-6 pt-4 border-t border-neutral-100 dark:border-neutral-800">
               <Link
@@ -587,15 +708,21 @@ export const ResourceViewPage: React.FC = () => {
               </span>
 
               <div className="flex items-center gap-2">
-                <a
-                  href={blobUrl || resource.fileUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex items-center gap-1 hover:text-neutral-900 dark:hover:text-neutral-100"
-                >
-                  <span>Open in new tab</span>
-                  <ExternalLink className="w-3 h-3" />
-                </a>
+                {allowDownload || isOwner ? (
+                  <a
+                    href={blobUrl || resource.fileUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-1 hover:text-neutral-900 dark:hover:text-neutral-100"
+                  >
+                    <span>Open in new tab</span>
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
+                ) : (
+                  <span className="text-[11px] text-neutral-400 dark:text-neutral-500 italic">
+                    In-browser view only
+                  </span>
+                )}
               </div>
             </div>
 
@@ -608,34 +735,47 @@ export const ResourceViewPage: React.FC = () => {
             </div>
 
             {/* Social Webview Helper */}
-            <div className="px-4 py-2 bg-neutral-50 dark:bg-neutral-900/50 border-t border-neutral-200 dark:border-neutral-800 text-[11px] text-neutral-500 text-center">
-              Viewing inside Instagram or a social app? If preview is blank, tap <span className="font-medium text-neutral-700 dark:text-neutral-300">Open in new tab</span> or <span className="font-medium text-neutral-700 dark:text-neutral-300">Download</span> below.
-            </div>
+            {(allowDownload || isOwner) && (
+              <div className="px-4 py-2 bg-neutral-50 dark:bg-neutral-900/50 border-t border-neutral-200 dark:border-neutral-800 text-[11px] text-neutral-500 text-center">
+                Viewing inside Instagram or a social app? If preview is blank, tap <span className="font-medium text-neutral-700 dark:text-neutral-300">Open in new tab</span>.
+              </div>
+            )}
 
-            {/* Quick Download Banner Below Viewer */}
+            {/* Quick Action Banner Below Viewer */}
             <div className="p-4 bg-white dark:bg-neutral-900 border-t border-neutral-200 dark:border-neutral-800 flex flex-col sm:flex-row items-center justify-between gap-3">
               <div className="text-xs text-neutral-500 dark:text-neutral-400 flex items-center gap-3">
                 <span className="flex items-center gap-1">
                   <Eye className="w-3.5 h-3.5" />
                   <span>{resource.totalViews} views</span>
                 </span>
-                <span>•</span>
-                <span className="flex items-center gap-1">
-                  <Download className="w-3.5 h-3.5" />
-                  <span>{resource.totalDownloads} downloads</span>
-                </span>
+                {allowDownload && (
+                  <>
+                    <span>•</span>
+                    <span className="flex items-center gap-1">
+                      <Download className="w-3.5 h-3.5" />
+                      <span>{resource.totalDownloads} downloads</span>
+                    </span>
+                  </>
+                )}
               </div>
 
-              <Button
-                size="md"
-                variant="primary"
-                onClick={handleDownload}
-                isLoading={isDownloading}
-                className="w-full sm:w-auto"
-              >
-                <Download className="w-4 h-4" />
-                <span>Download Original PDF</span>
-              </Button>
+              {allowDownload ? (
+                <Button
+                  size="md"
+                  variant="primary"
+                  onClick={handleDownload}
+                  isLoading={isDownloading}
+                  className="w-full sm:w-auto"
+                >
+                  <Download className="w-4 h-4" />
+                  <span>Download Original PDF</span>
+                </Button>
+              ) : (
+                <div className="text-xs text-neutral-500 dark:text-neutral-400 flex items-center gap-1.5 font-medium">
+                  <EyeOff className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+                  <span>View Only (Download Disabled)</span>
+                </div>
+              )}
             </div>
           </Card>
         )}

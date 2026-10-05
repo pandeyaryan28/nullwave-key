@@ -47,3 +47,29 @@ export async function getUniqueCodeForCreator(creatorId: string): Promise<string
   }
   return generateSixDigitCode();
 }
+
+/**
+ * Checks if a specific 6-digit code is already assigned to an active resource of the creator.
+ */
+export async function isCodeInUseByCreator(
+  creatorId: string,
+  code: string,
+  excludeResourceId?: string
+): Promise<boolean> {
+  try {
+    const q = query(
+      collection(db, 'resources'),
+      where('creatorId', '==', creatorId),
+      where('code', '==', code.trim()),
+      where('status', '==', 'active')
+    );
+    const snap = await getDocs(q);
+    if (snap.empty) return false;
+    if (excludeResourceId) {
+      return snap.docs.some(d => d.id !== excludeResourceId);
+    }
+    return true;
+  } catch {
+    return false;
+  }
+}

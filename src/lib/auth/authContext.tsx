@@ -242,6 +242,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         email: user.email || '',
         displayName: displayName || profile?.displayName || user.displayName || username,
         username,
+        bannerURL: profile?.bannerURL,
+        headline: profile?.headline,
+        location: profile?.location,
+        socialLinks: profile?.socialLinks,
         bio: profile?.bio || '',
         socialLink: profile?.socialLink || '',
         photoURL: profile?.photoURL || user.photoURL || undefined,
@@ -267,7 +271,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const updateCreatorProfile = async (data: Partial<UserProfile>) => {
     if (!user) throw new Error('Not authenticated.');
     const now = Date.now();
-    const cleanData = { ...data, updatedAt: now };
+
+    // Helper to strip undefined values deeply for Firestore compatibility
+    const stripUndefined = (obj: Record<string, unknown>): Record<string, unknown> => {
+      const result: Record<string, unknown> = {};
+      for (const [key, val] of Object.entries(obj)) {
+        if (val === undefined) continue;
+        if (val && typeof val === 'object' && !Array.isArray(val)) {
+          const cleanedChild = stripUndefined(val as Record<string, unknown>);
+          result[key] = cleanedChild;
+        } else {
+          result[key] = val;
+        }
+      }
+      return result;
+    };
+
+    const cleanData = stripUndefined({ ...data, updatedAt: now }) as Partial<UserProfile>;
 
     try {
       const userRef = doc(db, 'users', user.uid);

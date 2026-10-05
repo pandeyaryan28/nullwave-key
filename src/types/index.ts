@@ -1,11 +1,24 @@
+export interface UserSocialLinks {
+  instagram?: string;
+  twitter?: string;
+  youtube?: string;
+  linkedin?: string;
+  github?: string;
+  website?: string;
+}
+
 export interface UserProfile {
   uid: string;
   email: string;
   displayName: string;
   username: string; // lowercase, alphanumeric + underscore
   photoURL?: string;
+  bannerURL?: string;
+  headline?: string;
   bio?: string;
-  socialLink?: string; // e.g. instagram.com/username
+  location?: string;
+  socialLink?: string; // backwards compatibility e.g. instagram.com/username
+  socialLinks?: UserSocialLinks;
   createdAt: number; // unix timestamp ms
   updatedAt: number; // unix timestamp ms
 }
@@ -38,6 +51,13 @@ export interface Resource {
   totalViews: number;
   uniqueViews: number;
   totalDownloads: number;
+
+  // Advanced Distribution Controls
+  allowDownload?: boolean; // defaults to true; if false, view-only in browser
+  isPublicListing?: boolean; // defaults to true; if false, unlisted/direct link only
+  isPinned?: boolean; // defaults to false; featured at top of station
+  expiresAt?: number | null; // optional expiration timestamp ms
+  maxUnlocks?: number | null; // optional cap on total unlocks
 }
 
 export interface ResourceViewAudit {

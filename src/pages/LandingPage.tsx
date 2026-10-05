@@ -37,7 +37,7 @@ export const LandingPage: React.FC = () => {
   const handleDemoLookup = (e: React.FormEvent) => {
     e.preventDefault();
     if (!demoUsername.trim()) return;
-    const clean = demoUsername.replace(/^[@%40]+/, '').toLowerCase().trim();
+    const clean = demoUsername.replace(/^(?:@|%40)+/, '').toLowerCase().trim();
     navigate(`/${clean}`);
   };
 
