@@ -24,6 +24,8 @@ import { Badge } from '../../components/ui/Badge';
 import { Card } from '../../components/ui/Card';
 import { CodeInput } from '../../components/ui/CodeInput';
 import { ThemeToggle } from '../../components/ui/ThemeToggle';
+import { registerMonetagServiceWorker, initMonetag } from '../../lib/ads/monetag';
+import { MonetagAdSlot } from '../../components/ads/MonetagAdSlot';
 import {
   ArrowLeft,
   Download,
@@ -334,6 +336,20 @@ export const ResourceViewPage: React.FC = () => {
 
     fetchResource();
   }, [cleanUsername, code, publicSlug, user?.uid]);
+
+  // Register Monetag service worker on mount for site verification and push ad support
+  useEffect(() => {
+    registerMonetagServiceWorker();
+  }, []);
+
+  // Initialize Monetag ad delivery on the docs showing page once document is unlocked
+  useEffect(() => {
+    if (!isUnlocked) return;
+    const cleanup = initMonetag();
+    return () => {
+      cleanup?.();
+    };
+  }, [isUnlocked]);
 
   // Track page view once unlocked
   useEffect(() => {
@@ -829,12 +845,10 @@ export const ResourceViewPage: React.FC = () => {
             </div>
           </Card>
         ) : (
-          /* Native PDF Document Viewer with Dedicated Ad Placement Zones */
+          /* Native PDF Document Viewer with Dedicated Monetag Ad Placement Zones */
           <div className="space-y-4">
-            {/* Future Ad Slot: Top Banner */}
-            <div className="w-full p-4 rounded-md border border-dashed border-neutral-300 dark:border-neutral-800 bg-neutral-100/60 dark:bg-neutral-900/40 text-center text-xs text-neutral-400 dark:text-neutral-500 flex items-center justify-center min-h-[90px]">
-              <span className="font-mono tracking-wide uppercase text-[11px]">Ad Placement • Top Banner (728x90 / Responsive)</span>
-            </div>
+            {/* Top Banner Ad Slot */}
+            <MonetagAdSlot type="top-banner" />
 
             {/* Document Reader Layout: Main View + Side Rail Ad Space */}
             <div className="flex flex-col lg:flex-row gap-6 w-full items-start">
@@ -871,23 +885,15 @@ export const ResourceViewPage: React.FC = () => {
                 )}
               </div>
 
-              {/* Future Ad Slot: Side Rail Banner (visible on wide screens) */}
+              {/* Side Rail Ad Slots (visible on wide screens) */}
               <div className="hidden lg:flex flex-col gap-4 w-72 shrink-0">
-                <div className="w-full p-4 rounded-md border border-dashed border-neutral-300 dark:border-neutral-800 bg-neutral-100/60 dark:bg-neutral-900/40 text-center text-xs text-neutral-400 dark:text-neutral-500 flex flex-col items-center justify-center min-h-[250px]">
-                  <span className="font-mono tracking-wide uppercase text-[11px]">Ad Placement</span>
-                  <span className="text-[10px] text-neutral-400 mt-1">Side Rail (300x250)</span>
-                </div>
-                <div className="w-full p-4 rounded-md border border-dashed border-neutral-300 dark:border-neutral-800 bg-neutral-100/60 dark:bg-neutral-900/40 text-center text-xs text-neutral-400 dark:text-neutral-500 flex flex-col items-center justify-center min-h-[400px]">
-                  <span className="font-mono tracking-wide uppercase text-[11px]">Ad Placement</span>
-                  <span className="text-[10px] text-neutral-400 mt-1">Side Rail (300x600)</span>
-                </div>
+                <MonetagAdSlot type="sidebar-250" />
+                <MonetagAdSlot type="sidebar-600" />
               </div>
             </div>
 
-            {/* Future Ad Slot: Bottom Banner */}
-            <div className="w-full p-4 rounded-md border border-dashed border-neutral-300 dark:border-neutral-800 bg-neutral-100/60 dark:bg-neutral-900/40 text-center text-xs text-neutral-400 dark:text-neutral-500 flex items-center justify-center min-h-[90px]">
-              <span className="font-mono tracking-wide uppercase text-[11px]">Ad Placement • Bottom Banner (Responsive)</span>
-            </div>
+            {/* Bottom Banner Ad Slot */}
+            <MonetagAdSlot type="bottom-banner" />
           </div>
         )}
       </main>

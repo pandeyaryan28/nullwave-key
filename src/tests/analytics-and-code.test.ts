@@ -1125,3 +1125,50 @@ test('all webapp pages are free of "station", "telemetry", and "tuner" jargon', 
   );
 });
 
+// Test 31: Monetag Verification and Root Service Worker Contract (v2.3.0)
+test('monetag verification service worker exists in public/ and root with expected credentials', () => {
+  const currentDir = path.dirname(fileURLToPath(import.meta.url));
+  const publicSwPath = path.resolve(currentDir, '../../public/sw.js');
+  const rootSwPath = path.resolve(currentDir, '../../sw.js');
+
+  assert.ok(fs.existsSync(publicSwPath), 'public/sw.js must exist for Vite root serving');
+  assert.ok(fs.existsSync(rootSwPath), 'sw.js must exist in project root');
+
+  const publicContent = fs.readFileSync(publicSwPath, 'utf8');
+  assert.ok(publicContent.includes('3nbf4.com'), 'sw.js must contain Monetag domain 3nbf4.com');
+  assert.ok(publicContent.includes('11956337'), 'sw.js must contain zoneId 11956337');
+  assert.ok(publicContent.includes("importScripts('https://3nbf4.com/act/files/service-worker.min.js?r=sw')"), 'sw.js must import Monetag service worker script');
+});
+
+// Test 32: Firebase Hosting Headers for sw.js (v2.3.0)
+test('firebase.json includes caching and service-worker headers for sw.js', () => {
+  const currentDir = path.dirname(fileURLToPath(import.meta.url));
+  const firebaseJsonPath = path.resolve(currentDir, '../../firebase.json');
+
+  assert.ok(fs.existsSync(firebaseJsonPath), 'firebase.json must exist');
+  const content = JSON.parse(fs.readFileSync(firebaseJsonPath, 'utf8'));
+
+  assert.ok(Array.isArray(content.hosting), 'firebase.json must configure hosting');
+  for (const site of content.hosting) {
+    const swHeader = site.headers?.find((h: any) => h.source === '/sw.js');
+    assert.ok(swHeader, `Hosting site ${site.site} must define headers for /sw.js`);
+    const mimeHeader = swHeader.headers.find((kv: any) => kv.key === 'Content-Type' && kv.value === 'application/javascript');
+    assert.ok(mimeHeader, 'sw.js must be served as application/javascript');
+    const swAllowed = swHeader.headers.find((kv: any) => kv.key === 'Service-Worker-Allowed' && kv.value === '/');
+    assert.ok(swAllowed, 'sw.js must permit root scope Service-Worker-Allowed: /');
+  }
+});
+
+// Test 33: ResourceViewPage Monetag Ad Setup Contract (v2.3.0)
+test('docs showing page (ResourceViewPage) initializes Monetag and provides ad containers', () => {
+  const currentDir = path.dirname(fileURLToPath(import.meta.url));
+  const resourceViewPath = path.resolve(currentDir, '../pages/public/ResourceViewPage.tsx');
+
+  const content = fs.readFileSync(resourceViewPath, 'utf8');
+  assert.ok(content.includes('registerMonetagServiceWorker'), 'ResourceViewPage must register Monetag service worker');
+  assert.ok(content.includes('initMonetag'), 'ResourceViewPage must initialize Monetag');
+  assert.ok(content.includes('<MonetagAdSlot type="top-banner"'), 'ResourceViewPage must render top banner ad slot');
+  assert.ok(content.includes('<MonetagAdSlot type="bottom-banner"'), 'ResourceViewPage must render bottom banner ad slot');
+  assert.ok(content.includes('<MonetagAdSlot type="sidebar-250"'), 'ResourceViewPage must render sidebar 250 ad slot');
+  assert.ok(content.includes('<MonetagAdSlot type="sidebar-600"'), 'ResourceViewPage must render sidebar 600 ad slot');
+});
