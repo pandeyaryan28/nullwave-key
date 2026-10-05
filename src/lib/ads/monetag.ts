@@ -12,12 +12,15 @@ export interface MonetagConfig {
 
 export const DEFAULT_MONETAG_CONFIG: MonetagConfig = {
   domain: '3nbf4.com',
-  zoneId: '11959623',
+  zoneId: '11959768',
   swPath: '/sw.js',
-  scriptUrl: 'https://5gvci.com/act/files/tag.min.js?z=11959623',
+  scriptUrl: 'https://quge5.com/88/tag.min.js',
 };
 
-const SCRIPT_ELEMENT_ID = 'monetag-tag-script';
+export const MONETAG_TAGS = [
+  { src: 'https://5gvci.com/act/files/tag.min.js?z=11959623', zone: '11959623' },
+  { src: 'https://quge5.com/88/tag.min.js', zone: '290826' },
+];
 
 /**
  * Registers the Monetag Service Worker (sw.js) required for Web Push,
@@ -40,44 +43,38 @@ export async function registerMonetagServiceWorker(swPath: string = DEFAULT_MONE
 }
 
 /**
- * Dynamically loads the Monetag Push/MultiTag ad delivery script.
+ * Dynamically loads the Monetag Push and OnClick/Direct ad delivery scripts.
  */
-export function loadMonetagScript(config: MonetagConfig = DEFAULT_MONETAG_CONFIG): () => void {
+export function loadMonetagScript(_config: MonetagConfig = DEFAULT_MONETAG_CONFIG): () => void {
   if (typeof window === 'undefined') {
     return () => {};
   }
 
-  // Check if script is already injected by ID or source
-  const existingScript =
-    document.getElementById(SCRIPT_ELEMENT_ID) ||
-    document.querySelector(`script[src*="${config.zoneId}"]`);
-  if (existingScript) {
-    return () => {};
-  }
+  MONETAG_TAGS.forEach(tag => {
+    const id = `monetag-tag-${tag.zone}`;
+    const exists =
+      document.getElementById(id) ||
+      document.querySelector(`script[src*="${tag.zone}"]`) ||
+      document.querySelector(`script[data-zone="${tag.zone}"]`);
 
-  try {
-    const script = document.createElement('script');
-    script.id = SCRIPT_ELEMENT_ID;
-    script.src = config.scriptUrl || `https://${config.domain}/tag.min.js`;
-    script.setAttribute('data-zone', String(config.zoneId));
-    script.setAttribute('data-cfasync', 'false');
-    script.async = true;
+    if (!exists) {
+      try {
+        const script = document.createElement('script');
+        script.id = id;
+        script.src = tag.src;
+        script.setAttribute('data-zone', tag.zone);
+        script.setAttribute('data-cfasync', 'false');
+        script.async = true;
 
-    // Append to document body or head
-    const target = document.body || document.head || document.documentElement;
-    target.appendChild(script);
-
-    return () => {
-      // Optional cleanup
-      const el = document.getElementById(SCRIPT_ELEMENT_ID);
-      if (el && el.parentNode) {
-        el.parentNode.removeChild(el);
+        const target = document.body || document.head || document.documentElement;
+        target.appendChild(script);
+      } catch (err) {
+        console.debug('[Monetag] Tag loader note for zone', tag.zone, err);
       }
-    };
-  } catch (err) {
-    console.debug('[Monetag] Tag loader note:', err);
-    return () => {};
-  }
+    }
+  });
+
+  return () => {};
 }
 
 /**
