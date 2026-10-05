@@ -56,7 +56,7 @@ export const LandingPage: React.FC = () => {
       <section className="text-center max-w-4xl mx-auto px-4 space-y-8">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-neutral-100 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 text-xs font-medium text-neutral-800 dark:text-neutral-200">
           <Waves className="w-3.5 h-3.5" />
-          <span>Direct Creator-to-Audience Transmission</span>
+          <span>Direct Creator-to-Audience Distribution</span>
         </div>
 
         <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-neutral-950 dark:text-neutral-50 leading-[1.12]">
@@ -64,13 +64,13 @@ export const LandingPage: React.FC = () => {
         </h1>
 
         <p className="text-base sm:text-lg text-neutral-600 dark:text-neutral-300 max-w-2xl mx-auto leading-relaxed">
-          Upload PDF guides, cheatsheets, and slides. Generate an instant 6-digit Wave Code. Broadcast your station link and code across social video captions without sign-up walls for your audience.
+          Upload PDF guides, cheatsheets, and slides. Generate an instant 6-digit access code. Share your profile link and code across social video captions without sign-up walls for your audience.
         </p>
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
           <Link to="/signup" className="w-full sm:w-auto">
             <Button size="lg" variant="primary" className="w-full sm:w-auto">
-              <span>Create Wave Station</span>
+              <span>Get Started Free</span>
               <ArrowRight className="w-4 h-4" />
             </Button>
           </Link>
@@ -82,23 +82,23 @@ export const LandingPage: React.FC = () => {
           </Link>
         </div>
 
-        {/* Quick Station Lookup Form */}
+        {/* Quick Profile Lookup Form */}
         <div className="pt-6 max-w-md mx-auto">
           <form onSubmit={handleDemoLookup} className="flex gap-2">
             <Input
-              placeholder="Jump to creator station (e.g. aryan)"
+              placeholder="Find creator profile (e.g. aryan)"
               value={demoUsername}
               onChange={e => setDemoUsername(e.target.value)}
               className="text-xs sm:text-sm font-mono"
             />
             <Button type="submit" variant="secondary" size="md" className="shrink-0">
-              Visit Station
+              View Profile
             </Button>
           </form>
         </div>
       </section>
 
-      {/* Interactive Wave Station Transmission Box */}
+      {/* Interactive 6-Digit Code Demo Box */}
       <section className="max-w-4xl mx-auto px-4">
         <Card className="p-6 sm:p-8 border-neutral-300 dark:border-neutral-800 bg-white dark:bg-neutral-900/90 shadow-sm space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-neutral-200 dark:border-neutral-800 gap-2">
@@ -108,17 +108,17 @@ export const LandingPage: React.FC = () => {
               </div>
               <div>
                 <span className="text-sm font-bold text-neutral-900 dark:text-neutral-100 block">
-                  Interactive Transmission Demo
+                  Interactive Code Demo
                 </span>
                 <span className="text-xs text-neutral-500 font-mono">
-                  nullwave.com/demo • 6-Digit Protocol
+                  nullwave.com/demo • 6-Digit Code
                 </span>
               </div>
             </div>
             <div className="flex items-center gap-2">
               <span className="w-2 h-2 rounded-sm bg-emerald-600 dark:bg-emerald-400"></span>
               <span className="text-xs font-medium text-emerald-700 dark:text-emerald-400">
-                Channel Active
+                Online
               </span>
             </div>
           </div>
@@ -131,7 +131,7 @@ export const LandingPage: React.FC = () => {
                   Try the 6-Digit Unlock Experience
                 </h3>
                 <p className="text-xs text-neutral-600 dark:text-neutral-400">
-                  Enter sample code <code className="font-mono font-bold bg-neutral-100 dark:bg-neutral-800 px-1 py-0.5 rounded text-neutral-900 dark:text-neutral-100">482731</code> to simulate instant audience reception.
+                  Enter sample code <code className="font-mono font-bold bg-neutral-100 dark:bg-neutral-800 px-1 py-0.5 rounded text-neutral-900 dark:text-neutral-100">482731</code> to simulate instant audience access.
                 </p>
               </div>
 
@@ -160,11 +160,11 @@ export const LandingPage: React.FC = () => {
               )}
             </div>
 
-            {/* Telemetry Snapshot */}
+            {/* Real-time stats snapshot */}
             <div className="p-5 rounded-lg bg-neutral-100 dark:bg-neutral-950/60 border border-neutral-200 dark:border-neutral-800 space-y-4">
               <div className="flex items-center justify-between text-xs">
                 <span className="font-semibold text-neutral-500 uppercase tracking-wider">
-                  Live Station Telemetry
+                  Real-Time Engagement Stats
                 </span>
                 <span className="font-mono text-[11px] text-neutral-500">
                   24h Window
@@ -211,20 +211,20 @@ export const LandingPage: React.FC = () => {
         </Card>
       </section>
 
-      {/* Core 3-Step Protocol Flow */}
+      {/* Core 3-Step Flow */}
       <section className="max-w-5xl mx-auto px-4 space-y-12">
         <div className="text-center max-w-xl mx-auto space-y-2">
           <div className="flex items-center justify-center gap-2">
             <span className="w-2 h-2 rounded-sm bg-neutral-900 dark:bg-neutral-100"></span>
             <span className="text-xs uppercase tracking-wider font-semibold text-neutral-600 dark:text-neutral-400">
-              The Transmission Protocol
+              How NullWave Works
             </span>
           </div>
           <h2 className="text-2xl sm:text-3xl font-bold text-neutral-900 dark:text-neutral-100">
             Three direct steps between resource and audience
           </h2>
           <p className="text-sm text-neutral-500 dark:text-neutral-400">
-            No bloated link stacks. No mandatory viewer signups. Pure signal.
+            No bloated link stacks. No mandatory viewer signups. Pure simplicity.
           </p>
         </div>
 
@@ -238,7 +238,7 @@ export const LandingPage: React.FC = () => {
                 1. Upload PDF Guide
               </h3>
               <p className="text-xs sm:text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed">
-                Drop your document (up to 25 MB) into your creator station. NullWave instantly generates an isolated 6-digit numeric access code.
+                Upload your document (up to 25 MB). NullWave instantly generates an isolated 6-digit numeric access code.
               </p>
             </div>
           </Card>
@@ -249,10 +249,10 @@ export const LandingPage: React.FC = () => {
             </div>
             <div>
               <h3 className="text-base font-bold text-neutral-900 dark:text-neutral-100 mb-1">
-                2. Broadcast Code in Socials
+                2. Share Code in Socials
               </h3>
               <p className="text-xs sm:text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed">
-                Direct followers to your permanent bio link <span className="font-mono text-neutral-900 dark:text-neutral-100">nullwave.com/yourhandle</span> and speak or write the 6-digit code in the video caption.
+                Direct followers to your permanent profile link <span className="font-mono text-neutral-900 dark:text-neutral-100">nullwave.com/yourhandle</span> and speak or write the 6-digit code in the video caption.
               </p>
             </div>
           </Card>
@@ -263,7 +263,7 @@ export const LandingPage: React.FC = () => {
             </div>
             <div>
               <h3 className="text-base font-bold text-neutral-900 dark:text-neutral-100 mb-1">
-                3. Zero-Wall Audience Reception
+                3. Zero-Wall Audience Access
               </h3>
               <p className="text-xs sm:text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed">
                 Followers tap your link, type the 6 digits on their phone, and immediately read or download the PDF without signing up.
@@ -279,7 +279,7 @@ export const LandingPage: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
             <div className="space-y-4">
               <h3 className="text-2xl font-bold tracking-tight text-neutral-900 dark:text-neutral-100">
-                Privacy-first, non-invasive telemetry
+                Privacy-first, transparent analytics
               </h3>
               <p className="text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed">
                 Know the exact performance of your resources without invading audience privacy. Track total views, unique reach across a 24-hour measurement window, and genuine completed file downloads.
@@ -317,7 +317,7 @@ export const LandingPage: React.FC = () => {
                 <div className="space-y-3 text-xs">
                   <div>
                     <div className="flex justify-between mb-1 font-medium">
-                      <span>NullWave Reception Conversion</span>
+                      <span>NullWave Access Conversion</span>
                       <span className="font-mono text-emerald-700 dark:text-emerald-400 font-bold">~48%</span>
                     </div>
                     <div className="w-full h-2 rounded bg-neutral-200 dark:bg-neutral-800 overflow-hidden">
@@ -351,15 +351,15 @@ export const LandingPage: React.FC = () => {
           <Waves className="w-5 h-5" />
         </div>
         <h2 className="text-2xl sm:text-3xl font-bold text-neutral-950 dark:text-neutral-50">
-          Ready to transmit without barriers?
+          Ready to distribute without barriers?
         </h2>
         <p className="text-xs sm:text-sm text-neutral-600 dark:text-neutral-400">
-          Set up your custom wave station and broadcast your first resource in under two minutes.
+          Set up your creator profile and share your first document in under two minutes.
         </p>
         <div className="pt-2">
           <Link to="/signup">
             <Button size="md" variant="primary">
-              Create Wave Station Now
+              Get Started Free
             </Button>
           </Link>
         </div>

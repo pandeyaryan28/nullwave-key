@@ -13,13 +13,16 @@ export const SignupPage: React.FC = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [accountType, setAccountType] = useState<'creator' | 'viewer'>('creator');
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   React.useEffect(() => {
     if (user) {
-      if (profile && !profile.username) {
+      if (profile?.accountType === 'viewer' && !profile?.username) {
+        navigate('/dashboard/saved');
+      } else if (profile && !profile.username) {
         navigate('/onboarding');
       } else {
         navigate('/dashboard');
@@ -41,8 +44,12 @@ export const SignupPage: React.FC = () => {
     setIsLoading(true);
     setError(null);
     try {
-      await signUpWithEmail(email, password, name);
-      navigate('/onboarding');
+      await signUpWithEmail(email, password, name, accountType);
+      if (accountType === 'viewer') {
+        navigate('/dashboard/saved');
+      } else {
+        navigate('/onboarding');
+      }
     } catch (err: unknown) {
       console.error('Signup error:', err);
       const e = err as { message?: string };
@@ -75,14 +82,40 @@ export const SignupPage: React.FC = () => {
             <Waves className="w-5 h-5" />
           </div>
           <h1 className="text-2xl font-bold tracking-tight text-neutral-900 dark:text-neutral-50">
-            Create Wave Station
+            Create Your Account
           </h1>
           <p className="text-xs text-neutral-500 dark:text-neutral-400">
-            Start transmitting your resources with direct 6-digit wave codes.
+            Start sharing and accessing documents with simple 6-digit access codes.
           </p>
         </div>
 
         <Card className="p-6">
+          {/* Account Role Selector (Requirement 3) */}
+          <div className="grid grid-cols-2 gap-1.5 p-1 mb-4 bg-neutral-100 dark:bg-neutral-800 rounded-md">
+            <button
+              type="button"
+              onClick={() => setAccountType('creator')}
+              className={`py-1.5 px-2 text-xs font-semibold rounded-md transition-colors cursor-pointer ${
+                accountType === 'creator'
+                  ? 'bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-50 shadow-sm'
+                  : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100'
+              }`}
+            >
+              Creator (Publish)
+            </button>
+            <button
+              type="button"
+              onClick={() => setAccountType('viewer')}
+              className={`py-1.5 px-2 text-xs font-semibold rounded-md transition-colors cursor-pointer ${
+                accountType === 'viewer'
+                  ? 'bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-50 shadow-sm'
+                  : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100'
+              }`}
+            >
+              Viewer (Read & Save)
+            </button>
+          </div>
+
           <form onSubmit={handleEmailSignup} className="space-y-4">
             {error && (
               <div className="p-3 rounded-md bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 text-xs text-red-700 dark:text-red-300 flex items-center gap-2">
@@ -131,7 +164,7 @@ export const SignupPage: React.FC = () => {
             </div>
 
             <Input
-              label="Creator Name"
+              label="Full Name"
               type="text"
               placeholder="e.g. Aryan Pandey"
               value={name}

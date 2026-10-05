@@ -10,10 +10,12 @@ import {
 } from 'firebase/firestore';
 import { db } from '../../lib/firebase/config';
 import { useAuth } from '../../lib/auth/authContext';
-import { Resource } from '../../types';
+import { Resource, SavedResource } from '../../types';
+import { getSavedResources } from '../../lib/storage/savedResourcesService';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
+import { Input } from '../../components/ui/Input';
 import {
   FileText,
   Eye,
@@ -23,9 +25,10 @@ import {
   Copy,
   Check,
   ExternalLink,
+  Search,
   ArrowRight,
-  Waves,
-  Radio,
+  Bookmark,
+  Edit,
 } from 'lucide-react';
 
 export const DashboardOverviewPage: React.FC = () => {
@@ -33,55 +36,90 @@ export const DashboardOverviewPage: React.FC = () => {
   const navigate = useNavigate();
 
   const [resources, setResources] = useState<Resource[]>([]);
+  const [savedResources, setSavedResources] = useState<SavedResource[]>([]);
+  const isViewerAccount = profile?.accountType === 'viewer' && !profile?.username;
+  const [activeTab, setActiveTab] = useState<'uploads' | 'saved'>(
+    profile?.accountType === 'viewer' && !profile?.username ? 'saved' : 'uploads'
+  );
+  const [searchQuery, setSearchQuery] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(true);
+
   const [copiedCodeId, setCopiedCodeId] = useState<string | null>(null);
+  const [copiedLinkId, setCopiedLinkId] = useState<string | null>(null);
   const [copiedProfileLink, setCopiedProfileLink] = useState<boolean>(false);
 
   useEffect(() => {
     if (!user) return;
 
-    const fetchResources = async () => {
+    const fetchData = async () => {
       setLoading(true);
       try {
-        const q = query(
-          collection(db, 'resources'),
-          where('creatorId', '==', user.uid),
-          orderBy('createdAt', 'desc'),
-          limit(20)
-        );
-        const snap = await getDocs(q);
-        const list: Resource[] = snap.docs.map(
-          d => ({ id: d.id, ...d.data() } as Resource)
-        );
-        setResources(list);
-      } catch (err) {
-        console.warn('Could not fetch resources with ordered query, falling back:', err);
+        // 1. Fetch creator uploads
+        let list: Resource[] = [];
         try {
-          const fallbackQ = query(
+          const q = query(
             collection(db, 'resources'),
-            where('creatorId', '==', user.uid)
+            where('creatorId', '==', user.uid),
+            orderBy('createdAt', 'desc'),
+            limit(50)
           );
-          const snap = await getDocs(fallbackQ);
-          const list: Resource[] = snap.docs.map(
-            d => ({ id: d.id, ...d.data() } as Resource)
-          );
-          list.sort((a, b) => b.createdAt - a.createdAt);
-          setResources(list);
+          const snap = await getDocs(q);
+          list = snap.docs.map(d => ({ id: d.id, ...d.data() } as Resource));
+        } catch {
+          // Fallback unordered query
+          try {
+            const fallbackQ = query(
+              collection(db, 'resources'),
+              where('creatorId', '==', user.uid)
+            );
+            const snap = await getDocs(fallbackQ);
+            list = snap.docs.map(d => ({ id: d.id, ...d.data() } as Resource));
+            list.sort((a, b) => b.createdAt - a.createdAt);
+          } catch (e) {
+            console.error('Failed to query resources:', e);
+          }
+        }
+
+        // Local storage cache fallback if Firestore query is empty
+        if (list.length === 0) {
+          try {
+            const local = JSON.parse(
+              localStorage.getItem(`nullwave_resources_${user.uid}`) ||
+              localStorage.getItem(`unlockr_resources_${user.uid}`) ||
+              '[]'
+            ) as Resource[];
+            if (local.length > 0) list = local;
+          } catch {}
+        }
+        setResources(list);
+
+        // 2. Fetch saved resources for viewer library tab
+        try {
+          const saved = await getSavedResources(user.uid);
+          setSavedResources(saved);
         } catch (e) {
-          console.error('Failed to load resources:', e);
+          console.warn('Failed to load saved resources for dashboard:', e);
         }
       } finally {
         setLoading(false);
       }
     };
 
-    fetchResources();
+    fetchData();
   }, [user]);
 
   const copyCode = (resourceId: string, code: string) => {
     navigator.clipboard.writeText(code);
     setCopiedCodeId(resourceId);
     setTimeout(() => setCopiedCodeId(null), 2000);
+  };
+
+  const copyDocLink = (resource: Resource) => {
+    if (!profile?.username) return;
+    const url = `${window.location.origin}/${profile.username}/${resource.code}`;
+    navigator.clipboard.writeText(url);
+    setCopiedLinkId(resource.id);
+    setTimeout(() => setCopiedLinkId(null), 2000);
   };
 
   const copyProfileUrl = () => {
@@ -98,121 +136,106 @@ export const DashboardOverviewPage: React.FC = () => {
   const uniqueViews = resources.reduce((acc, r) => acc + (r.uniqueViews || 0), 0);
   const totalDownloads = resources.reduce((acc, r) => acc + (r.totalDownloads || 0), 0);
 
+  const filteredResources = resources.filter(res => {
+    const q = searchQuery.toLowerCase().trim();
+    if (!q) return true;
+    return (
+      res.title.toLowerCase().includes(q) ||
+      res.code.includes(q) ||
+      (res.category && res.category.toLowerCase().includes(q))
+    );
+  });
+
   if (loading) {
     return (
       <div className="space-y-6">
         <div className="h-8 w-48 bg-neutral-200 dark:bg-neutral-800 rounded animate-pulse" />
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {Array(4).fill(0).map((_, i) => (
-            <div key={i} className="h-24 bg-neutral-200 dark:bg-neutral-800 rounded-lg animate-pulse" />
+            <div key={i} className="h-24 bg-neutral-200 dark:bg-neutral-800 rounded-md animate-pulse" />
           ))}
         </div>
-      </div>
-    );
-  }
-
-  // Proper Empty State if creator has no resources yet
-  if (resources.length === 0) {
-    return (
-      <div className="space-y-8">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight text-neutral-900 dark:text-neutral-50">
-              Station Overview{profile?.displayName ? ` • ${profile.displayName}` : ''}
-            </h1>
-            <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-1">
-              Transmit digital resources to your audience with frictionless 6-digit wave codes.
-            </p>
-          </div>
-
-          {profile?.username && (
-            <Button variant="outline" size="sm" onClick={copyProfileUrl}>
-              {copiedProfileLink ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4" />}
-              <span>{copiedProfileLink ? 'Station Link Copied!' : `Copy /${profile.username}`}</span>
-            </Button>
-          )}
-        </div>
-
-        {/* Empty State Banner */}
-        <Card className="p-12 text-center border-dashed border-2 border-neutral-300 dark:border-neutral-700">
-          <div className="w-12 h-12 rounded-md bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 flex items-center justify-center mx-auto mb-4 border border-neutral-200 dark:border-neutral-700">
-            <Waves className="w-6 h-6" />
-          </div>
-          <h2 className="text-lg font-bold text-neutral-900 dark:text-neutral-100 mb-2">
-            No waves transmitted yet.
-          </h2>
-          <p className="text-sm text-neutral-600 dark:text-neutral-400 max-w-md mx-auto mb-6">
-            Upload your first PDF resource, receive an instant 6-digit wave code, and broadcast it in your Instagram bio or video captions.
-          </p>
-          <Button
-            size="md"
-            variant="primary"
-            onClick={() => navigate('/dashboard/resources/new')}
-          >
-            <Plus className="w-4 h-4" />
-            <span>Upload First Resource</span>
-          </Button>
-        </Card>
+        <div className="h-64 bg-neutral-200 dark:bg-neutral-800 rounded-md animate-pulse" />
       </div>
     );
   }
 
   return (
-    <div className="space-y-8">
-      {/* Wave Station Header Banner */}
-      <div className="p-4 sm:p-5 rounded-lg border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-md bg-neutral-900 text-white dark:bg-neutral-100 dark:text-neutral-900 flex items-center justify-center font-bold shrink-0">
-            <Radio className="w-4 h-4" />
+    <div className="space-y-8 animate-fade-in-up">
+      {/* Redesigned Dashboard Header */}
+      <div className="p-6 rounded-lg border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-bold tracking-tight text-neutral-900 dark:text-neutral-50">
+              Welcome back{profile?.displayName ? `, ${profile.displayName}` : ''}
+            </h1>
           </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-semibold uppercase tracking-wider text-neutral-500">
-                Your Wave Station
+          {profile?.username ? (
+            <div className="flex items-center gap-2 text-xs text-neutral-500 dark:text-neutral-400">
+              <span>Public Profile:</span>
+              <span className="font-mono font-medium text-neutral-800 dark:text-neutral-200">
+                {window.location.origin}/{profile.username}
               </span>
-              <span className="w-1.5 h-1.5 rounded-sm bg-emerald-600 dark:bg-emerald-400"></span>
-              <span className="text-[11px] font-medium text-emerald-700 dark:text-emerald-400">Live</span>
             </div>
-            <div className="font-mono text-sm font-bold text-neutral-900 dark:text-neutral-100">
-              {window.location.origin}/{profile?.username}
-            </div>
-          </div>
+          ) : isViewerAccount ? (
+            <p className="text-xs text-neutral-500 dark:text-neutral-400">
+              Your personal library of saved guides and documents.
+            </p>
+          ) : (
+            <p className="text-xs text-neutral-500 dark:text-neutral-400">
+              Manage your documents and view real-time reader engagement.
+            </p>
+          )}
         </div>
 
-        <div className="flex items-center gap-2 w-full sm:w-auto">
+        <div className="flex flex-wrap items-center gap-2.5">
           {profile?.username && (
             <>
-              <Button variant="outline" size="sm" onClick={copyProfileUrl} className="flex-1 sm:flex-initial">
-                {copiedProfileLink ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4" />}
-                <span>{copiedProfileLink ? 'Link Copied' : 'Copy Station Link'}</span>
+              <Button variant="outline" size="sm" onClick={copyProfileUrl}>
+                {copiedProfileLink ? (
+                  <Check className="w-3.5 h-3.5 text-emerald-600" />
+                ) : (
+                  <Copy className="w-3.5 h-3.5" />
+                )}
+                <span>{copiedProfileLink ? 'Profile Copied' : 'Copy Profile Link'}</span>
               </Button>
 
               <Link to={`/${profile.username}`} target="_blank" rel="noreferrer">
                 <Button variant="secondary" size="sm">
-                  <span>Visit Station</span>
+                  <span>View Public Profile</span>
                   <ExternalLink className="w-3.5 h-3.5" />
                 </Button>
               </Link>
             </>
           )}
 
-          <Button
-            variant="primary"
-            size="sm"
-            onClick={() => navigate('/dashboard/resources/new')}
-            className="flex-1 sm:flex-initial"
-          >
-            <Plus className="w-4 h-4" />
-            <span>Upload</span>
-          </Button>
+          {isViewerAccount ? (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => navigate('/onboarding')}
+            >
+              <Plus className="w-4 h-4" />
+              <span>Become a Creator</span>
+            </Button>
+          ) : (
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={() => navigate('/dashboard/resources/new')}
+            >
+              <Plus className="w-4 h-4" />
+              <span>Upload Document</span>
+            </Button>
+          )}
         </div>
       </div>
 
-      {/* Aggregate Metric Cards */}
+      {/* Metric Counters */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <Card className="p-5">
-          <div className="flex items-center justify-between text-neutral-500 dark:text-neutral-400 mb-3">
-            <span className="text-xs font-semibold uppercase tracking-wider">Active Resources</span>
+          <div className="flex items-center justify-between text-neutral-500 dark:text-neutral-400 mb-2">
+            <span className="text-xs font-semibold uppercase tracking-wider">Total Documents</span>
             <FileText className="w-4 h-4 text-neutral-600 dark:text-neutral-400" />
           </div>
           <div className="text-2xl sm:text-3xl font-bold text-neutral-900 dark:text-neutral-100 font-mono">
@@ -221,7 +244,7 @@ export const DashboardOverviewPage: React.FC = () => {
         </Card>
 
         <Card className="p-5">
-          <div className="flex items-center justify-between text-neutral-500 dark:text-neutral-400 mb-3">
+          <div className="flex items-center justify-between text-neutral-500 dark:text-neutral-400 mb-2">
             <span className="text-xs font-semibold uppercase tracking-wider">Total Views</span>
             <Eye className="w-4 h-4 text-neutral-600 dark:text-neutral-400" />
           </div>
@@ -231,8 +254,8 @@ export const DashboardOverviewPage: React.FC = () => {
         </Card>
 
         <Card className="p-5">
-          <div className="flex items-center justify-between text-neutral-500 dark:text-neutral-400 mb-3">
-            <span className="text-xs font-semibold uppercase tracking-wider">Unique Audience (24h)</span>
+          <div className="flex items-center justify-between text-neutral-500 dark:text-neutral-400 mb-2">
+            <span className="text-xs font-semibold uppercase tracking-wider">Unique Visitors</span>
             <Users className="w-4 h-4 text-neutral-600 dark:text-neutral-400" />
           </div>
           <div className="text-2xl sm:text-3xl font-bold text-neutral-900 dark:text-neutral-100 font-mono">
@@ -241,8 +264,8 @@ export const DashboardOverviewPage: React.FC = () => {
         </Card>
 
         <Card className="p-5">
-          <div className="flex items-center justify-between text-neutral-500 dark:text-neutral-400 mb-3">
-            <span className="text-xs font-semibold uppercase tracking-wider">Downloads</span>
+          <div className="flex items-center justify-between text-neutral-500 dark:text-neutral-400 mb-2">
+            <span className="text-xs font-semibold uppercase tracking-wider">Total Downloads</span>
             <Download className="w-4 h-4 text-neutral-600 dark:text-neutral-400" />
           </div>
           <div className="text-2xl sm:text-3xl font-bold text-neutral-900 dark:text-neutral-100 font-mono">
@@ -251,81 +274,248 @@ export const DashboardOverviewPage: React.FC = () => {
         </Card>
       </div>
 
-      {/* Recent Resources Section */}
+      {/* Tabs & Search Controls */}
       <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-base font-bold text-neutral-900 dark:text-neutral-100">
-            Recent Transmissions
-          </h2>
-          <Link
-            to="/dashboard/resources"
-            className="text-xs font-semibold text-neutral-600 dark:text-neutral-400 hover:text-neutral-950 dark:hover:text-neutral-100 flex items-center gap-1"
-          >
-            <span>View all ({resources.length})</span>
-            <ArrowRight className="w-3.5 h-3.5" />
-          </Link>
-        </div>
-
-        <div className="space-y-3">
-          {resources.slice(0, 5).map(res => (
-            <Card
-              key={res.id}
-              className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:border-neutral-300 dark:hover:border-neutral-700 transition-colors"
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-neutral-200 dark:border-neutral-800 pb-3">
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setActiveTab('uploads')}
+              className={`px-3 py-1.5 text-sm font-semibold rounded-md transition-colors cursor-pointer ${
+                activeTab === 'uploads'
+                  ? 'bg-neutral-900 text-neutral-50 dark:bg-neutral-100 dark:text-neutral-900'
+                  : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100'
+              }`}
             >
-              <div className="flex items-start gap-4 min-w-0">
-                <div className="w-10 h-10 rounded-md bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 flex items-center justify-center shrink-0 border border-neutral-200 dark:border-neutral-700">
-                  <FileText className="w-5 h-5" />
-                </div>
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2">
-                    <h3 className="text-sm font-semibold text-neutral-900 dark:text-neutral-100 truncate">
-                      {res.title}
-                    </h3>
-                    <Badge variant={res.status === 'active' ? 'success' : 'neutral'}>
-                      {res.status}
-                    </Badge>
-                  </div>
+              My Uploads ({resources.length})
+            </button>
+            <button
+              onClick={() => setActiveTab('saved')}
+              className={`px-3 py-1.5 text-sm font-semibold rounded-md transition-colors cursor-pointer flex items-center gap-1.5 ${
+                activeTab === 'saved'
+                  ? 'bg-neutral-900 text-neutral-50 dark:bg-neutral-100 dark:text-neutral-900'
+                  : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100'
+              }`}
+            >
+              <Bookmark className="w-3.5 h-3.5" />
+              <span>Saved Library ({savedResources.length})</span>
+            </button>
+          </div>
 
-                  <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1 text-xs text-neutral-500 dark:text-neutral-400">
-                    <span>{res.totalViews} views</span>
-                    <span>•</span>
-                    <span>{res.uniqueViews} unique</span>
-                    <span>•</span>
-                    <span>{res.totalDownloads} downloads</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Code & Actions */}
-              <div className="flex items-center gap-3 shrink-0 self-end sm:self-center">
-                <button
-                  type="button"
-                  onClick={() => copyCode(res.id, res.code)}
-                  title="Copy 6-digit wave code"
-                  className="inline-flex items-center gap-2 px-3 py-1.5 rounded-md border border-neutral-300 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900/80 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors text-xs font-mono font-bold text-neutral-900 dark:text-neutral-100 cursor-pointer"
-                >
-                  <span className="tracking-widest text-sm">{res.code}</span>
-                  {copiedCodeId === res.id ? (
-                    <Check className="w-3.5 h-3.5 text-emerald-600" />
-                  ) : (
-                    <Copy className="w-3.5 h-3.5 text-neutral-400" />
-                  )}
-                </button>
-
-                {profile?.username && (
-                  <Link
-                    to={`/${profile.username}/resource/${res.publicSlug}`}
-                    target="_blank"
-                    className="p-2 text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-100 rounded-md hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
-                    title="View public resource page"
-                  >
-                    <ExternalLink className="w-4 h-4" />
-                  </Link>
-                )}
-              </div>
-            </Card>
-          ))}
+          {activeTab === 'uploads' && resources.length > 0 && (
+            <div className="relative w-full sm:w-64">
+              <Input
+                placeholder="Search by title or 6-digit code..."
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                className="pl-8 text-xs h-9"
+              />
+              <Search className="w-3.5 h-3.5 text-neutral-400 absolute left-2.5 top-2.5 pointer-events-none" />
+            </div>
+          )}
         </div>
+
+        {/* Tab 1: Creator Uploads */}
+        {activeTab === 'uploads' && (
+          <div>
+            {resources.length === 0 ? (
+              <Card className="p-12 text-center border-dashed border-2 border-neutral-300 dark:border-neutral-700">
+                <div className="w-12 h-12 rounded-md bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 flex items-center justify-center mx-auto mb-4 border border-neutral-200 dark:border-neutral-700">
+                  <FileText className="w-6 h-6" />
+                </div>
+                <h2 className="text-lg font-bold text-neutral-900 dark:text-neutral-100 mb-2">
+                  No documents uploaded yet
+                </h2>
+                <p className="text-sm text-neutral-600 dark:text-neutral-400 max-w-md mx-auto mb-6">
+                  Upload your first PDF document to generate an isolated 6-digit access code and canonical link to share with your audience.
+                </p>
+                <Button
+                  size="md"
+                  variant="primary"
+                  onClick={() => navigate('/dashboard/resources/new')}
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>Upload Your First Document</span>
+                </Button>
+              </Card>
+            ) : filteredResources.length === 0 ? (
+              <Card className="p-8 text-center border-neutral-300 dark:border-neutral-700">
+                <p className="text-sm text-neutral-600 dark:text-neutral-400">
+                  No documents found matching &quot;{searchQuery}&quot;.
+                </p>
+              </Card>
+            ) : (
+              <div className="space-y-3">
+                {filteredResources.map(res => (
+                  <Card
+                    key={res.id}
+                    className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:border-neutral-300 dark:hover:border-neutral-700 transition-colors"
+                  >
+                    <div className="flex items-start gap-4 min-w-0">
+                      <div className="w-10 h-10 rounded-md bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 flex items-center justify-center shrink-0 border border-neutral-200 dark:border-neutral-700">
+                        <FileText className="w-5 h-5" />
+                      </div>
+
+                      <div className="min-w-0 space-y-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <h3 className="text-sm font-semibold text-neutral-900 dark:text-neutral-100 truncate">
+                            {res.title}
+                          </h3>
+                          <Badge variant={res.status === 'active' ? 'success' : 'neutral'} className="text-[10px]">
+                            {res.status}
+                          </Badge>
+                          {res.category && (
+                            <Badge variant="neutral" className="text-[10px]">
+                              {res.category}
+                            </Badge>
+                          )}
+                          {res.isPinned && (
+                            <Badge variant="neutral" className="text-[10px]">
+                              Pinned
+                            </Badge>
+                          )}
+                        </div>
+
+                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-neutral-500 dark:text-neutral-400">
+                          <span>{res.totalViews} views</span>
+                          <span>•</span>
+                          <span>{res.uniqueViews} unique</span>
+                          <span>•</span>
+                          <span>{res.totalDownloads} downloads</span>
+                          <span>•</span>
+                          <span className="font-mono">{(res.fileSizeBytes / (1024 * 1024)).toFixed(1)} MB</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Actions: Code Badge, 1-Click Link Copy, Edit, View */}
+                    <div className="flex items-center gap-2.5 shrink-0 self-end sm:self-center">
+                      {/* Click-to-copy 6-digit access code */}
+                      <button
+                        type="button"
+                        onClick={() => copyCode(res.id, res.code)}
+                        title="Click to copy 6-digit code"
+                        className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md border border-neutral-300 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors text-xs font-mono font-bold text-neutral-900 dark:text-neutral-100 cursor-pointer"
+                      >
+                        <span className="tracking-wider">{res.code}</span>
+                        {copiedCodeId === res.id ? (
+                          <Check className="w-3.5 h-3.5 text-emerald-600" />
+                        ) : (
+                          <Copy className="w-3.5 h-3.5 text-neutral-400" />
+                        )}
+                      </button>
+
+                      {/* 1-Click canonical link copy (url/username/code) */}
+                      {profile?.username && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => copyDocLink(res)}
+                          title="Copy direct document link"
+                          className="text-xs"
+                        >
+                          {copiedLinkId === res.id ? (
+                            <Check className="w-3.5 h-3.5 text-emerald-600" />
+                          ) : (
+                            <Copy className="w-3.5 h-3.5" />
+                          )}
+                          <span className="hidden sm:inline">
+                            {copiedLinkId === res.id ? 'Copied' : 'Share Link'}
+                          </span>
+                        </Button>
+                      )}
+
+                      <Link to={`/dashboard/resources/${res.id}/edit`}>
+                        <Button size="sm" variant="outline" className="text-xs">
+                          <Edit className="w-3.5 h-3.5" />
+                          <span className="hidden sm:inline">Edit</span>
+                        </Button>
+                      </Link>
+
+                      {profile?.username && (
+                        <Link
+                          to={`/${profile.username}/${res.code}`}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          <Button size="sm" variant="secondary" className="text-xs">
+                            <span>Open</span>
+                            <ExternalLink className="w-3.5 h-3.5" />
+                          </Button>
+                        </Link>
+                      )}
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Tab 2: Saved Library */}
+        {activeTab === 'saved' && (
+          <div>
+            {savedResources.length === 0 ? (
+              <Card className="p-12 text-center border-dashed border-2 border-neutral-300 dark:border-neutral-700">
+                <div className="w-12 h-12 rounded-md bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 flex items-center justify-center mx-auto mb-4 border border-neutral-200 dark:border-neutral-700">
+                  <Bookmark className="w-6 h-6" />
+                </div>
+                <h2 className="text-lg font-bold text-neutral-900 dark:text-neutral-100 mb-1">
+                  No saved documents yet
+                </h2>
+                <p className="text-xs text-neutral-500 dark:text-neutral-400 max-w-md mx-auto mb-6">
+                  Save documents you find from creators to access and read them anytime in your personal library.
+                </p>
+                <Link to="/">
+                  <Button variant="outline" size="sm">
+                    Discover Documents
+                  </Button>
+                </Link>
+              </Card>
+            ) : (
+              <div className="space-y-3">
+                {savedResources.map(item => (
+                  <Card
+                    key={item.resourceId}
+                    className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:border-neutral-300 dark:hover:border-neutral-700 transition-colors"
+                  >
+                    <div className="flex items-start gap-4 min-w-0">
+                      <div className="w-10 h-10 rounded-md bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 flex items-center justify-center shrink-0 border border-neutral-200 dark:border-neutral-700">
+                        <FileText className="w-5 h-5" />
+                      </div>
+                      <div className="min-w-0 space-y-1">
+                        <h3 className="text-sm font-semibold text-neutral-900 dark:text-neutral-100 truncate">
+                          {item.title}
+                        </h3>
+                        <p className="text-xs text-neutral-500">
+                          by {item.creatorDisplayName || item.creatorUsername} (@{item.creatorUsername})
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 shrink-0 self-end sm:self-center">
+                      <Link to={`/${item.creatorUsername}/${item.code}`} target="_blank">
+                        <Button size="sm" variant="primary" className="text-xs">
+                          <span>Open Document</span>
+                          <ExternalLink className="w-3.5 h-3.5" />
+                        </Button>
+                      </Link>
+                    </div>
+                  </Card>
+                ))}
+
+                <div className="pt-2 text-right">
+                  <Link
+                    to="/dashboard/saved"
+                    className="text-xs font-semibold text-neutral-600 dark:text-neutral-400 hover:text-neutral-950 dark:hover:text-neutral-100 inline-flex items-center gap-1"
+                  >
+                    <span>View full saved library</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </Link>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

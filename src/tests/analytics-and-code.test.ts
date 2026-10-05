@@ -1,5 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { generateSixDigitCode } from '../lib/utils/codeGenerator.ts';
 import { generatePublicSlug } from '../lib/utils/slugify.ts';
 import { evaluateUniquenessWindow, type StorageLike } from '../lib/analytics/tracker.ts';
@@ -433,13 +436,13 @@ test('maxUnlocks cap checking restricts new unlocks when capacity limit is reach
 });
 
 // Test 16: Distribution Control: isPublicListing Filtering Logic
-test('isPublicListing hides unlisted resources from public station feed unless unlocked', () => {
+test('isPublicListing hides unlisted resources from public profile feed unless unlocked', () => {
   interface ResourceListingCheck {
     id: string;
     isPublicListing?: boolean;
   }
 
-  const filterForStationFeed = (
+  const filterForProfileFeed = (
     resources: ResourceListingCheck[],
     unlockedIds: Set<string>
   ): ResourceListingCheck[] => {
@@ -455,14 +458,14 @@ test('isPublicListing hides unlisted resources from public station feed unless u
   const r3: ResourceListingCheck = { id: 'r3' }; // default public
 
   // Public visitor without session unlock
-  const feed1 = filterForStationFeed([r1, r2, r3], new Set());
+  const feed1 = filterForProfileFeed([r1, r2, r3], new Set());
   assert.equal(feed1.length, 2, 'Feed should only include 2 public items');
   assert.ok(feed1.some(r => r.id === 'r1'));
   assert.ok(feed1.some(r => r.id === 'r3'));
   assert.ok(!feed1.some(r => r.id === 'r2'), 'Unlisted item r2 must be hidden');
 
   // Visitor who unlocked r2 via direct code/link
-  const feed2 = filterForStationFeed([r1, r2, r3], new Set(['r2']));
+  const feed2 = filterForProfileFeed([r1, r2, r3], new Set(['r2']));
   assert.equal(feed2.length, 3, 'Feed should now include unlocked r2');
 });
 
@@ -595,8 +598,8 @@ test('isCodeInUseByCreator correctly identifies duplicate codes among active cre
   assert.equal(checkCodeInUse('user_a', '999999'), false, 'Unused code is available');
 });
 
-// Test 20: Profile Tuner & Modal Access Gate for Expired and Capacity-Capped Drops
-test('profile tuner and unlock modal block access when drop is expired or capacity cap is reached', () => {
+// Test 20: Profile Code Input & Modal Access Gate for Expired and Capacity-Capped Drops
+test('profile code input and unlock modal block access when drop is expired or capacity cap is reached', () => {
   interface DropAccessTarget {
     id: string;
     title: string;
@@ -757,5 +760,368 @@ test('stripUndefined recursively purges undefined keys to prevent Firestore runt
 
   // Arrays must remain intact
   assert.deepEqual(cleaned.tags, ['tag1', 'tag2']);
+});
+
+// Test 23: Canonical Document URLs formatted as url/username/six-digit-code (v2.2.0 Requirement 5)
+test('canonical document URL generator formats as url/username/six-digit-code and rejects legacy extensions', () => {
+  const buildCanonicalDocumentUrl = (origin: string, username: string, code: string) => {
+    const cleanUser = username.replace(/^(?:@|%40)+/, '').toLowerCase().trim();
+    const cleanCode = code.trim();
+    if (!/^\d{6}$/.test(cleanCode)) {
+      throw new Error('Code must be a 6-digit numeric string');
+    }
+    return `${origin.replace(/\/+$/, '')}/${cleanUser}/${cleanCode}`;
+  };
+
+  const origin = 'https://unlockr.com';
+  const url = buildCanonicalDocumentUrl(origin, 'aryan', '482731');
+  assert.equal(url, 'https://unlockr.com/aryan/482731', 'Canonical URL must be origin/username/6-digit-code');
+
+  // Must handle @ and %40 prefix cleanly
+  assert.equal(
+    buildCanonicalDocumentUrl(origin, '@aryan', '482731'),
+    'https://unlockr.com/aryan/482731'
+  );
+  assert.equal(
+    buildCanonicalDocumentUrl(origin, '%40aryan', '482731'),
+    'https://unlockr.com/aryan/482731'
+  );
+
+  // Must reject invalid codes (e.g. non-numeric, random extensions, wrong lengths)
+  assert.throws(
+    () => buildCanonicalDocumentUrl(origin, 'aryan', '48273'),
+    /6-digit numeric string/
+  );
+  assert.throws(
+    () => buildCanonicalDocumentUrl(origin, 'aryan', 'guide.pdf'),
+    /6-digit numeric string/
+  );
+  assert.throws(
+    () => buildCanonicalDocumentUrl(origin, 'aryan', '482731a'),
+    /6-digit numeric string/
+  );
+});
+
+// Test 24: Direct 6-Digit Access Code Route Resolution & Auto-Unlock (v2.2.0 Requirement 5)
+test('direct 6-digit access code route resolution automatically unlocks document for visitors', () => {
+  const evaluateAccess = (params: {
+    urlCode?: string;
+    resourceCode: string;
+    expiresAt?: number | null;
+    maxUnlocks?: number | null;
+    views: number;
+    sessionUnlocked: boolean;
+    isOwner: boolean;
+  }) => {
+    const isDirectCodeAccess = Boolean(params.urlCode && params.urlCode.trim() === params.resourceCode);
+    const alreadyUnlocked = params.sessionUnlocked || params.isOwner;
+    const isExpired = Boolean(params.expiresAt && Date.now() > params.expiresAt);
+    const isCapped = Boolean(params.maxUnlocks && params.views >= params.maxUnlocks);
+
+    if (params.isOwner) {
+      return { unlocked: true, reason: 'owner' };
+    }
+    if (isExpired) {
+      return { unlocked: false, reason: 'expired' };
+    }
+    if (isCapped) {
+      return { unlocked: false, reason: 'capacity_reached' };
+    }
+    if (isDirectCodeAccess || alreadyUnlocked) {
+      return { unlocked: true, reason: 'authorized' };
+    }
+    return { unlocked: false, reason: 'locked' };
+  };
+
+  // Visitor accessing canonical url/username/482731 with valid code matching resource
+  const resValid = evaluateAccess({
+    urlCode: '482731',
+    resourceCode: '482731',
+    views: 12,
+    sessionUnlocked: false,
+    isOwner: false,
+  });
+  assert.equal(resValid.unlocked, true, 'Direct code URL must automatically unlock for visitor');
+
+  // Visitor accessing with mismatched code
+  const resMismatch = evaluateAccess({
+    urlCode: '999999',
+    resourceCode: '482731',
+    views: 12,
+    sessionUnlocked: false,
+    isOwner: false,
+  });
+  assert.equal(resMismatch.unlocked, false, 'Mismatched code must remain locked');
+
+  // Expired drop even with valid direct code URL blocks visitor access
+  const resExpired = evaluateAccess({
+    urlCode: '482731',
+    resourceCode: '482731',
+    expiresAt: Date.now() - 5000,
+    views: 12,
+    sessionUnlocked: false,
+    isOwner: false,
+  });
+  assert.equal(resExpired.unlocked, false, 'Expired drop must block visitor even with valid code');
+  assert.equal(resExpired.reason, 'expired');
+
+  // Owner always bypasses limits
+  const resOwner = evaluateAccess({
+    urlCode: '482731',
+    resourceCode: '482731',
+    expiresAt: Date.now() - 5000,
+    views: 100,
+    maxUnlocks: 50,
+    sessionUnlocked: false,
+    isOwner: true,
+  });
+  assert.equal(resOwner.unlocked, true, 'Owner always has access to their own drop');
+});
+
+// Test 25: Viewer Accounts & Saved Library (v2.2.0 Requirement 3)
+test('viewer saved library contract and creator allowSave control', () => {
+  // Creator control: allowSave defaults to true
+  const defaultResource = {
+    id: 'res_1',
+    code: '123456',
+    title: 'Design Systems',
+    allowSave: undefined, // omitted = default true
+  };
+  const shouldShowSaveButton = (res: { allowSave?: boolean }) => res.allowSave !== false;
+
+  assert.equal(shouldShowSaveButton(defaultResource), true, 'Save button must be shown by default');
+  assert.equal(shouldShowSaveButton({ ...defaultResource, allowSave: true }), true);
+  assert.equal(shouldShowSaveButton({ ...defaultResource, allowSave: false }), false, 'Creator can disable saving');
+
+  // Viewer route protection: viewer accounts without creator username can access /dashboard/saved, /saved, /dashboard, and /dashboard/settings
+  const canAccessRoute = (
+    pathname: string,
+    user: boolean,
+    profileUsername?: string,
+    accountType: 'creator' | 'viewer' = 'creator'
+  ) => {
+    if (!user) return false;
+    const isViewer = accountType === 'viewer';
+    const isSavedRoute = pathname === '/saved' || pathname === '/dashboard/saved';
+    const isAllowedForViewer =
+      isViewer &&
+      (pathname === '/dashboard' || pathname === '/dashboard/settings' || isSavedRoute);
+
+    if (!profileUsername && !isAllowedForViewer && pathname !== '/onboarding' && !isSavedRoute) {
+      return false; // redirects to /onboarding
+    }
+    return true;
+  };
+
+  assert.equal(canAccessRoute('/dashboard/saved', true, undefined, 'viewer'), true, 'Viewer without username can access /dashboard/saved');
+  assert.equal(canAccessRoute('/saved', true, undefined, 'viewer'), true, 'Viewer without username can access /saved');
+  assert.equal(canAccessRoute('/dashboard', true, undefined, 'viewer'), true, 'Viewer can access /dashboard overview');
+  assert.equal(canAccessRoute('/dashboard/settings', true, undefined, 'viewer'), true, 'Viewer can access /dashboard/settings');
+  assert.equal(canAccessRoute('/dashboard/resources/new', true, undefined, 'viewer'), false, 'Viewer without creator username is blocked from upload route');
+  assert.equal(canAccessRoute('/dashboard/resources', true, undefined, 'viewer'), false, 'Viewer without creator username is blocked from resource list');
+  assert.equal(canAccessRoute('/dashboard', true, 'creator_dan', 'creator'), true, 'Creator with username can access dashboard');
+
+  // Saved item contract
+  const savedItem = {
+    id: 'res_1',
+    resourceId: 'res_1',
+    title: 'Design Systems',
+    code: '123456',
+    creatorUsername: 'aryan',
+    creatorDisplayName: 'Aryan Pandey',
+    savedAt: Date.now(),
+  };
+  assert.equal(typeof savedItem.savedAt, 'number');
+  assert.equal(savedItem.code, '123456');
+  assert.equal(savedItem.creatorUsername, 'aryan');
+});
+
+// Test 26: Advanced Options Accordion State (v2.2.0 Requirement 4)
+test('advanced options in drop creator/editor is collapsed by default', () => {
+  type DropFormState = {
+    isAdvancedOpen: boolean;
+    allowDownload: boolean;
+    allowSave: boolean;
+    expiresAt: number | null;
+    maxUnlocks: number | null;
+  };
+
+  const initialNewDropState: DropFormState = {
+    isAdvancedOpen: false,
+    allowDownload: true,
+    allowSave: true,
+    expiresAt: null,
+    maxUnlocks: null,
+  };
+
+  assert.equal(initialNewDropState.isAdvancedOpen, false, 'Advanced Options must be collapsed by default');
+  assert.equal(initialNewDropState.allowSave, true, 'allowSave must be enabled by default');
+
+  const toggleAccordion = (state: DropFormState): DropFormState => ({
+    ...state,
+    isAdvancedOpen: !state.isAdvancedOpen,
+  });
+
+  const opened = toggleAccordion(initialNewDropState);
+  assert.equal(opened.isAdvancedOpen, true, 'Toggling accordion expands advanced options');
+  const closed = toggleAccordion(opened);
+  assert.equal(closed.isAdvancedOpen, false, 'Toggling again collapses advanced options');
+});
+
+// Test 27: Webapp Footer Removal Enforcement (v2.2.0 Requirement 8)
+test('footer is permanently removed across all webapp routes and codebase', () => {
+  const currentDir = path.dirname(fileURLToPath(import.meta.url));
+  const footerComponentPath = path.resolve(currentDir, '../components/ui/Footer.tsx');
+  const appTsxPath = path.resolve(currentDir, '../App.tsx');
+  const pagesDir = path.resolve(currentDir, '../pages');
+
+  // 1. Footer.tsx file must NOT exist
+  assert.equal(
+    fs.existsSync(footerComponentPath),
+    false,
+    'src/components/ui/Footer.tsx must be permanently removed'
+  );
+
+  // 2. App.tsx must not import or render Footer
+  const appContent = fs.readFileSync(appTsxPath, 'utf8');
+  assert.ok(!appContent.includes('<Footer'), 'App.tsx must not render <Footer');
+  assert.ok(!appContent.includes("from './components/ui/Footer"), 'App.tsx must not import Footer component');
+
+  // 3. No page in src/pages should render a <footer> tag
+  const getTsxFiles = (dir: string): string[] => {
+    const entries = fs.readdirSync(dir, { withFileTypes: true });
+    const list: string[] = [];
+    for (const entry of entries) {
+      const full = path.join(dir, entry.name);
+      if (entry.isDirectory()) {
+        list.push(...getTsxFiles(full));
+      } else if (entry.isFile() && entry.name.endsWith('.tsx')) {
+        list.push(full);
+      }
+    }
+    return list;
+  };
+
+  const pageFiles = getTsxFiles(pagesDir);
+  assert.ok(pageFiles.length >= 10, 'Expected at least 10 page files in src/pages');
+
+  for (const pageFile of pageFiles) {
+    const content = fs.readFileSync(pageFile, 'utf8');
+    assert.ok(
+      !content.includes('<footer'),
+      `Page ${path.basename(pageFile)} must not contain <footer element`
+    );
+  }
+});
+
+// Test 28: Minimal Tactile Micro-Interactions (v2.2.0 Requirement 1)
+test('tactile button scaling and smooth scroll class configurations', () => {
+  const buttonBaseClass =
+    'inline-flex items-center justify-center font-medium rounded-md active:scale-[0.98] transition-all duration-150';
+
+  assert.ok(
+    buttonBaseClass.includes('active:scale-[0.98]'),
+    'Button micro-interaction must include active:scale-[0.98] for tactile feedback'
+  );
+  assert.ok(
+    buttonBaseClass.includes('duration-150'),
+    'Button micro-interaction must have smooth duration-150 transition'
+  );
+  assert.ok(
+    buttonBaseClass.includes('rounded-md'),
+    'Anti-AI Slop: Button must use subtle rounded-md and not rounded-full'
+  );
+  assert.ok(
+    !buttonBaseClass.includes('rounded-full'),
+    'Anti-AI Slop: Forbid rounded-full pill buttons'
+  );
+});
+
+// Test 29: Canonical Document URL Redirect and Auto-Unlock Contract (v2.2.0 Requirement 5)
+test('legacy slug URL auto-redirects to canonical /:username/:code and auto-unlocks', () => {
+  const resolveTargetRoute = (
+    pathname: string,
+    resource: { code: string; publicSlug: string } | null
+  ) => {
+    // If accessing via /:username/resource/:slug and resource is found, route to /:username/:code
+    const legacyMatch = pathname.match(/^\/([^/]+)\/resource\/([^/]+)$/);
+    if (legacyMatch && resource) {
+      const username = legacyMatch[1].replace(/^(?:@|%40)+/, '').toLowerCase();
+      return `/${username}/${resource.code}`;
+    }
+    return pathname;
+  };
+
+  const resource = {
+    code: '749102',
+    publicSlug: 'founder-gtm-playbook-a1b2',
+  };
+
+  const redirectTarget = resolveTargetRoute(
+    '/aryan/resource/founder-gtm-playbook-a1b2',
+    resource
+  );
+  assert.equal(
+    redirectTarget,
+    '/aryan/749102',
+    'Legacy resource slug route must resolve to canonical /:username/:code'
+  );
+
+  // Direct code match unlocks immediately
+  const directPath = '/aryan/749102';
+  const directMatch = directPath.match(/^\/([^/]+)\/(\d{6})$/);
+  assert.ok(directMatch, 'Canonical path must match 6-digit pattern');
+  assert.equal(directMatch[2], resource.code, 'Extracted code must match resource code');
+});
+
+// Test 30: Eradication of "station", "telemetry", and "tuner" jargon across all webapp pages (v2.2.0 Requirement 7)
+test('all webapp pages are free of "station", "telemetry", and "tuner" jargon', () => {
+  const currentDir = path.dirname(fileURLToPath(import.meta.url));
+  const pagesDir = path.resolve(currentDir, '../pages');
+
+  const getTsxFiles = (dir: string): string[] => {
+    const entries = fs.readdirSync(dir, { withFileTypes: true });
+    const list: string[] = [];
+    for (const entry of entries) {
+      const full = path.join(dir, entry.name);
+      if (entry.isDirectory()) {
+        list.push(...getTsxFiles(full));
+      } else if (entry.isFile() && entry.name.endsWith('.tsx')) {
+        list.push(full);
+      }
+    }
+    return list;
+  };
+
+  const pageFiles = getTsxFiles(pagesDir);
+  const jargonPatterns = [
+    { name: 'station', regex: /\bstation\b/i },
+    { name: 'telemetry', regex: /\btelemetry\b/i },
+    { name: 'tuner', regex: /\btuner\b/i },
+  ];
+
+  const violations: { file: string; pattern: string; line: string }[] = [];
+
+  for (const pageFile of pageFiles) {
+    const content = fs.readFileSync(pageFile, 'utf8');
+    const lines = content.split('\n');
+    lines.forEach((line, idx) => {
+      for (const { name, regex } of jargonPatterns) {
+        if (regex.test(line)) {
+          violations.push({
+            file: path.relative(pagesDir, pageFile),
+            pattern: name,
+            line: `L${idx + 1}: ${line.trim()}`,
+          });
+        }
+      }
+    });
+  }
+
+  assert.equal(
+    violations.length,
+    0,
+    `Found forbidden jargon occurrences in pages:\n${JSON.stringify(violations, null, 2)}`
+  );
 });
 

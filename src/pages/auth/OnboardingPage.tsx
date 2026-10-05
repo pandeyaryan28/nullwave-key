@@ -4,15 +4,16 @@ import { useAuth } from '../../lib/auth/authContext';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
-import { Waves, Check, AlertCircle } from 'lucide-react';
+import { Waves, Check, AlertCircle, Bookmark } from 'lucide-react';
 
 export const OnboardingPage: React.FC = () => {
-  const { user, profile, claimUsername } = useAuth();
+  const { profile, claimUsername, continueAsViewer } = useAuth();
   const navigate = useNavigate();
 
   const [username, setUsername] = useState('');
-  const [displayName, setDisplayName] = useState(profile?.displayName || user?.displayName || '');
+  const [displayName, setDisplayName] = useState(profile?.displayName || '');
   const [isLoading, setIsLoading] = useState(false);
+  const [isViewerLoading, setIsViewerLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // If already has username, send to dashboard
@@ -54,6 +55,19 @@ export const OnboardingPage: React.FC = () => {
     }
   };
 
+  const handleContinueAsViewer = async () => {
+    setIsViewerLoading(true);
+    setError(null);
+    try {
+      await continueAsViewer();
+      navigate('/dashboard/saved');
+    } catch {
+      setError('Failed to update account role.');
+    } finally {
+      setIsViewerLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-[85vh] flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-md space-y-6">
@@ -62,10 +76,10 @@ export const OnboardingPage: React.FC = () => {
             <Waves className="w-5 h-5" />
           </div>
           <h1 className="text-2xl font-bold tracking-tight text-neutral-900 dark:text-neutral-50">
-            Claim Your Wave Station Handle
+            Claim Your Profile Handle
           </h1>
           <p className="text-xs text-neutral-500 dark:text-neutral-400">
-            This will be your permanent bio link for broadcasting resources.
+            This will be your permanent profile link for sharing your documents.
           </p>
         </div>
 
@@ -125,6 +139,28 @@ export const OnboardingPage: React.FC = () => {
             >
               <Check className="w-4 h-4" />
               <span>Claim Profile & Go to Dashboard</span>
+            </Button>
+
+            <div className="relative my-4">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-neutral-200 dark:border-neutral-800" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-white dark:bg-neutral-900 px-2 text-neutral-400">
+                  Or
+                </span>
+              </div>
+            </div>
+
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full"
+              isLoading={isViewerLoading}
+              onClick={handleContinueAsViewer}
+            >
+              <Bookmark className="w-4 h-4" />
+              <span>Continue as Viewer (Read & Save Only)</span>
             </Button>
           </form>
         </Card>

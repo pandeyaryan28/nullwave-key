@@ -66,7 +66,7 @@ export const CreatorProfilePage: React.FC = () => {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [copiedProfile, setCopiedProfile] = useState<boolean>(false);
 
-  // Inline Tuner Code verification state
+  // Inline Code verification state
   const [isVerifying, setIsVerifying] = useState<boolean>(false);
   const [codeError, setCodeError] = useState<string | null>(null);
   const [hintMessage, setHintMessage] = useState<string | null>(null);
@@ -320,7 +320,7 @@ export const CreatorProfilePage: React.FC = () => {
       sessionStorage.removeItem(`unlockr_attempts_${cleanUsername}`);
     } catch {}
     setUnlockedResourceIds(prev => new Set(prev).add(targetResource.id));
-    navigate(`/${creator?.username}/resource/${targetResource.publicSlug}`);
+    navigate(`/${creator?.username}/${targetResource.code}`);
   };
 
   const checkResourceAccess = (target: Resource): { allowed: boolean; error?: string } => {
@@ -413,7 +413,7 @@ export const CreatorProfilePage: React.FC = () => {
         if (isLockedOut) {
           setCodeError('Incorrect code. Too many failed attempts, please wait 30 seconds.');
         } else {
-          setCodeError('Incorrect code. Check the 6-digit wave code shared by the creator.');
+          setCodeError('Incorrect code. Check the 6-digit access code shared by the creator.');
         }
         setIsVerifying(false);
         return;
@@ -538,10 +538,10 @@ export const CreatorProfilePage: React.FC = () => {
           <Waves className="w-6 h-6" />
         </div>
         <h1 className="text-xl font-bold text-neutral-900 dark:text-neutral-100 mb-2">
-          Station Not Found
+          Profile Not Found
         </h1>
         <p className="text-sm text-neutral-600 dark:text-neutral-400 max-w-sm mb-6">
-          The creator station <span className="font-semibold text-neutral-900 dark:text-neutral-200">{cleanUsername}</span> does not exist or may have changed their handle.
+          The creator profile <span className="font-semibold text-neutral-900 dark:text-neutral-200">{cleanUsername}</span> does not exist or may have changed their handle.
         </p>
         <Link
           to="/"
@@ -659,7 +659,7 @@ export const CreatorProfilePage: React.FC = () => {
               <Link to="/dashboard/settings">
                 <Button size="sm" variant="outline" className="text-xs">
                   <Edit className="w-3.5 h-3.5" />
-                  <span>Edit Station</span>
+                  <span>Edit Profile</span>
                 </Button>
               </Link>
             )}
@@ -692,7 +692,7 @@ export const CreatorProfilePage: React.FC = () => {
           {creator.bannerURL ? (
             <img
               src={creator.bannerURL}
-              alt="Station Banner"
+              alt="Profile Banner"
               className="w-full h-full object-cover"
             />
           ) : (
@@ -723,7 +723,7 @@ export const CreatorProfilePage: React.FC = () => {
               </div>
             )}
 
-            {/* Quick Actions (Share + Edit + Station Link) */}
+            {/* Quick Actions (Share + Edit + Profile Link) */}
             <div className="flex items-center gap-2 self-start sm:self-auto">
               {isOwner && (
                 <Link to="/dashboard/settings">
@@ -740,7 +740,7 @@ export const CreatorProfilePage: React.FC = () => {
                 className="text-xs"
               >
                 <Share2 className="w-3.5 h-3.5" />
-                <span>{copiedProfile ? 'Copied Station Link' : 'Share Station'}</span>
+                <span>{copiedProfile ? 'Copied Profile Link' : 'Share Profile'}</span>
               </Button>
             </div>
           </div>
@@ -776,7 +776,7 @@ export const CreatorProfilePage: React.FC = () => {
               )}
               <span className="flex items-center gap-1">
                 <Calendar className="w-3.5 h-3.5" />
-                <span>Station active since {activeSinceDate}</span>
+                <span>Member since {activeSinceDate}</span>
               </span>
             </div>
 
@@ -870,16 +870,16 @@ export const CreatorProfilePage: React.FC = () => {
           </div>
         </div>
 
-        {/* Wave Code Tuner Box */}
+        {/* Access Code Input Box */}
         <div ref={codeCardRef} className="scroll-mt-20 mb-8">
           <Card className="p-6 border-neutral-300 dark:border-neutral-700 shadow-sm">
             <div className="text-center mb-5">
               <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-neutral-100 dark:bg-neutral-800 text-neutral-800 dark:text-neutral-200 text-xs font-semibold mb-2 uppercase tracking-wider">
                 <Radio className="w-3.5 h-3.5 text-neutral-600 dark:text-neutral-400" />
-                <span>Station Wave Code Tuner</span>
+                <span>Enter 6-Digit Code</span>
               </div>
               <h2 className="text-base font-semibold text-neutral-900 dark:text-neutral-100">
-                Enter 6-Digit Wave Code
+                Unlock Document with Code
               </h2>
               <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">
                 Have an access code shared on Instagram or social media? Enter it here to unlock immediately.
@@ -1075,7 +1075,7 @@ export const CreatorProfilePage: React.FC = () => {
 
                 <div className="w-full sm:w-auto shrink-0">
                   {isOwner || unlockedResourceIds.has(pinnedResource.id) ? (
-                    <Link to={`/${creator.username}/resource/${pinnedResource.publicSlug}`}>
+                    <Link to={`/${creator.username}/${pinnedResource.code}`}>
                       <Button variant="primary" size="sm" className="w-full sm:w-auto">
                         <span>Open Document</span>
                         <ArrowRight className="w-3.5 h-3.5" />
@@ -1122,7 +1122,7 @@ export const CreatorProfilePage: React.FC = () => {
         ) : (
           <div>
             <div className="text-xs font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400 mb-3">
-              Station Library ({visibleResources.length})
+              Documents ({visibleResources.length})
             </div>
 
             {viewMode === 'grid' ? (
@@ -1139,7 +1139,7 @@ export const CreatorProfilePage: React.FC = () => {
                       className="overflow-hidden flex flex-col hover:border-neutral-300 dark:hover:border-neutral-700 transition-all hover:shadow-xs group cursor-pointer"
                       onClick={() => {
                         if (isUnlocked) {
-                          navigate(`/${creator.username}/resource/${res.publicSlug}`);
+                          navigate(`/${creator.username}/${res.code}`);
                         } else {
                           setModalResource(res);
                         }
@@ -1256,7 +1256,7 @@ export const CreatorProfilePage: React.FC = () => {
                       className="p-4 sm:p-5 hover:border-neutral-300 dark:hover:border-neutral-700 transition-all hover:shadow-xs group cursor-pointer"
                       onClick={() => {
                         if (isUnlocked) {
-                          navigate(`/${creator.username}/resource/${res.publicSlug}`);
+                          navigate(`/${creator.username}/${res.code}`);
                         } else {
                           setModalResource(res);
                         }
@@ -1400,7 +1400,7 @@ export const CreatorProfilePage: React.FC = () => {
                     ? `This time-limited drop expired on ${new Date(modalResource.expiresAt!).toLocaleDateString()}. Access is no longer open.`
                     : isModalCapped && !isOwner
                     ? `All ${modalResource.maxUnlocks} access slots have been redeemed. Capacity limit has been reached.`
-                    : `Enter the 6-digit wave code shared by ${creator.displayName || creator.username}.`}
+                    : `Enter the 6-digit access code shared by ${creator.displayName || creator.username}.`}
                 </p>
 
                 {modalResource.allowDownload === false && (
@@ -1442,19 +1442,6 @@ export const CreatorProfilePage: React.FC = () => {
           </div>
         );
       })()}
-
-      {/* Clean Footer */}
-      <footer className="w-full py-6 text-center text-xs text-neutral-400 dark:text-neutral-600 mt-auto flex items-center justify-center gap-1.5 border-t border-neutral-200 dark:border-neutral-800">
-        <span>Powered by</span>
-        <Link
-          to="/"
-          className="inline-flex items-center gap-1 font-semibold text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors"
-        >
-          <Waves className="w-3.5 h-3.5" />
-          <span>NullWave</span>
-        </Link>
-        <span>• Zero-friction creator distribution</span>
-      </footer>
     </div>
   );
 };

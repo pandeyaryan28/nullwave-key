@@ -73,10 +73,10 @@ export const HowItWorksPage: React.FC = () => {
             </div>
             <div className="space-y-2">
               <h3 className="text-base font-bold text-neutral-900 dark:text-neutral-100">
-                2. Broadcast in Video
+                2. Share in Video
               </h3>
               <p className="text-xs sm:text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed">
-                Add your wave station link in your bio (<span className="font-mono text-neutral-900 dark:text-neutral-100">nullwave.com/yourhandle</span>) and state your 6-digit code in the Reel, Story, or caption.
+                Add your profile link in your bio (<span className="font-mono text-neutral-900 dark:text-neutral-100">nullwave.com/yourhandle</span>) and state your 6-digit code in the Reel, Story, or caption.
               </p>
             </div>
           </Card>
@@ -90,18 +90,18 @@ export const HowItWorksPage: React.FC = () => {
                 3. One Link, Infinite Guides
               </h3>
               <p className="text-xs sm:text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed">
-                Never change your bio link again. Each new guide gets a unique 6-digit code under your single permanent station URL.
+                Never change your bio link again. Each new guide gets a unique 6-digit code under your single permanent profile link.
               </p>
             </div>
           </Card>
         </div>
       </section>
 
-      {/* Audience Reception Section */}
+      {/* Audience Access Section */}
       <section className="space-y-8">
         <div className="space-y-2">
           <h2 className="text-2xl font-bold tracking-tight text-neutral-900 dark:text-neutral-100">
-            Stage 2: Audience Reception
+            Stage 2: Audience Access
           </h2>
           <p className="text-sm text-neutral-500 dark:text-neutral-400">
             How followers unlock and read resources without getting stuck behind sign-up forms.
@@ -115,14 +115,14 @@ export const HowItWorksPage: React.FC = () => {
                 01
               </div>
               <h3 className="text-lg font-bold text-neutral-900 dark:text-neutral-100">
-                Viewer Enters Station
+                Viewer Opens Your Profile
               </h3>
             </div>
             <p className="text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed">
-              When a follower clicks your profile link from Instagram, TikTok, or YouTube, your station loads in under 250 milliseconds with a dedicated numeric wave receiver box front-and-center.
+              When a follower clicks your profile link from Instagram, TikTok, or YouTube, your profile loads in under 250 milliseconds with a dedicated numeric code box front-and-center.
             </p>
             <div className="p-3 bg-neutral-100 dark:bg-neutral-900 rounded-md font-mono text-xs text-neutral-700 dark:text-neutral-300 border border-neutral-200 dark:border-neutral-800">
-              Station: nullwave.com/aryan • Status: Live
+              Profile: nullwave.com/aryan • Status: Active
             </div>
           </Card>
 
@@ -146,11 +146,11 @@ export const HowItWorksPage: React.FC = () => {
         </div>
       </section>
 
-      {/* Security & Telemetry Section */}
+      {/* Security & Analytics Section */}
       <section id="security" className="space-y-8">
         <div className="space-y-2">
           <h2 className="text-2xl font-bold tracking-tight text-neutral-900 dark:text-neutral-100">
-            Stage 3: Security & Telemetry
+            Stage 3: Security & Analytics
           </h2>
           <p className="text-sm text-neutral-500 dark:text-neutral-400">
             Engineered defenses against abuse and transparent audience insights.
@@ -207,15 +207,15 @@ export const HowItWorksPage: React.FC = () => {
       {/* CTA */}
       <section className="p-8 sm:p-12 rounded-lg bg-neutral-100 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 text-center space-y-4">
         <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-neutral-950 dark:text-neutral-50">
-          Start broadcasting your resources today
+          Start sharing your resources today
         </h2>
         <p className="text-sm text-neutral-600 dark:text-neutral-400 max-w-xl mx-auto">
-          Set up your custom station in less than two minutes and eliminate drop-offs from your bio link.
+          Set up your custom profile in less than two minutes and eliminate drop-offs from your bio link.
         </p>
         <div className="pt-2">
           <Link to="/signup">
             <Button size="lg" variant="primary">
-              <span>Create Station Now</span>
+              <span>Create Your Profile</span>
               <ArrowRight className="w-4 h-4" />
             </Button>
           </Link>

@@ -29,14 +29,14 @@ export const PricingPage: React.FC = () => {
         <div className="flex items-center gap-2">
           <span className="w-2 h-2 rounded-sm bg-neutral-900 dark:bg-neutral-100"></span>
           <span className="text-xs uppercase tracking-wider font-semibold text-neutral-600 dark:text-neutral-400">
-            Station Plans
+            Plans & Pricing
           </span>
         </div>
         <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-neutral-950 dark:text-neutral-50">
           Transparent, zero-commission infrastructure
         </h1>
         <p className="text-base sm:text-lg text-neutral-600 dark:text-neutral-300 leading-relaxed">
-          NullWave will never take transaction commissions or gate your content behind revenue taxes. Pick the bandwidth tier that matches your transmission scale.
+          NullWave will never take transaction commissions or gate your content behind revenue taxes. Pick the bandwidth tier that matches your distribution scale.
         </p>
       </header>
 
@@ -56,7 +56,7 @@ export const PricingPage: React.FC = () => {
               <p className="text-xs text-neutral-500 dark:text-neutral-400">No credit card required</p>
             </div>
             <p className="text-xs sm:text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed">
-              Ideal for independent educators, solo creators, and designers launching their first wave station.
+              Ideal for independent educators, solo creators, and designers launching their first profile.
             </p>
             <div className="pt-4 border-t border-neutral-200 dark:border-neutral-800 space-y-2.5 text-xs sm:text-sm text-neutral-700 dark:text-neutral-300">
               <div className="flex items-center gap-2">
@@ -131,7 +131,7 @@ export const PricingPage: React.FC = () => {
               </div>
               <div className="flex items-center gap-2">
                 <Check className="w-4 h-4 text-emerald-600 shrink-0" />
-                <span>Removes NullWave station watermark</span>
+                <span>Removes NullWave watermark</span>
               </div>
             </div>
           </div>
@@ -273,7 +273,7 @@ export const PricingPage: React.FC = () => {
               Is the Community plan genuinely free forever?
             </h3>
             <p className="text-xs sm:text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed">
-              Yes. You can create a station, upload up to 10 active guides, and share 6-digit wave codes with unlimited audience downloads without ever entering payment information.
+              Yes. You can create a profile, upload up to 10 active guides, and share 6-digit access codes with unlimited audience downloads without ever entering payment information.
             </p>
           </Card>
 
@@ -288,10 +288,10 @@ export const PricingPage: React.FC = () => {
 
           <Card className="p-6 space-y-2">
             <h3 className="text-base font-bold text-neutral-900 dark:text-neutral-100">
-              Can I change my wave station handle later?
+              Can I change my profile handle later?
             </h3>
             <p className="text-xs sm:text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed">
-              Your station handle is claimed during onboarding. You can update your display name and profile details at any time in your station settings.
+              Your profile handle is claimed during onboarding. You can update your display name and profile details at any time in your profile settings.
             </p>
           </Card>
 
@@ -300,7 +300,7 @@ export const PricingPage: React.FC = () => {
               Do my audience members need to sign up?
             </h3>
             <p className="text-xs sm:text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed">
-              Never. Viewers simply enter the 6-digit code or tap the resource directly on your station. No login, no password, and no cookies.
+              Never. Viewers simply enter the 6-digit code or tap the document directly on your profile. No login, no password, and no cookies.
             </p>
           </Card>
         </div>

@@ -74,7 +74,7 @@ export const LoginPage: React.FC = () => {
             Sign In to NullWave
           </h1>
           <p className="text-xs text-neutral-500 dark:text-neutral-400">
-            Sign in to manage your wave station and broadcast codes.
+            Sign in to manage your documents, access codes, and saved library.
           </p>
         </div>
 

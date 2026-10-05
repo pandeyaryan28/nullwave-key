@@ -16,11 +16,19 @@ export const Navbar: React.FC = () => {
     return location.pathname === path || location.pathname.startsWith(path + '/');
   };
 
-  const dashboardLinks = [
-    { label: 'Overview', path: '/dashboard' },
-    { label: 'Resources', path: '/dashboard/resources' },
-    { label: 'Settings', path: '/dashboard/settings' },
-  ];
+  const isViewer = profile?.accountType === 'viewer' && !profile?.username;
+
+  const dashboardLinks = isViewer
+    ? [
+        { label: 'Saved Library', path: '/dashboard/saved' },
+        { label: 'Settings', path: '/dashboard/settings' },
+      ]
+    : [
+        { label: 'Overview', path: '/dashboard' },
+        { label: 'Documents', path: '/dashboard/resources' },
+        { label: 'Saved Library', path: '/dashboard/saved' },
+        { label: 'Settings', path: '/dashboard/settings' },
+      ];
 
   const publicLinks = [
     { label: 'Overview', path: '/' },
@@ -36,7 +44,7 @@ export const Navbar: React.FC = () => {
         {/* Brand Logo & Main Nav */}
         <div className="flex items-center gap-8">
           <Link
-            to={user ? '/dashboard' : '/'}
+            to={user ? (isViewer ? '/dashboard/saved' : '/dashboard') : '/'}
             className="flex items-center gap-2.5 text-neutral-950 dark:text-neutral-50 font-bold text-lg tracking-tight focus-visible:outline-none select-none"
           >
             <div className="w-8 h-8 rounded-md bg-neutral-900 text-neutral-50 dark:bg-neutral-100 dark:text-neutral-900 flex items-center justify-center">
@@ -95,14 +103,25 @@ export const Navbar: React.FC = () => {
                 </Link>
               )}
 
-              <Button
-                size="sm"
-                variant="primary"
-                onClick={() => navigate('/dashboard/resources/new')}
-              >
-                <Plus className="w-4 h-4" />
-                <span>Upload Resource</span>
-              </Button>
+              {isViewer ? (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => navigate('/onboarding')}
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>Become a Creator</span>
+                </Button>
+              ) : (
+                <Button
+                  size="sm"
+                  variant="primary"
+                  onClick={() => navigate('/dashboard/resources/new')}
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>Upload Document</span>
+                </Button>
+              )}
 
               <button
                 onClick={() => signOut()}
@@ -168,22 +187,36 @@ export const Navbar: React.FC = () => {
                   onClick={() => setMobileMenuOpen(false)}
                   className="flex items-center justify-between px-3 py-2 text-sm font-medium text-neutral-600 dark:text-neutral-400 border border-neutral-200 dark:border-neutral-800 rounded-md"
                 >
-                  <span>View Wave Station (/{profile.username})</span>
+                  <span>View Public Profile (/{profile.username})</span>
                   <ExternalLink className="w-4 h-4" />
                 </Link>
               )}
 
-              <Button
-                variant="primary"
-                className="w-full mt-2"
-                onClick={() => {
-                  setMobileMenuOpen(false);
-                  navigate('/dashboard/resources/new');
-                }}
-              >
-                <Plus className="w-4 h-4" />
-                <span>Upload Resource</span>
-              </Button>
+              {isViewer ? (
+                <Button
+                  variant="outline"
+                  className="w-full mt-2"
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    navigate('/onboarding');
+                  }}
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>Become a Creator</span>
+                </Button>
+              ) : (
+                <Button
+                  variant="primary"
+                  className="w-full mt-2"
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    navigate('/dashboard/resources/new');
+                  }}
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>Upload Document</span>
+                </Button>
+              )}
 
               <button
                 onClick={() => {

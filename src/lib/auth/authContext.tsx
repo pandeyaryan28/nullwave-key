@@ -24,10 +24,11 @@ interface AuthContextType {
   loading: boolean;
   signInWithGoogle: () => Promise<void>;
   signInWithEmail: (email: string, pass: string) => Promise<void>;
-  signUpWithEmail: (email: string, pass: string, displayName?: string) => Promise<void>;
+  signUpWithEmail: (email: string, pass: string, displayName?: string, accountType?: 'creator' | 'viewer') => Promise<void>;
   signOut: () => Promise<void>;
   updateCreatorProfile: (data: Partial<UserProfile>) => Promise<void>;
   claimUsername: (username: string, displayName?: string) => Promise<{ success: boolean; error?: string }>;
+  continueAsViewer: () => Promise<void>;
   refreshProfile: () => Promise<void>;
 }
 
@@ -145,7 +146,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const signUpWithEmail = async (email: string, pass: string, displayName?: string) => {
+  const signUpWithEmail = async (
+    email: string,
+    pass: string,
+    displayName?: string,
+    accountType: 'creator' | 'viewer' = 'creator'
+  ) => {
     try {
       const cred = await createUserWithEmailAndPassword(auth, email, pass);
       const newProfile: UserProfile = {
@@ -153,6 +159,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         email,
         displayName: displayName || email.split('@')[0],
         username: '',
+        accountType,
         createdAt: Date.now(),
         updatedAt: Date.now(),
       };
@@ -176,6 +183,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           email,
           displayName: displayName || email.split('@')[0],
           username: '',
+          accountType,
           createdAt: Date.now(),
           updatedAt: Date.now(),
         };
@@ -242,6 +250,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         email: user.email || '',
         displayName: displayName || profile?.displayName || user.displayName || username,
         username,
+        accountType: 'creator',
         bannerURL: profile?.bannerURL,
         headline: profile?.headline,
         location: profile?.location,
@@ -266,6 +275,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
       return { success: false, error: e.message || 'Failed to claim username.' };
     }
+  };
+
+  const continueAsViewer = async () => {
+    if (!user) throw new Error('Not authenticated.');
+    await updateCreatorProfile({ accountType: 'viewer' });
   };
 
   const updateCreatorProfile = async (data: Partial<UserProfile>) => {
@@ -326,6 +340,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         signOut,
         updateCreatorProfile,
         claimUsername,
+        continueAsViewer,
         refreshProfile,
       }}
     >

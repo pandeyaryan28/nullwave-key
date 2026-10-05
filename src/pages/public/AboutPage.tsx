@@ -72,7 +72,7 @@ export const AboutPage: React.FC = () => {
               Sub-250ms Mobile Precision
             </h3>
             <p className="text-xs sm:text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed">
-              Every millisecond of latency is a tax on attention. NullWave stations are stripped of heavy marketing trackers and designed to render immediately inside in-app webviews.
+              Every millisecond of latency is a tax on attention. NullWave documents are stripped of heavy marketing trackers and designed to render immediately inside in-app webviews.
             </p>
           </Card>
 
@@ -81,7 +81,7 @@ export const AboutPage: React.FC = () => {
               03
             </div>
             <h3 className="text-base font-bold text-neutral-900 dark:text-neutral-100">
-              Honest, Transparent Telemetry
+              Honest, Transparent Analytics
             </h3>
             <p className="text-xs sm:text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed">
               No surveillance capitalism. Our analytics measure real engagement without third-party advertising cookies or cross-site tracking scripts.
@@ -105,15 +105,15 @@ export const AboutPage: React.FC = () => {
       {/* CTA Section */}
       <section className="p-8 sm:p-12 rounded-lg bg-neutral-100 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 text-center space-y-4">
         <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-neutral-950 dark:text-neutral-50">
-          Join the wave
+          Join creators distributing cleanly
         </h2>
         <p className="text-sm text-neutral-600 dark:text-neutral-400 max-w-xl mx-auto">
-          Broadcast your digital work cleanly and see how much farther your ideas travel when nothing is in the way.
+          Share your digital work cleanly and see how much farther your ideas travel when nothing is in the way.
         </p>
         <div className="pt-2">
           <Link to="/signup">
             <Button size="lg" variant="primary">
-              <span>Create Your Station</span>
+              <span>Get Started Free</span>
               <ArrowRight className="w-4 h-4" />
             </Button>
           </Link>

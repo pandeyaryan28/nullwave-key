@@ -26,6 +26,7 @@ import {
   Pin,
   Clock,
   Users,
+  ChevronDown,
 } from 'lucide-react';
 
 export const NewResourcePage: React.FC = () => {
@@ -39,8 +40,10 @@ export const NewResourcePage: React.FC = () => {
   const [description, setDescription] = useState<string>('');
   const [category, setCategory] = useState<string>('');
 
-  // Advanced Distribution Controls state
+  // Advanced Options state (collapsed by default)
+  const [isAdvancedOpen, setIsAdvancedOpen] = useState<boolean>(false);
   const [allowDownload, setAllowDownload] = useState<boolean>(true);
+  const [allowSave, setAllowSave] = useState<boolean>(true);
   const [isPublicListing, setIsPublicListing] = useState<boolean>(true);
   const [isPinned, setIsPinned] = useState<boolean>(false);
   const [hasExpiration, setHasExpiration] = useState<boolean>(false);
@@ -115,7 +118,7 @@ export const NewResourcePage: React.FC = () => {
     if (useCustomCode) {
       const clean = customCode.trim();
       if (!/^\d{6}$/.test(clean)) {
-        setError('Custom wave code must be exactly 6 numeric digits (e.g. 582910).');
+        setError('Custom access code must be exactly 6 numeric digits (e.g. 582910).');
         return;
       }
       const num = parseInt(clean, 10);
@@ -160,7 +163,7 @@ export const NewResourcePage: React.FC = () => {
         code = customCode.trim();
         const codeTaken = await isCodeInUseByCreator(user.uid, code);
         if (codeTaken) {
-          setError('This 6-digit wave code is already assigned to one of your active resources. Please choose a different code.');
+          setError('This 6-digit access code is already assigned to one of your active resources. Please choose a different code.');
           setIsUploading(false);
           return;
         }
@@ -211,6 +214,7 @@ export const NewResourcePage: React.FC = () => {
         uniqueViews: 0,
         totalDownloads: 0,
         allowDownload,
+        allowSave,
         isPublicListing,
         isPinned,
         expiresAt: expiresAtTimestamp,
@@ -257,9 +261,9 @@ export const NewResourcePage: React.FC = () => {
     setTimeout(() => setCopiedCode(false), 2000);
   };
 
-  const copyCreatorLink = () => {
-    if (!profile?.username) return;
-    const url = `${window.location.origin}/${profile.username}`;
+  const copyDocLink = () => {
+    if (!profile?.username || !createdResource) return;
+    const url = `${window.location.origin}/${profile.username}/${createdResource.code}`;
     navigator.clipboard.writeText(url);
     setCopiedLink(true);
     setTimeout(() => setCopiedLink(false), 2000);
@@ -268,23 +272,23 @@ export const NewResourcePage: React.FC = () => {
   // Confirmation Success View
   if (createdResource) {
     return (
-      <div className="max-w-xl mx-auto py-6 space-y-6">
+      <div className="max-w-xl mx-auto py-6 space-y-6 animate-fade-in-up">
         <Card className="p-8 text-center border-neutral-300 dark:border-neutral-700 shadow-sm">
           <div className="w-12 h-12 rounded-md bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 flex items-center justify-center mx-auto mb-4 border border-emerald-300 dark:border-emerald-800">
             <Check className="w-6 h-6" />
           </div>
 
           <h1 className="text-xl font-bold text-neutral-900 dark:text-neutral-50 mb-1">
-            Wave created successfully
+            Document Published Successfully
           </h1>
           <p className="text-xs text-neutral-500 dark:text-neutral-400 mb-6">
-            Your resource is published to your station and ready for broadcast.
+            Your document is live and ready to share with your audience.
           </p>
 
           {/* Prominent 6-Digit Code Box */}
           <div className="p-6 rounded-lg bg-neutral-100 dark:bg-neutral-800/80 border border-neutral-300 dark:border-neutral-700 mb-6">
             <p className="text-xs font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400 mb-2">
-              6-Digit Wave Code
+              6-Digit Access Code
             </p>
             <div className="text-4xl sm:text-5xl font-mono font-bold tracking-widest text-neutral-950 dark:text-neutral-50 my-2">
               {createdResource.code}
@@ -292,12 +296,12 @@ export const NewResourcePage: React.FC = () => {
             <div className="flex items-center justify-center gap-3 mt-4">
               <Button size="md" variant="primary" onClick={copyCode}>
                 {copiedCode ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
-                <span>{copiedCode ? 'Code Copied!' : 'Copy Wave Code'}</span>
+                <span>{copiedCode ? 'Code Copied!' : 'Copy Code'}</span>
               </Button>
 
-              <Button size="md" variant="outline" onClick={copyCreatorLink}>
+              <Button size="md" variant="outline" onClick={copyDocLink}>
                 {copiedLink ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4" />}
-                <span>{copiedLink ? 'Link Copied!' : 'Copy Station Link'}</span>
+                <span>{copiedLink ? 'Link Copied!' : 'Copy Document Link'}</span>
               </Button>
             </div>
           </div>
@@ -309,9 +313,14 @@ export const NewResourcePage: React.FC = () => {
                 View Only (Downloads Disabled)
               </span>
             )}
+            {createdResource.allowSave === false && (
+              <span className="px-2.5 py-1 text-xs font-medium rounded-md bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 border border-neutral-200 dark:border-neutral-700">
+                Saving Disabled
+              </span>
+            )}
             {!createdResource.isPublicListing && (
               <span className="px-2.5 py-1 text-xs font-medium rounded-md bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 border border-neutral-200 dark:border-neutral-700">
-                Unlisted Drop
+                Unlisted Document
               </span>
             )}
             {createdResource.isPinned && (
@@ -334,10 +343,10 @@ export const NewResourcePage: React.FC = () => {
           {/* Social Script Helper */}
           <div className="p-4 rounded-md bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 text-left mb-6 text-xs text-neutral-600 dark:text-neutral-400 space-y-1.5">
             <p className="font-semibold text-neutral-900 dark:text-neutral-200">
-              How to share on Instagram Reels, Stories, or X:
+              Share link directly:
             </p>
-            <p className="italic">
-              &quot;Link in bio (nullwave.com/{profile?.username}). Enter code <span className="font-mono font-bold text-neutral-900 dark:text-neutral-100">{createdResource.code}</span> to get the guide.&quot;
+            <p className="font-mono text-xs bg-neutral-100 dark:bg-neutral-800 p-2 rounded border border-neutral-200 dark:border-neutral-700 text-neutral-900 dark:text-neutral-100 select-all">
+              {window.location.origin}/{profile?.username}/{createdResource.code}
             </p>
           </div>
 
@@ -351,11 +360,11 @@ export const NewResourcePage: React.FC = () => {
             </Button>
 
             <Link
-              to={`/${profile?.username}/resource/${createdResource.publicSlug}`}
+              to={`/${profile?.username}/${createdResource.code}`}
               target="_blank"
             >
               <Button variant="subtle" size="sm">
-                <span>Preview page</span>
+                <span>Open Document</span>
                 <ExternalLink className="w-3.5 h-3.5" />
               </Button>
             </Link>
@@ -483,197 +492,232 @@ export const NewResourcePage: React.FC = () => {
             />
           </div>
 
-          {/* Advanced Distribution Controls Section */}
-          <div className="p-5 rounded-lg border border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/50 space-y-5">
-            <div className="flex items-center gap-2 border-b border-neutral-200 dark:border-neutral-800 pb-3">
-              <SlidersHorizontal className="w-4 h-4 text-neutral-700 dark:text-neutral-300" />
-              <h2 className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">
-                Advanced Distribution Controls
-              </h2>
-            </div>
+          {/* Advanced Options Collapsible Accordion (Requirement 4) */}
+          <div className="rounded-lg border border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/50 overflow-hidden">
+            <button
+              type="button"
+              onClick={() => setIsAdvancedOpen(!isAdvancedOpen)}
+              className="w-full p-4 flex items-center justify-between text-left hover:bg-neutral-100/50 dark:hover:bg-neutral-800/40 transition-colors cursor-pointer"
+            >
+              <div className="flex items-center gap-2">
+                <SlidersHorizontal className="w-4 h-4 text-neutral-700 dark:text-neutral-300" />
+                <h2 className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">
+                  Advanced Options
+                </h2>
+              </div>
+              <ChevronDown
+                className={`w-4 h-4 text-neutral-500 transition-transform duration-200 ${
+                  isAdvancedOpen ? 'rotate-180' : ''
+                }`}
+              />
+            </button>
 
-            {/* 1. Download Permission */}
-            <div className="space-y-1">
-              <label className="flex items-start gap-2.5 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={allowDownload}
-                  onChange={e => setAllowDownload(e.target.checked)}
-                  className="mt-0.5 rounded border-neutral-300 dark:border-neutral-700 text-neutral-900 dark:text-neutral-100 focus:ring-neutral-500"
-                />
-                <div>
-                  <span className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
-                    Allow viewers to download PDF file
-                  </span>
-                  <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">
-                    When unchecked, turns on View-Only in-browser mode. Viewers can inspect the guide in the reader, but download buttons and raw PDF saving are suppressed.
-                  </p>
-                </div>
-              </label>
-            </div>
-
-            {/* 2. Station Listing Visibility */}
-            <div className="space-y-1 pt-2 border-t border-neutral-200/60 dark:border-neutral-800/60">
-              <label className="flex items-start gap-2.5 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={isPublicListing}
-                  onChange={e => setIsPublicListing(e.target.checked)}
-                  className="mt-0.5 rounded border-neutral-300 dark:border-neutral-700 text-neutral-900 dark:text-neutral-100 focus:ring-neutral-500"
-                />
-                <div>
-                  <span className="text-sm font-medium text-neutral-900 dark:text-neutral-100 flex items-center gap-1.5">
-                    <span>List publicly on Station Profile</span>
-                    {!isPublicListing && (
-                      <span className="text-[11px] font-normal text-neutral-500 flex items-center gap-1">
-                        <EyeOff className="w-3 h-3" /> Unlisted
+            {isAdvancedOpen && (
+              <div className="p-5 pt-2 border-t border-neutral-200 dark:border-neutral-800 space-y-5 animate-fade-in-up">
+                {/* 1. Download Permission */}
+                <div className="space-y-1">
+                  <label className="flex items-start gap-2.5 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={allowDownload}
+                      onChange={e => setAllowDownload(e.target.checked)}
+                      className="mt-0.5 rounded border-neutral-300 dark:border-neutral-700 text-neutral-900 dark:text-neutral-100 focus:ring-neutral-500"
+                    />
+                    <div>
+                      <span className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
+                        Allow viewers to download PDF file
                       </span>
-                    )}
-                  </span>
-                  <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">
-                    When unchecked, this resource is hidden from your public station feed. Only visitors given the direct link or wave code can unlock it.
-                  </p>
+                      <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">
+                        When unchecked, turns on View-Only mode. Viewers can inspect the guide in the reader, but download buttons and raw PDF saving are suppressed.
+                      </p>
+                    </div>
+                  </label>
                 </div>
-              </label>
-            </div>
 
-            {/* 3. Pin to Top */}
-            <div className="space-y-1 pt-2 border-t border-neutral-200/60 dark:border-neutral-800/60">
-              <label className="flex items-start gap-2.5 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={isPinned}
-                  onChange={e => setIsPinned(e.target.checked)}
-                  className="mt-0.5 rounded border-neutral-300 dark:border-neutral-700 text-neutral-900 dark:text-neutral-100 focus:ring-neutral-500"
-                />
-                <div>
-                  <span className="text-sm font-medium text-neutral-900 dark:text-neutral-100 flex items-center gap-1.5">
-                    <Pin className="w-3.5 h-3.5 text-neutral-500" />
-                    <span>Pin to top of Station as Featured</span>
-                  </span>
-                  <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">
-                    Highlighted at the top of your library for high-priority drops and flagship guides.
-                  </p>
+                {/* 2. Viewer Library Save Permission (Requirement 3) */}
+                <div className="space-y-1 pt-2 border-t border-neutral-200/60 dark:border-neutral-800/60">
+                  <label className="flex items-start gap-2.5 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={allowSave}
+                      onChange={e => setAllowSave(e.target.checked)}
+                      className="mt-0.5 rounded border-neutral-300 dark:border-neutral-700 text-neutral-900 dark:text-neutral-100 focus:ring-neutral-500"
+                    />
+                    <div>
+                      <span className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
+                        Allow viewers to save this file to their library
+                      </span>
+                      <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">
+                        When checked, visitors with viewer accounts can bookmark and save this document to their personal library to view anytime.
+                      </p>
+                    </div>
+                  </label>
                 </div>
-              </label>
-            </div>
 
-            {/* 4. Drop Expiration */}
-            <div className="space-y-2 pt-2 border-t border-neutral-200/60 dark:border-neutral-800/60">
-              <label className="flex items-start gap-2.5 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={hasExpiration}
-                  onChange={e => setHasExpiration(e.target.checked)}
-                  className="mt-0.5 rounded border-neutral-300 dark:border-neutral-700 text-neutral-900 dark:text-neutral-100 focus:ring-neutral-500"
-                />
-                <div>
-                  <span className="text-sm font-medium text-neutral-900 dark:text-neutral-100 flex items-center gap-1.5">
-                    <Clock className="w-3.5 h-3.5 text-neutral-500" />
-                    <span>Set drop expiration date & time</span>
-                  </span>
-                  <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">
-                    Perfect for 24-hour flash drops or cohort deadlines. Access is automatically closed after this timestamp.
-                  </p>
+                {/* 3. Public Listing Visibility */}
+                <div className="space-y-1 pt-2 border-t border-neutral-200/60 dark:border-neutral-800/60">
+                  <label className="flex items-start gap-2.5 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={isPublicListing}
+                      onChange={e => setIsPublicListing(e.target.checked)}
+                      className="mt-0.5 rounded border-neutral-300 dark:border-neutral-700 text-neutral-900 dark:text-neutral-100 focus:ring-neutral-500"
+                    />
+                    <div>
+                      <span className="text-sm font-medium text-neutral-900 dark:text-neutral-100 flex items-center gap-1.5">
+                        <span>List publicly on Public Profile</span>
+                        {!isPublicListing && (
+                          <span className="text-[11px] font-normal text-neutral-500 flex items-center gap-1">
+                            <EyeOff className="w-3 h-3" /> Unlisted
+                          </span>
+                        )}
+                      </span>
+                      <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">
+                        When unchecked, this resource is hidden from your public profile feed. Only visitors given the direct link or 6-digit code can unlock it.
+                      </p>
+                    </div>
+                  </label>
                 </div>
-              </label>
 
-              {hasExpiration && (
-                <div className="pl-6 pt-1 max-w-xs">
-                  <input
-                    type="datetime-local"
-                    value={expirationDate}
-                    onChange={e => setExpirationDate(e.target.value)}
-                    className="w-full h-10 px-3 py-2 text-xs rounded-md border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100"
-                  />
+                {/* 4. Pin to Top */}
+                <div className="space-y-1 pt-2 border-t border-neutral-200/60 dark:border-neutral-800/60">
+                  <label className="flex items-start gap-2.5 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={isPinned}
+                      onChange={e => setIsPinned(e.target.checked)}
+                      className="mt-0.5 rounded border-neutral-300 dark:border-neutral-700 text-neutral-900 dark:text-neutral-100 focus:ring-neutral-500"
+                    />
+                    <div>
+                      <span className="text-sm font-medium text-neutral-900 dark:text-neutral-100 flex items-center gap-1.5">
+                        <Pin className="w-3.5 h-3.5 text-neutral-500" />
+                        <span>Pin to top of Profile as Featured</span>
+                      </span>
+                      <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">
+                        Highlighted at the top of your document feed for high-priority drops and flagship guides.
+                      </p>
+                    </div>
+                  </label>
                 </div>
-              )}
-            </div>
 
-            {/* 5. Unlock Capacity Cap */}
-            <div className="space-y-2 pt-2 border-t border-neutral-200/60 dark:border-neutral-800/60">
-              <label className="flex items-start gap-2.5 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={hasCapacityCap}
-                  onChange={e => setHasCapacityCap(e.target.checked)}
-                  className="mt-0.5 rounded border-neutral-300 dark:border-neutral-700 text-neutral-900 dark:text-neutral-100 focus:ring-neutral-500"
-                />
-                <div>
-                  <span className="text-sm font-medium text-neutral-900 dark:text-neutral-100 flex items-center gap-1.5">
-                    <Users className="w-3.5 h-3.5 text-neutral-500" />
-                    <span>Limit maximum unlock capacity</span>
-                  </span>
-                  <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">
-                    Cap total unlocks (e.g., &quot;First 100 viewers only&quot;). Access closes once the unlock limit is reached.
-                  </p>
-                </div>
-              </label>
+                {/* 5. Drop Expiration */}
+                <div className="space-y-2 pt-2 border-t border-neutral-200/60 dark:border-neutral-800/60">
+                  <label className="flex items-start gap-2.5 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={hasExpiration}
+                      onChange={e => setHasExpiration(e.target.checked)}
+                      className="mt-0.5 rounded border-neutral-300 dark:border-neutral-700 text-neutral-900 dark:text-neutral-100 focus:ring-neutral-500"
+                    />
+                    <div>
+                      <span className="text-sm font-medium text-neutral-900 dark:text-neutral-100 flex items-center gap-1.5">
+                        <Clock className="w-3.5 h-3.5 text-neutral-500" />
+                        <span>Set document expiration date & time</span>
+                      </span>
+                      <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">
+                        Perfect for 24-hour flash drops or cohort deadlines. Access is automatically closed after this timestamp.
+                      </p>
+                    </div>
+                  </label>
 
-              {hasCapacityCap && (
-                <div className="pl-6 pt-1 max-w-xs">
-                  <input
-                    type="number"
-                    min="1"
-                    placeholder="e.g. 100"
-                    value={maxUnlocks}
-                    onChange={e => setMaxUnlocks(e.target.value)}
-                    className="w-full h-10 px-3 py-2 text-xs rounded-md border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100 font-mono"
-                  />
+                  {hasExpiration && (
+                    <div className="pl-6 pt-1 max-w-xs">
+                      <input
+                        type="datetime-local"
+                        value={expirationDate}
+                        onChange={e => setExpirationDate(e.target.value)}
+                        className="w-full h-10 px-3 py-2 text-xs rounded-md border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100"
+                      />
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
 
-            {/* 6. Custom 6-Digit Wave Code */}
-            <div className="space-y-2 pt-2 border-t border-neutral-200/60 dark:border-neutral-800/60">
-              <label className="flex items-start gap-2.5 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={useCustomCode}
-                  onChange={e => {
-                    setUseCustomCode(e.target.checked);
-                    if (e.target.checked && !customCode) {
-                      setCustomCode(generateSixDigitCode());
-                    }
-                  }}
-                  className="mt-0.5 rounded border-neutral-300 dark:border-neutral-700 text-neutral-900 dark:text-neutral-100 focus:ring-neutral-500"
-                />
-                <div>
-                  <span className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
-                    Set custom 6-digit access code
-                  </span>
-                  <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">
-                    Pick a memorable 6-digit numeric wave code for your audience (defaults to auto-generated).
-                  </p>
-                </div>
-              </label>
+                {/* 6. Unlock Capacity Cap */}
+                <div className="space-y-2 pt-2 border-t border-neutral-200/60 dark:border-neutral-800/60">
+                  <label className="flex items-start gap-2.5 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={hasCapacityCap}
+                      onChange={e => setHasCapacityCap(e.target.checked)}
+                      className="mt-0.5 rounded border-neutral-300 dark:border-neutral-700 text-neutral-900 dark:text-neutral-100 focus:ring-neutral-500"
+                    />
+                    <div>
+                      <span className="text-sm font-medium text-neutral-900 dark:text-neutral-100 flex items-center gap-1.5">
+                        <Users className="w-3.5 h-3.5 text-neutral-500" />
+                        <span>Limit maximum viewer capacity</span>
+                      </span>
+                      <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">
+                        Cap total unlocks (e.g., &quot;First 100 viewers only&quot;). Access closes once the unlock limit is reached.
+                      </p>
+                    </div>
+                  </label>
 
-              {useCustomCode && (
-                <div className="pl-6 pt-1 flex items-center gap-2 max-w-xs">
-                  <input
-                    type="text"
-                    maxLength={6}
-                    placeholder="e.g. 582910"
-                    value={customCode}
-                    onChange={e => {
-                      const val = e.target.value.replace(/\D/g, '').slice(0, 6);
-                      setCustomCode(val);
-                    }}
-                    className="w-36 h-10 px-3 py-2 text-base font-mono font-bold tracking-widest text-center rounded-md border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100"
-                  />
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="outline"
-                    onClick={handleGenerateRandomCode}
-                    title="Generate random code"
-                  >
-                    <RefreshCw className="w-3.5 h-3.5" />
-                    <span>Random</span>
-                  </Button>
+                  {hasCapacityCap && (
+                    <div className="pl-6 pt-1 max-w-xs">
+                      <input
+                        type="number"
+                        min="1"
+                        placeholder="e.g. 100"
+                        value={maxUnlocks}
+                        onChange={e => setMaxUnlocks(e.target.value)}
+                        className="w-full h-10 px-3 py-2 text-xs rounded-md border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100 font-mono"
+                      />
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
+
+                {/* 7. Custom 6-Digit Code */}
+                <div className="space-y-2 pt-2 border-t border-neutral-200/60 dark:border-neutral-800/60">
+                  <label className="flex items-start gap-2.5 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={useCustomCode}
+                      onChange={e => {
+                        setUseCustomCode(e.target.checked);
+                        if (e.target.checked && !customCode) {
+                          setCustomCode(generateSixDigitCode());
+                        }
+                      }}
+                      className="mt-0.5 rounded border-neutral-300 dark:border-neutral-700 text-neutral-900 dark:text-neutral-100 focus:ring-neutral-500"
+                    />
+                    <div>
+                      <span className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
+                        Set custom 6-digit access code
+                      </span>
+                      <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">
+                        Pick a memorable 6-digit numeric access code for your audience (defaults to auto-generated).
+                      </p>
+                    </div>
+                  </label>
+
+                  {useCustomCode && (
+                    <div className="pl-6 pt-1 flex items-center gap-2 max-w-xs">
+                      <input
+                        type="text"
+                        maxLength={6}
+                        placeholder="e.g. 582910"
+                        value={customCode}
+                        onChange={e => {
+                          const val = e.target.value.replace(/\D/g, '').slice(0, 6);
+                          setCustomCode(val);
+                        }}
+                        className="w-36 h-10 px-3 py-2 text-base font-mono font-bold tracking-widest text-center rounded-md border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100"
+                      />
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        onClick={handleGenerateRandomCode}
+                        title="Generate random code"
+                      >
+                        <RefreshCw className="w-3.5 h-3.5" />
+                        <span>Random</span>
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Upload Progress */}

@@ -2,7 +2,6 @@ import React, { Suspense, lazy } from 'react';
 import { Routes, Route, Navigate, useLocation, useParams } from 'react-router-dom';
 import { useAuth } from './lib/auth/authContext';
 import { Navbar } from './components/ui/Navbar';
-import { Footer } from './components/ui/Footer';
 
 // Code-split routes so public visitor pages don't load dashboard code
 const LandingPage = lazy(() => import('./pages/LandingPage').then(m => ({ default: m.LandingPage })));
@@ -15,6 +14,7 @@ const SignupPage = lazy(() => import('./pages/auth/SignupPage').then(m => ({ def
 const OnboardingPage = lazy(() => import('./pages/auth/OnboardingPage').then(m => ({ default: m.OnboardingPage })));
 const DashboardOverviewPage = lazy(() => import('./pages/dashboard/DashboardOverviewPage').then(m => ({ default: m.DashboardOverviewPage })));
 const ResourcesListPage = lazy(() => import('./pages/dashboard/ResourcesListPage').then(m => ({ default: m.ResourcesListPage })));
+const SavedResourcesPage = lazy(() => import('./pages/dashboard/SavedResourcesPage').then(m => ({ default: m.SavedResourcesPage })));
 const NewResourcePage = lazy(() => import('./pages/dashboard/NewResourcePage').then(m => ({ default: m.NewResourcePage })));
 const EditResourcePage = lazy(() => import('./pages/dashboard/EditResourcePage').then(m => ({ default: m.EditResourcePage })));
 const SettingsPage = lazy(() => import('./pages/dashboard/SettingsPage').then(m => ({ default: m.SettingsPage })));
@@ -45,14 +45,18 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  if (!profile?.username && location.pathname !== '/onboarding') {
+  const isViewer = profile?.accountType === 'viewer';
+  const isSavedRoute = location.pathname === '/saved' || location.pathname === '/dashboard/saved';
+  const isAllowedForViewer = isViewer && (location.pathname === '/dashboard' || location.pathname === '/dashboard/settings' || isSavedRoute);
+
+  if (!profile?.username && !isAllowedForViewer && location.pathname !== '/onboarding' && !isSavedRoute) {
     return <Navigate to="/onboarding" replace />;
   }
 
   return <>{children}</>;
 };
 
-// Home Route: redirects authenticated creators to dashboard / onboarding, displays marketing LandingPage for guests
+// Home Route: redirects authenticated users to appropriate workspace, displays marketing LandingPage for guests
 const HomeRoute: React.FC = () => {
   const { user, profile, loading } = useAuth();
 
@@ -61,6 +65,9 @@ const HomeRoute: React.FC = () => {
   }
 
   if (user) {
+    if (profile?.accountType === 'viewer' && !profile?.username) {
+      return <Navigate to="/dashboard/saved" replace />;
+    }
     if (profile && !profile.username) {
       return <Navigate to="/onboarding" replace />;
     }
@@ -86,9 +93,9 @@ const LegacyResourceRedirect: React.FC = () => {
 export const App: React.FC = () => {
   const location = useLocation();
 
-  // Non-viewer routes that should show the main creator navbar/footer
+  // Non-viewer routes that should show the main creator navbar/header
   const isMainAppRoute =
-    ['/', '/login', '/signup', '/onboarding', '/features', '/how-it-works', '/pricing', '/about'].includes(location.pathname) ||
+    ['/', '/login', '/signup', '/onboarding', '/features', '/how-it-works', '/pricing', '/about', '/saved'].includes(location.pathname) ||
     location.pathname.startsWith('/dashboard');
 
   // Standalone public screens (creator profiles and resource views) omit main nav/footer
@@ -174,8 +181,31 @@ export const App: React.FC = () => {
               }
             />
 
+            {/* Viewer Saved Library Routes */}
+            <Route
+              path="/dashboard/saved"
+              element={
+                <ProtectedRoute>
+                  <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8">
+                    <SavedResourcesPage />
+                  </div>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/saved"
+              element={
+                <ProtectedRoute>
+                  <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8">
+                    <SavedResourcesPage />
+                  </div>
+                </ProtectedRoute>
+              }
+            />
+
             {/* Clean Public Creator and Resource Routes */}
             <Route path="/:username" element={<CreatorProfilePage />} />
+            <Route path="/:username/:code" element={<ResourceViewPage />} />
             <Route path="/:username/resource/:publicSlug" element={<ResourceViewPage />} />
 
             {/* Backwards Compatibility: Redirect Legacy @ and /creator/ Routes to Clean Routes */}
@@ -191,8 +221,6 @@ export const App: React.FC = () => {
           </Routes>
         </Suspense>
       </div>
-
-      {!isPublicViewerRoute && <Footer />}
     </div>
   );
 };

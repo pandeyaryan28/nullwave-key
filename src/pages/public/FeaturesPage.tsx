@@ -92,7 +92,7 @@ export const FeaturesPage: React.FC = () => {
           </div>
           <div className="space-y-2">
             <h3 className="text-lg font-bold text-neutral-900 dark:text-neutral-100">
-              24-Hour Non-Invasive Telemetry
+              24-Hour Non-Invasive Analytics
             </h3>
             <p className="text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed">
               Privacy-first analytics measure total views, confirmed downloads, and genuine unique visitors across rolling 24-hour windows using zero-PII client tokens rather than creepy surveillance trackers.
@@ -106,10 +106,10 @@ export const FeaturesPage: React.FC = () => {
           </div>
           <div className="space-y-2">
             <h3 className="text-lg font-bold text-neutral-900 dark:text-neutral-100">
-              Canonical Station Routing
+              Clean Profile & Document Routing
             </h3>
             <p className="text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed">
-              Clean URLs like <span className="font-mono text-xs text-neutral-900 dark:text-neutral-100">nullwave.com/username</span> automatically normalize encoded `@` handles and preserve backwards-compatible deep linking across social bio placements.
+              Clean URLs like <span className="font-mono text-xs text-neutral-900 dark:text-neutral-100">nullwave.com/username/code</span> automatically normalize encoded `@` handles and preserve backwards-compatible deep linking across social bio placements.
             </p>
           </div>
         </Card>
@@ -133,10 +133,10 @@ export const FeaturesPage: React.FC = () => {
       <section className="space-y-6">
         <div className="space-y-2">
           <h2 className="text-2xl font-bold tracking-tight text-neutral-900 dark:text-neutral-100">
-            Direct Transmission vs Traditional Link Tools
+            Direct Access vs Traditional Link Tools
           </h2>
           <p className="text-sm text-neutral-500 dark:text-neutral-400">
-            Why audiences abandon traditional link trees and how NullWave restores pure transmission.
+            Why audiences abandon traditional link trees and how NullWave restores direct access.
           </p>
         </div>
 
@@ -146,7 +146,7 @@ export const FeaturesPage: React.FC = () => {
               <tr>
                 <th className="px-6 py-4 font-semibold">Capability</th>
                 <th className="px-6 py-4 font-semibold text-neutral-950 dark:text-neutral-50">
-                  NullWave Station
+                  NullWave Profile
                 </th>
                 <th className="px-6 py-4 font-semibold">Standard Link Aggregators</th>
                 <th className="px-6 py-4 font-semibold">Email Capture Portals</th>
@@ -231,15 +231,15 @@ export const FeaturesPage: React.FC = () => {
       {/* CTA Section */}
       <section className="p-8 sm:p-12 rounded-lg bg-neutral-100 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 text-center space-y-4">
         <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-neutral-950 dark:text-neutral-50">
-          Ready to transmit without barriers?
+          Ready to distribute without barriers?
         </h2>
         <p className="text-sm text-neutral-600 dark:text-neutral-400 max-w-xl mx-auto">
-          Claim your handle and broadcast your first 6-digit wave code in less than two minutes.
+          Claim your handle and share your first 6-digit access code in less than two minutes.
         </p>
         <div className="pt-2">
           <Link to="/signup">
             <Button size="lg" variant="primary">
-              <span>Create NullWave Station</span>
+              <span>Get Started Free</span>
               <ArrowRight className="w-4 h-4" />
             </Button>
           </Link>

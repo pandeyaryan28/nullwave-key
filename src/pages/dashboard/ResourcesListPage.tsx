@@ -71,7 +71,7 @@ export const ResourcesListPage: React.FC = () => {
 
   const handleCopyLink = (resource: Resource) => {
     if (!profile?.username) return;
-    const url = `${window.location.origin}/${profile.username}/resource/${resource.publicSlug}`;
+    const url = `${window.location.origin}/${profile.username}/${resource.code}`;
     navigator.clipboard.writeText(url);
     setCopiedLinkId(resource.id);
     setTimeout(() => setCopiedLinkId(null), 2000);
@@ -297,7 +297,7 @@ export const ResourcesListPage: React.FC = () => {
 
                     {profile?.username && (
                       <Link
-                        to={`/${profile.username}/resource/${res.publicSlug}`}
+                        to={`/${profile.username}/${res.code}`}
                         target="_blank"
                         title="Open resource"
                         className="p-2 text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-md transition-colors"

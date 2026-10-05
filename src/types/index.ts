@@ -19,6 +19,7 @@ export interface UserProfile {
   location?: string;
   socialLink?: string; // backwards compatibility e.g. instagram.com/username
   socialLinks?: UserSocialLinks;
+  accountType?: 'creator' | 'viewer'; // account role distinction
   createdAt: number; // unix timestamp ms
   updatedAt: number; // unix timestamp ms
 }
@@ -54,10 +55,28 @@ export interface Resource {
 
   // Advanced Distribution Controls
   allowDownload?: boolean; // defaults to true; if false, view-only in browser
+  allowSave?: boolean; // defaults to true; permits visitors to save to viewer library
   isPublicListing?: boolean; // defaults to true; if false, unlisted/direct link only
-  isPinned?: boolean; // defaults to false; featured at top of station
+  isPinned?: boolean; // defaults to false; featured at top of profile
   expiresAt?: number | null; // optional expiration timestamp ms
   maxUnlocks?: number | null; // optional cap on total unlocks
+}
+
+export interface SavedResource {
+  id: string; // resource ID
+  resourceId: string;
+  title: string;
+  description?: string;
+  fileName: string;
+  fileSizeBytes: number;
+  fileUrl: string;
+  coverUrl?: string;
+  code: string;
+  creatorId: string;
+  creatorUsername: string;
+  creatorDisplayName?: string;
+  category?: string;
+  savedAt: number;
 }
 
 export interface ResourceViewAudit {

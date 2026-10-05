@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { useParams, Link, Navigate } from 'react-router-dom';
+import { useParams, Link, Navigate, useNavigate } from 'react-router-dom';
 import {
   collection,
   query,
@@ -14,6 +14,11 @@ import { Resource, UserProfile } from '../../types';
 import { useAuth } from '../../lib/auth/authContext';
 import { trackResourceView, trackResourceDownload } from '../../lib/analytics/tracker';
 import { fetchFileFromFirestoreChunks } from '../../lib/storage/storageService';
+import {
+  saveResource,
+  removeSavedResource,
+  isResourceSaved,
+} from '../../lib/storage/savedResourcesService';
 import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
 import { Card } from '../../components/ui/Card';
@@ -22,26 +27,35 @@ import { ThemeToggle } from '../../components/ui/ThemeToggle';
 import {
   ArrowLeft,
   Download,
-  Waves,
-  Radio,
-  ExternalLink,
   FileText,
-  Eye,
   Calendar,
   Clock,
   Users,
   EyeOff,
   Lock,
   Edit,
+  Bookmark,
+  Copy,
+  Check,
+  Shield,
+  X,
 } from 'lucide-react';
 
 export const ResourceViewPage: React.FC = () => {
-  const { username, publicSlug } = useParams<{ username: string; publicSlug: string }>();
-  const { user } = useAuth();
+  const { username, code, publicSlug } = useParams<{
+    username: string;
+    code?: string;
+    publicSlug?: string;
+  }>();
+  const { user, signInWithGoogle } = useAuth();
+  const navigate = useNavigate();
 
   // Redirect legacy @, encoded %40, or mixed-case handles immediately to clean canonical URL
   if (username && (username !== username.toLowerCase() || /^(?:@|%40)/.test(username))) {
     const clean = username.replace(/^(?:@|%40)+/, '').toLowerCase();
+    if (code) {
+      return <Navigate to={`/${clean}/${code}`} replace />;
+    }
     return <Navigate to={`/${clean}/resource/${publicSlug || ''}`} replace />;
   }
 
@@ -56,6 +70,12 @@ export const ResourceViewPage: React.FC = () => {
   const [isVerifying, setIsVerifying] = useState<boolean>(false);
   const [codeError, setCodeError] = useState<string | null>(null);
   const [cooldownSeconds, setCooldownSeconds] = useState<number>(0);
+
+  // Viewer library save state
+  const [isSaved, setIsSaved] = useState<boolean>(false);
+  const [isSaving, setIsSaving] = useState<boolean>(false);
+  const [showAuthModal, setShowAuthModal] = useState<boolean>(false);
+  const [copiedLink, setCopiedLink] = useState<boolean>(false);
 
   const [blobUrl, setBlobUrl] = useState<string | null>(null);
 
@@ -111,9 +131,10 @@ export const ResourceViewPage: React.FC = () => {
 
   // Check rate limit cooldown for this specific resource
   useEffect(() => {
-    if (!cleanUsername || !publicSlug) return;
-    const nullwaveKey = `nullwave_cooldown_${cleanUsername}_${publicSlug}`;
-    const unlockrKey = `unlockr_cooldown_${cleanUsername}_${publicSlug}`;
+    if (!cleanUsername) return;
+    const identifier = code || publicSlug || 'default';
+    const nullwaveKey = `nullwave_cooldown_${cleanUsername}_${identifier}`;
+    const unlockrKey = `unlockr_cooldown_${cleanUsername}_${identifier}`;
 
     const checkCooldown = () => {
       try {
@@ -129,11 +150,20 @@ export const ResourceViewPage: React.FC = () => {
     checkCooldown();
     const interval = setInterval(checkCooldown, 1000);
     return () => clearInterval(interval);
-  }, [cleanUsername, publicSlug]);
+  }, [cleanUsername, code, publicSlug]);
+
+  // Check if saved in viewer's personal library
+  useEffect(() => {
+    if (user?.uid && resource?.id) {
+      isResourceSaved(user.uid, resource.id).then(saved => {
+        setIsSaved(saved);
+      });
+    }
+  }, [user?.uid, resource?.id]);
 
   useEffect(() => {
     const fetchResource = async () => {
-      if (!cleanUsername || !publicSlug) {
+      if (!cleanUsername || (!code && !publicSlug)) {
         setNotFound(true);
         setLoading(false);
         return;
@@ -209,12 +239,16 @@ export const ResourceViewPage: React.FC = () => {
         }
         setCreator(creatorData);
 
-        // 2. Fetch resource by creatorId + publicSlug (+ status == 'active' for public viewers)
+        // 2. Fetch resource by creatorId + (code OR publicSlug)
         const isOwner = user?.uid === creatorData.uid;
-        const constraints = [
-          where('creatorId', '==', creatorData.uid),
-          where('publicSlug', '==', publicSlug),
-        ];
+        const constraints = [where('creatorId', '==', creatorData.uid)];
+
+        if (code) {
+          constraints.push(where('code', '==', code.trim()));
+        } else if (publicSlug) {
+          constraints.push(where('publicSlug', '==', publicSlug));
+        }
+
         if (!isOwner) {
           constraints.push(where('status', '==', 'active'));
         }
@@ -245,9 +279,13 @@ export const ResourceViewPage: React.FC = () => {
               localStorage.getItem(`unlockr_resources_${creatorData.uid}`);
             if (localListStr) {
               const localList = JSON.parse(localListStr) as Resource[];
-              resData = localList.find(
-                r => r.publicSlug === publicSlug && (isOwner || r.status === 'active')
-              ) || null;
+              resData =
+                localList.find(r => {
+                  const matchesIdentifier = code
+                    ? r.code === code.trim()
+                    : r.publicSlug === publicSlug;
+                  return matchesIdentifier && (isOwner || r.status === 'active');
+                }) || null;
             }
           } catch {}
         }
@@ -258,16 +296,33 @@ export const ResourceViewPage: React.FC = () => {
           return;
         }
 
+        // Canonical URL migration: when accessed via legacy slug route, redirect to canonical /:username/:code
+        if (!code && publicSlug && resData.code) {
+          navigate(`/${cleanUsername}/${resData.code}`, { replace: true });
+          return;
+        }
+
         setResource(resData);
 
-        // Check if unlocked in session or if logged in creator owns the resource
-        const alreadyUnlocked =
+        // Evaluation: when accessed via the direct 6-digit code URL (/:username/:code),
+        // the visitor already possesses the valid access code! Automatically unlock!
+        const isDirectCodeAccess = Boolean(code && code.trim() === resData.code);
+        const alreadyUnlockedInSession =
           sessionStorage.getItem(`nullwave_unlocked_${resData.id}`) === 'true' ||
           sessionStorage.getItem(`unlockr_unlocked_${resData.id}`) === 'true' ||
           user?.uid === resData.creatorId;
 
-        if (alreadyUnlocked) {
+        const isExpiredCheck = Boolean(resData.expiresAt && Date.now() > resData.expiresAt);
+        const isCapacityCheck = Boolean(
+          resData.maxUnlocks && (resData.uniqueViews || 0) >= resData.maxUnlocks
+        );
+
+        if ((isDirectCodeAccess || alreadyUnlockedInSession) && ((!isExpiredCheck && !isCapacityCheck) || isOwner)) {
           setIsUnlocked(true);
+          try {
+            sessionStorage.setItem(`nullwave_unlocked_${resData.id}`, 'true');
+            sessionStorage.setItem(`unlockr_unlocked_${resData.id}`, 'true');
+          } catch {}
         }
       } catch (err) {
         console.error('Error fetching resource:', err);
@@ -278,7 +333,7 @@ export const ResourceViewPage: React.FC = () => {
     };
 
     fetchResource();
-  }, [cleanUsername, publicSlug, user?.uid]);
+  }, [cleanUsername, code, publicSlug, user?.uid]);
 
   // Track page view once unlocked
   useEffect(() => {
@@ -311,25 +366,27 @@ export const ResourceViewPage: React.FC = () => {
     resource?.maxUnlocks && (resource.uniqueViews || 0) >= resource.maxUnlocks
   );
   const allowDownload = resource?.allowDownload !== false;
+  const allowSave = resource?.allowSave !== false;
 
   const handleInlineCodeSubmit = (enteredCode: string) => {
     if (!resource) return;
 
     // Check expiration and cap
     if (isExpired && !isOwner) {
-      setCodeError('This drop has expired and is no longer accessible.');
+      setCodeError('This document has expired and is no longer accessible.');
       return;
     }
 
     if (isCapacityReached && !isOwner) {
-      setCodeError(`Maximum unlock capacity (${resource.maxUnlocks}) has been reached for this drop.`);
+      setCodeError(`Maximum unlock capacity (${resource.maxUnlocks}) has been reached for this document.`);
       return;
     }
 
-    const nullwaveCooldownKey = `nullwave_cooldown_${cleanUsername}_${publicSlug}`;
-    const unlockrCooldownKey = `unlockr_cooldown_${cleanUsername}_${publicSlug}`;
-    const nullwaveAttemptsKey = `nullwave_attempts_${cleanUsername}_${publicSlug}`;
-    const unlockrAttemptsKey = `unlockr_attempts_${cleanUsername}_${publicSlug}`;
+    const identifier = code || publicSlug || resource.code;
+    const nullwaveCooldownKey = `nullwave_cooldown_${cleanUsername}_${identifier}`;
+    const unlockrCooldownKey = `unlockr_cooldown_${cleanUsername}_${identifier}`;
+    const nullwaveAttemptsKey = `nullwave_attempts_${cleanUsername}_${identifier}`;
+    const unlockrAttemptsKey = `unlockr_attempts_${cleanUsername}_${identifier}`;
 
     if (cooldownSeconds > 0) {
       setCodeError(`Too many failed attempts. Please wait ${cooldownSeconds}s before trying again.`);
@@ -383,10 +440,8 @@ export const ResourceViewPage: React.FC = () => {
     setIsDownloading(true);
 
     try {
-      // 1. Record download event in analytics atomically
       await trackResourceDownload(resource.id, resource.creatorId);
 
-      // Update local counter
       setResource(prev =>
         prev ? { ...prev, totalDownloads: prev.totalDownloads + 1 } : null
       );
@@ -394,7 +449,6 @@ export const ResourceViewPage: React.FC = () => {
       const targetUrl = blobUrl || resource.fileUrl;
       const fileName = resource.fileName || `${resource.title}.pdf`;
 
-      // 2. Trigger reliable browser file download via Blob
       try {
         const response = await fetch(targetUrl);
         const fileBlob = await response.blob();
@@ -422,11 +476,51 @@ export const ResourceViewPage: React.FC = () => {
     }
   };
 
+  const handleToggleSave = async () => {
+    if (!user) {
+      setShowAuthModal(true);
+      return;
+    }
+    if (!resource || !creator) return;
+
+    setIsSaving(true);
+    try {
+      if (isSaved) {
+        await removeSavedResource(user.uid, resource.id);
+        setIsSaved(false);
+      } else {
+        await saveResource(user.uid, resource, creator);
+        setIsSaved(true);
+      }
+    } catch (err) {
+      console.error('Error toggling saved resource:', err);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleCopyDocLink = () => {
+    if (!creator?.username || !resource?.code) return;
+    const url = `${window.location.origin}/${creator.username}/${resource.code}`;
+    navigator.clipboard.writeText(url);
+    setCopiedLink(true);
+    setTimeout(() => setCopiedLink(false), 2000);
+  };
+
+  const handleGoogleSignInAndSave = async () => {
+    try {
+      await signInWithGoogle();
+      setShowAuthModal(false);
+    } catch (err) {
+      console.error('Google sign in error from viewer modal:', err);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-neutral-50 dark:bg-neutral-950 flex flex-col items-center justify-center p-4">
-        <div className="w-12 h-12 rounded-md bg-neutral-200 dark:bg-neutral-800 animate-pulse mb-4" />
-        <div className="h-6 w-48 bg-neutral-200 dark:bg-neutral-800 rounded animate-pulse mb-2" />
+        <div className="w-10 h-10 rounded-md bg-neutral-200 dark:bg-neutral-800 animate-pulse mb-4" />
+        <div className="h-5 w-48 bg-neutral-200 dark:bg-neutral-800 rounded animate-pulse mb-2" />
         <div className="h-4 w-32 bg-neutral-200 dark:bg-neutral-800 rounded animate-pulse" />
       </div>
     );
@@ -436,13 +530,13 @@ export const ResourceViewPage: React.FC = () => {
     return (
       <div className="min-h-screen bg-neutral-50 dark:bg-neutral-950 flex flex-col items-center justify-center p-6 text-center">
         <div className="w-12 h-12 rounded-md bg-neutral-200 dark:bg-neutral-800 flex items-center justify-center mb-4 text-neutral-500">
-          <Waves className="w-6 h-6" />
+          <FileText className="w-6 h-6" />
         </div>
         <h1 className="text-xl font-bold text-neutral-900 dark:text-neutral-100 mb-2">
-          Resource Unavailable
+          Document Unavailable
         </h1>
         <p className="text-sm text-neutral-600 dark:text-neutral-400 max-w-sm mb-6">
-          This resource is either disabled, has been removed, or does not exist under {cleanUsername}.
+          This document is either disabled, has been removed, or does not exist under {cleanUsername}.
         </p>
         <Link to={`/${cleanUsername}`}>
           <Button variant="outline" size="sm">
@@ -462,29 +556,63 @@ export const ResourceViewPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-neutral-50 dark:bg-neutral-950 flex flex-col selection:bg-neutral-200 dark:selection:bg-neutral-800">
-      {/* Top Header */}
-      <header className="sticky top-0 z-40 border-b border-neutral-200 dark:border-neutral-800 bg-white/90 dark:bg-neutral-950/90 backdrop-blur-md">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
-          <Link
-            to={`/${creator.username}`}
-            className="inline-flex items-center gap-2 text-xs font-semibold text-neutral-700 dark:text-neutral-300 hover:text-neutral-950 dark:hover:text-neutral-50 transition-colors"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            <span>Back to {creator.displayName || creator.username}</span>
-          </Link>
+      {/* Top Sticky Document Control Bar */}
+      <header className="sticky top-0 z-40 border-b border-neutral-200 dark:border-neutral-800 bg-white/95 dark:bg-neutral-950/95 backdrop-blur-md">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3 min-w-0">
+            <Link
+              to={`/${creator.username}`}
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-neutral-700 dark:text-neutral-300 hover:text-neutral-950 dark:hover:text-neutral-50 shrink-0 transition-colors"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              <span className="hidden sm:inline">Back to</span>
+              <span>{creator.displayName || creator.username}</span>
+            </Link>
 
-          <div className="flex items-center gap-2.5">
-            {isOwner && resource && (
+            <span className="text-neutral-300 dark:text-neutral-700 hidden sm:inline">•</span>
+
+            <span className="text-xs font-medium text-neutral-900 dark:text-neutral-100 truncate hidden md:inline">
+              {resource.title}
+            </span>
+          </div>
+
+          <div className="flex items-center gap-2 shrink-0">
+            {isOwner && (
               <Link to={`/dashboard/resources/${resource.id}/edit`}>
                 <Button size="sm" variant="outline" className="text-xs">
                   <Edit className="w-3.5 h-3.5" />
-                  <span>Edit</span>
+                  <span className="hidden sm:inline">Edit</span>
                 </Button>
               </Link>
             )}
-            <ThemeToggle />
 
-            {/* Download Button (Only when downloads allowed AND resource is unlocked) */}
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handleCopyDocLink}
+              title="Copy direct document link"
+              className="text-xs"
+            >
+              {copiedLink ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+              <span className="hidden sm:inline">{copiedLink ? 'Link Copied' : 'Share'}</span>
+            </Button>
+
+            {/* Save to Library Button (for viewers when creator allows saving) */}
+            {isUnlocked && allowSave && (
+              <Button
+                size="sm"
+                variant={isSaved ? 'secondary' : 'outline'}
+                onClick={handleToggleSave}
+                isLoading={isSaving}
+                className="text-xs"
+                title={isSaved ? 'Remove from saved library' : 'Save to viewer library'}
+              >
+                <Bookmark className={`w-3.5 h-3.5 ${isSaved ? 'fill-current text-neutral-900 dark:text-neutral-100' : ''}`} />
+                <span className="hidden sm:inline">{isSaved ? 'Saved' : 'Save'}</span>
+              </Button>
+            )}
+
+            {/* Download Button */}
             {isUnlocked ? (
               allowDownload ? (
                 <Button
@@ -492,9 +620,10 @@ export const ResourceViewPage: React.FC = () => {
                   variant="primary"
                   onClick={handleDownload}
                   isLoading={isDownloading}
+                  className="text-xs"
                 >
-                  <Download className="w-4 h-4" />
-                  <span>Download PDF</span>
+                  <Download className="w-3.5 h-3.5" />
+                  <span>Download</span>
                 </Button>
               ) : (
                 <Badge variant="warning" className="text-xs py-1 px-2.5 flex items-center gap-1.5">
@@ -504,158 +633,160 @@ export const ResourceViewPage: React.FC = () => {
               )
             ) : (
               <div className="text-xs text-neutral-500 flex items-center gap-1.5 font-medium">
-                <Radio className="w-3.5 h-3.5" />
-                <span>Wave Protected</span>
+                <Shield className="w-3.5 h-3.5" />
+                <span>Code Protected</span>
               </div>
             )}
+
+            <ThemeToggle />
           </div>
         </div>
       </header>
 
-      {/* Main Container */}
-      <main className="max-w-5xl mx-auto px-4 sm:px-6 py-8 flex-1 w-full space-y-6">
-        {/* Resource Header Card */}
-        <Card className="p-6 sm:p-8">
-          <div className="flex flex-col md:flex-row items-start justify-between gap-6">
-            <div className="space-y-3 flex-1 min-w-0">
-              <div className="flex flex-wrap items-center gap-2">
-                {resource.category && (
-                  <Badge variant="neutral">{resource.category}</Badge>
-                )}
-                {!allowDownload && (
-                  <Badge variant="warning" className="flex items-center gap-1">
-                    <EyeOff className="w-3 h-3" />
-                    <span>View Only</span>
-                  </Badge>
-                )}
-                {isExpired && (
-                  <Badge variant="error" className="flex items-center gap-1">
-                    <Clock className="w-3 h-3" />
-                    <span>Expired Drop</span>
-                  </Badge>
-                )}
-                {isCapacityReached && (
-                  <Badge variant="error" className="flex items-center gap-1">
-                    <Users className="w-3 h-3" />
-                    <span>Capacity Cap Reached</span>
-                  </Badge>
-                )}
-                <span className="text-xs text-neutral-500 dark:text-neutral-400 flex items-center gap-1">
-                  <Calendar className="w-3.5 h-3.5" />
-                  {formattedDate}
-                </span>
-                <span className="text-xs text-neutral-500 dark:text-neutral-400 flex items-center gap-1 font-mono">
-                  {(resource.fileSizeBytes / (1024 * 1024)).toFixed(1)} MB
-                </span>
-              </div>
-
-              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-neutral-900 dark:text-neutral-50 leading-tight">
-                {resource.title}
-              </h1>
-
-              {resource.description && (
-                <p className="text-sm sm:text-base text-neutral-600 dark:text-neutral-300 leading-relaxed max-w-3xl">
-                  {resource.description}
-                </p>
+      {/* Main Document Container */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 flex-1 w-full space-y-6">
+        {/* Document Metadata Bar */}
+        <div className="flex flex-col md:flex-row items-start justify-between gap-4 p-5 rounded-md border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900">
+          <div className="space-y-2 flex-1 min-w-0">
+            <div className="flex flex-wrap items-center gap-2">
+              {resource.category && (
+                <Badge variant="neutral">{resource.category}</Badge>
               )}
-
-              {/* Creator Bylines */}
-              <div className="pt-2 flex items-center gap-3 border-t border-neutral-100 dark:border-neutral-800">
-                <Link
-                  to={`/${creator.username}`}
-                  className="flex items-center gap-2 group"
-                >
-                  {creator.photoURL ? (
-                    <img
-                      src={creator.photoURL}
-                      alt={creator.displayName}
-                      className="w-7 h-7 rounded-md object-cover border border-neutral-200 dark:border-neutral-700"
-                    />
-                  ) : (
-                    <div className="w-7 h-7 rounded-md bg-neutral-200 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 flex items-center justify-center font-bold text-xs">
-                      {creator.displayName ? creator.displayName[0].toUpperCase() : 'C'}
-                    </div>
-                  )}
-                  <span className="text-xs font-semibold text-neutral-800 dark:text-neutral-200 group-hover:underline">
-                    {creator.displayName} <span className="text-neutral-500 font-normal">(@{creator.username})</span>
-                  </span>
-                </Link>
-                {creator.headline && (
-                  <span className="text-xs text-neutral-500 truncate hidden sm:inline">
-                    • {creator.headline}
-                  </span>
-                )}
-              </div>
+              {!allowDownload && (
+                <Badge variant="warning" className="flex items-center gap-1">
+                  <EyeOff className="w-3 h-3" />
+                  <span>View Only</span>
+                </Badge>
+              )}
+              {isExpired && (
+                <Badge variant="error" className="flex items-center gap-1">
+                  <Clock className="w-3 h-3" />
+                  <span>Expired</span>
+                </Badge>
+              )}
+              {isCapacityReached && (
+                <Badge variant="error" className="flex items-center gap-1">
+                  <Users className="w-3 h-3" />
+                  <span>Capacity Cap Reached</span>
+                </Badge>
+              )}
+              <span className="text-xs text-neutral-500 dark:text-neutral-400 flex items-center gap-1">
+                <Calendar className="w-3.5 h-3.5" />
+                {formattedDate}
+              </span>
+              <span className="text-xs text-neutral-500 dark:text-neutral-400 flex items-center gap-1 font-mono">
+                {(resource.fileSizeBytes / (1024 * 1024)).toFixed(1)} MB
+              </span>
+              <span className="text-xs font-mono text-neutral-500 dark:text-neutral-400">
+                Code: <span className="font-semibold text-neutral-900 dark:text-neutral-100">{resource.code}</span>
+              </span>
             </div>
 
-            {/* Optional Resource Cover */}
-            {resource.coverUrl && (
-              <div className="w-full md:w-48 h-48 rounded-md overflow-hidden border border-neutral-200 dark:border-neutral-800 shrink-0">
-                <img
-                  src={resource.coverUrl}
-                  alt={resource.title}
-                  className="w-full h-full object-cover"
-                />
-              </div>
-            )}
-          </div>
-        </Card>
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-neutral-900 dark:text-neutral-50 leading-tight">
+              {resource.title}
+            </h1>
 
-        {/* Expired Drop Notice (when viewer visits expired resource) */}
+            {resource.description && (
+              <p className="text-sm text-neutral-600 dark:text-neutral-300 leading-relaxed max-w-3xl">
+                {resource.description}
+              </p>
+            )}
+
+            {/* Creator Attribution */}
+            <div className="pt-2 flex items-center gap-3 border-t border-neutral-100 dark:border-neutral-800">
+              <Link
+                to={`/${creator.username}`}
+                className="flex items-center gap-2 group"
+              >
+                {creator.photoURL ? (
+                  <img
+                    src={creator.photoURL}
+                    alt={creator.displayName}
+                    className="w-6 h-6 rounded-md object-cover border border-neutral-200 dark:border-neutral-700"
+                  />
+                ) : (
+                  <div className="w-6 h-6 rounded-md bg-neutral-200 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 flex items-center justify-center font-bold text-xs">
+                    {creator.displayName ? creator.displayName[0].toUpperCase() : 'C'}
+                  </div>
+                )}
+                <span className="text-xs font-semibold text-neutral-800 dark:text-neutral-200 group-hover:underline">
+                  {creator.displayName} <span className="text-neutral-500 font-normal">(@{creator.username})</span>
+                </span>
+              </Link>
+              {creator.headline && (
+                <span className="text-xs text-neutral-500 truncate hidden sm:inline">
+                  • {creator.headline}
+                </span>
+              )}
+            </div>
+          </div>
+
+          {resource.coverUrl && (
+            <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-md overflow-hidden border border-neutral-200 dark:border-neutral-800 shrink-0">
+              <img
+                src={resource.coverUrl}
+                alt={resource.title}
+                className="w-full h-full object-cover"
+              />
+            </div>
+          )}
+        </div>
+
+        {/* Expired Notice */}
         {isExpired && !isOwner && (
           <div className="p-4 rounded-md bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 text-xs text-red-700 dark:text-red-300 flex items-center gap-2.5">
             <Clock className="w-4 h-4 shrink-0 text-red-600 dark:text-red-400" />
             <span>
-              This time-limited drop expired on {new Date(resource.expiresAt!).toLocaleString()}. Access has closed.
+              This document expired on {new Date(resource.expiresAt!).toLocaleString()}. Access has closed.
             </span>
           </div>
         )}
 
-        {/* Capacity Cap Notice (when viewer visits capped resource) */}
+        {/* Capacity Cap Notice */}
         {isCapacityReached && !isUnlocked && !isOwner && (
           <div className="p-4 rounded-md bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-xs text-amber-800 dark:text-amber-300 flex items-center gap-2.5">
             <Users className="w-4 h-4 shrink-0 text-amber-600 dark:text-amber-400" />
             <span>
-              This drop had a limit of {resource.maxUnlocks} viewers, and all slots have been claimed. Access is now closed.
+              This document had a limit of {resource.maxUnlocks} viewers, and all slots have been claimed.
             </span>
           </div>
         )}
 
-        {/* View-Only Distribution Banner (when viewer has unlocked a view-only document) */}
+        {/* View-Only Notice */}
         {!allowDownload && isUnlocked && (
           <div className="p-3.5 rounded-md bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/60 text-xs text-amber-800 dark:text-amber-300 flex items-center gap-2">
             <EyeOff className="w-4 h-4 shrink-0 text-amber-600 dark:text-amber-400" />
             <span>
-              This document is distributed in view-only mode by the creator. You can read the guide completely in the browser reader below, but file downloading is disabled.
+              This document is distributed in view-only mode by the creator. You can read the entire guide in the reader below, but raw file downloading is disabled.
             </span>
           </div>
         )}
 
-        {/* Gated Access: Inline 6-Digit Code Verification OR Unlocked Document Viewer */}
+        {/* Gated Access: 6-Digit Code Input OR Native PDF Document Reader */}
         {!isUnlocked ? (
           <Card className="p-8 text-center border-neutral-300 dark:border-neutral-700 shadow-sm max-w-lg mx-auto">
             <div className="w-12 h-12 rounded-md bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 flex items-center justify-center mx-auto mb-4 border border-neutral-200 dark:border-neutral-700">
               {isExpired || (isCapacityReached && !isOwner) ? (
                 <Lock className="w-6 h-6 text-red-500" />
               ) : (
-                <Radio className="w-6 h-6" />
+                <Shield className="w-6 h-6" />
               )}
             </div>
 
             <h2 className="text-lg font-bold text-neutral-900 dark:text-neutral-100 mb-1">
               {isExpired
-                ? 'Drop Expired'
+                ? 'Document Expired'
                 : isCapacityReached && !isOwner
                 ? 'Capacity Reached'
-                : 'Enter 6-Digit Wave Code'}
+                : 'Enter 6-Digit Code'}
             </h2>
 
             <p className="text-xs text-neutral-500 dark:text-neutral-400 mb-6 max-w-sm mx-auto">
               {isExpired
                 ? 'This guide was time-limited and is no longer open for access.'
                 : isCapacityReached && !isOwner
-                ? 'This limited drop has reached maximum capacity.'
-                : `This document is protected. Enter the 6-digit wave code shared by ${
+                ? 'This document has reached maximum viewer capacity.'
+                : `This document is protected. Enter the 6-digit access code shared by ${
                     creator.displayName || creator.username
                   } to view.`}
             </p>
@@ -666,14 +797,13 @@ export const ResourceViewPage: React.FC = () => {
               </div>
             )}
 
-            {/* Disable code input if drop is expired or capacity reached */}
             {isExpired && !isOwner ? (
               <div className="p-4 rounded-md bg-neutral-100 dark:bg-neutral-800 text-xs text-neutral-600 dark:text-neutral-400">
-                Drop availability has ended. Contact @{creator.username} for future drops.
+                Document availability has ended. Contact @{creator.username} for updates.
               </div>
             ) : isCapacityReached && !isOwner ? (
               <div className="p-4 rounded-md bg-neutral-100 dark:bg-neutral-800 text-xs text-neutral-600 dark:text-neutral-400">
-                All {resource.maxUnlocks} access slots have been redeemed.
+                All {resource.maxUnlocks} access slots have been claimed.
               </div>
             ) : (
               <CodeInput
@@ -694,101 +824,149 @@ export const ResourceViewPage: React.FC = () => {
                 to={`/${creator.username}`}
                 className="text-xs text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors"
               >
-                Looking for other resources? View {creator.displayName || creator.username}&apos;s profile →
+                View all documents by {creator.displayName || creator.username} →
               </Link>
             </div>
           </Card>
         ) : (
-          /* Embedded In-Browser PDF Viewer & Direct Download (No Sign-in Required) */
-          <Card className="overflow-hidden border-neutral-300 dark:border-neutral-700">
-            <div className="p-3 bg-neutral-100 dark:bg-neutral-900 border-b border-neutral-200 dark:border-neutral-800 flex items-center justify-between text-xs text-neutral-600 dark:text-neutral-400">
-              <span className="font-medium flex items-center gap-1.5">
-                <FileText className="w-3.5 h-3.5" />
-                <span>{resource.fileName || `${resource.title}.pdf`}</span>
-              </span>
+          /* Native PDF Document Viewer with Dedicated Ad Placement Zones */
+          <div className="space-y-4">
+            {/* Future Ad Slot: Top Banner */}
+            <div className="w-full p-4 rounded-md border border-dashed border-neutral-300 dark:border-neutral-800 bg-neutral-100/60 dark:bg-neutral-900/40 text-center text-xs text-neutral-400 dark:text-neutral-500 flex items-center justify-center min-h-[90px]">
+              <span className="font-mono tracking-wide uppercase text-[11px]">Ad Placement • Top Banner (728x90 / Responsive)</span>
+            </div>
 
-              <div className="flex items-center gap-2">
-                {allowDownload || isOwner ? (
-                  <a
-                    href={blobUrl || resource.fileUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex items-center gap-1 hover:text-neutral-900 dark:hover:text-neutral-100"
+            {/* Document Reader Layout: Main View + Side Rail Ad Space */}
+            <div className="flex flex-col lg:flex-row gap-6 w-full items-start">
+              {/* Native Document Reader */}
+              <div className="flex-1 w-full space-y-4">
+                <div className="w-full min-h-[85vh] sm:min-h-[90vh] h-[85vh] sm:h-[90vh] bg-white dark:bg-neutral-900 rounded-md overflow-hidden border border-neutral-200 dark:border-neutral-800 shadow-sm relative">
+                  <object
+                    data={`${blobUrl || resource.fileUrl}#view=FitH`}
+                    type="application/pdf"
+                    className="w-full h-full"
                   >
-                    <span>Open in new tab</span>
-                    <ExternalLink className="w-3 h-3" />
-                  </a>
-                ) : (
-                  <span className="text-[11px] text-neutral-400 dark:text-neutral-500 italic">
-                    In-browser view only
-                  </span>
-                )}
-              </div>
-            </div>
-
-            <div className="w-full h-[65vh] min-h-[480px] bg-neutral-200 dark:bg-neutral-950 flex flex-col relative">
-              <iframe
-                src={`${blobUrl || resource.fileUrl}#view=FitH`}
-                title={resource.title}
-                className="w-full h-full border-none"
-              />
-            </div>
-
-            {/* Social Webview Helper */}
-            {(allowDownload || isOwner) && (
-              <div className="px-4 py-2 bg-neutral-50 dark:bg-neutral-900/50 border-t border-neutral-200 dark:border-neutral-800 text-[11px] text-neutral-500 text-center">
-                Viewing inside Instagram or a social app? If preview is blank, tap <span className="font-medium text-neutral-700 dark:text-neutral-300">Open in new tab</span>.
-              </div>
-            )}
-
-            {/* Quick Action Banner Below Viewer */}
-            <div className="p-4 bg-white dark:bg-neutral-900 border-t border-neutral-200 dark:border-neutral-800 flex flex-col sm:flex-row items-center justify-between gap-3">
-              <div className="text-xs text-neutral-500 dark:text-neutral-400 flex items-center gap-3">
-                <span className="flex items-center gap-1">
-                  <Eye className="w-3.5 h-3.5" />
-                  <span>{resource.totalViews} views</span>
-                </span>
-                {allowDownload && (
-                  <>
-                    <span>•</span>
-                    <span className="flex items-center gap-1">
-                      <Download className="w-3.5 h-3.5" />
-                      <span>{resource.totalDownloads} downloads</span>
-                    </span>
-                  </>
-                )}
-              </div>
-
-              {allowDownload ? (
-                <Button
-                  size="md"
-                  variant="primary"
-                  onClick={handleDownload}
-                  isLoading={isDownloading}
-                  className="w-full sm:w-auto"
-                >
-                  <Download className="w-4 h-4" />
-                  <span>Download Original PDF</span>
-                </Button>
-              ) : (
-                <div className="text-xs text-neutral-500 dark:text-neutral-400 flex items-center gap-1.5 font-medium">
-                  <EyeOff className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
-                  <span>View Only (Download Disabled)</span>
+                    <iframe
+                      src={`${blobUrl || resource.fileUrl}#view=FitH`}
+                      title={resource.title}
+                      className="w-full h-full border-none"
+                    />
+                  </object>
                 </div>
-              )}
+
+                {/* Social In-App Browser Helper */}
+                {(allowDownload || isOwner) && (
+                  <div className="px-4 py-2 bg-neutral-100 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-md text-[11px] text-neutral-500 text-center">
+                    Viewing inside Instagram or a social in-app browser? If preview is blank, tap{' '}
+                    <a
+                      href={blobUrl || resource.fileUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="font-medium underline text-neutral-700 dark:text-neutral-300"
+                    >
+                      Open in new tab
+                    </a>
+                    .
+                  </div>
+                )}
+              </div>
+
+              {/* Future Ad Slot: Side Rail Banner (visible on wide screens) */}
+              <div className="hidden lg:flex flex-col gap-4 w-72 shrink-0">
+                <div className="w-full p-4 rounded-md border border-dashed border-neutral-300 dark:border-neutral-800 bg-neutral-100/60 dark:bg-neutral-900/40 text-center text-xs text-neutral-400 dark:text-neutral-500 flex flex-col items-center justify-center min-h-[250px]">
+                  <span className="font-mono tracking-wide uppercase text-[11px]">Ad Placement</span>
+                  <span className="text-[10px] text-neutral-400 mt-1">Side Rail (300x250)</span>
+                </div>
+                <div className="w-full p-4 rounded-md border border-dashed border-neutral-300 dark:border-neutral-800 bg-neutral-100/60 dark:bg-neutral-900/40 text-center text-xs text-neutral-400 dark:text-neutral-500 flex flex-col items-center justify-center min-h-[400px]">
+                  <span className="font-mono tracking-wide uppercase text-[11px]">Ad Placement</span>
+                  <span className="text-[10px] text-neutral-400 mt-1">Side Rail (300x600)</span>
+                </div>
+              </div>
             </div>
-          </Card>
+
+            {/* Future Ad Slot: Bottom Banner */}
+            <div className="w-full p-4 rounded-md border border-dashed border-neutral-300 dark:border-neutral-800 bg-neutral-100/60 dark:bg-neutral-900/40 text-center text-xs text-neutral-400 dark:text-neutral-500 flex items-center justify-center min-h-[90px]">
+              <span className="font-mono tracking-wide uppercase text-[11px]">Ad Placement • Bottom Banner (Responsive)</span>
+            </div>
+          </div>
         )}
       </main>
 
-      {/* Clean Footer */}
-      <footer className="border-t border-neutral-200 dark:border-neutral-800 py-6 text-center text-xs text-neutral-500 dark:text-neutral-400 mt-auto flex items-center justify-center gap-1.5">
-        <span>Distributed via</span>
-        <Link to="/" className="inline-flex items-center gap-1 font-semibold text-neutral-700 dark:text-neutral-300 hover:text-neutral-950 dark:hover:text-white transition-colors">
-          <Waves className="w-3.5 h-3.5" />
-          <span>NullWave</span>
-        </Link>
-      </footer>
+      {/* Viewer Account Modal (for guests clicking "Save to Library") */}
+      {showAuthModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in-up">
+          <Card className="w-full max-w-sm p-6 relative border-neutral-300 dark:border-neutral-700 shadow-lg">
+            <button
+              onClick={() => setShowAuthModal(false)}
+              className="absolute top-4 right-4 p-1 text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 rounded-md"
+              aria-label="Close modal"
+            >
+              <X className="w-4 h-4" />
+            </button>
+
+            <div className="w-10 h-10 rounded-md bg-neutral-900 text-neutral-50 dark:bg-neutral-100 dark:text-neutral-900 flex items-center justify-center mb-3">
+              <Bookmark className="w-5 h-5" />
+            </div>
+
+            <h3 className="text-lg font-bold text-neutral-900 dark:text-neutral-50 mb-1">
+              Save to Your Library
+            </h3>
+            <p className="text-xs text-neutral-500 dark:text-neutral-400 mb-5 leading-relaxed">
+              Create a free viewer account to save this document and access it anytime from your personal library.
+            </p>
+
+            <div className="space-y-3">
+              <Button
+                variant="outline"
+                className="w-full flex items-center justify-center gap-2"
+                onClick={handleGoogleSignInAndSave}
+              >
+                <svg className="w-4 h-4" viewBox="0 0 24 24">
+                  <path
+                    fill="currentColor"
+                    d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                  />
+                  <path
+                    fill="currentColor"
+                    d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                  />
+                  <path
+                    fill="currentColor"
+                    d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
+                  />
+                  <path
+                    fill="currentColor"
+                    d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
+                  />
+                </svg>
+                <span>Continue with Google</span>
+              </Button>
+
+              <Button
+                variant="primary"
+                className="w-full"
+                onClick={() => {
+                  setShowAuthModal(false);
+                  navigate('/signup');
+                }}
+              >
+                <span>Create Free Account</span>
+              </Button>
+
+              <div className="pt-2 text-center">
+                <span className="text-xs text-neutral-500">Already have an account? </span>
+                <Link
+                  to="/login"
+                  onClick={() => setShowAuthModal(false)}
+                  className="text-xs font-semibold text-neutral-900 dark:text-neutral-100 underline"
+                >
+                  Sign in
+                </Link>
+              </div>
+            </div>
+          </Card>
+        </div>
+      )}
     </div>
   );
 };

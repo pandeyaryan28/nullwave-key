@@ -178,10 +178,10 @@ export const SettingsPage: React.FC = () => {
     <div className="max-w-3xl mx-auto space-y-6">
       <div>
         <h1 className="text-2xl font-bold tracking-tight text-neutral-900 dark:text-neutral-50">
-          Wave Station Settings
+          Profile & Account Settings
         </h1>
         <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-0.5">
-          Customize your public creator station cover, bio details, and social channels.
+          Customize your public creator profile cover, bio details, and social channels.
         </p>
       </div>
 
@@ -204,7 +204,7 @@ export const SettingsPage: React.FC = () => {
           {/* Banner Cover Image Section */}
           <div className="space-y-3">
             <label className="block text-xs font-semibold uppercase tracking-wider text-neutral-700 dark:text-neutral-300">
-              Station Header Banner
+              Profile Header Banner
             </label>
 
             <div className="relative w-full h-36 sm:h-44 rounded-lg overflow-hidden border border-neutral-200 dark:border-neutral-800 bg-neutral-100 dark:bg-neutral-900">
@@ -296,10 +296,10 @@ export const SettingsPage: React.FC = () => {
             </div>
           </div>
 
-          {/* Username (Read Only with station link) */}
+          {/* Username (Read Only with profile link) */}
           <div className="space-y-1.5 pt-2 border-t border-neutral-100 dark:border-neutral-800">
             <label className="block text-xs font-semibold uppercase tracking-wider text-neutral-700 dark:text-neutral-300">
-              Station Handle
+              Profile Handle
             </label>
             <div className="flex items-center gap-2">
               <input
@@ -314,13 +314,13 @@ export const SettingsPage: React.FC = () => {
                   target="_blank"
                   className="px-3 h-10 inline-flex items-center gap-1.5 rounded-md border border-neutral-300 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800 text-xs font-medium shrink-0"
                 >
-                  <span>View Station</span>
+                  <span>View Profile</span>
                   <ExternalLink className="w-3.5 h-3.5" />
                 </Link>
               )}
             </div>
             <p className="text-xs text-neutral-500">
-              Your public station address is {window.location.origin}/{profile?.username}
+              Your public profile address is {window.location.origin}/{profile?.username}
             </p>
           </div>
 
@@ -368,7 +368,7 @@ export const SettingsPage: React.FC = () => {
                 Connected Social Links
               </h2>
               <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">
-                Displays crisp icon badges on your public station header for seamless visitor cross-follow.
+                Displays crisp icon badges on your public profile header for seamless visitor cross-follow.
               </p>
             </div>
 
