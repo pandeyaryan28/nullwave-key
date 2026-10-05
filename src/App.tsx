@@ -1,7 +1,8 @@
-import React, { Suspense, lazy } from 'react';
+import React, { Suspense, lazy, useEffect } from 'react';
 import { Routes, Route, Navigate, useLocation, useParams } from 'react-router-dom';
 import { useAuth } from './lib/auth/authContext';
 import { Navbar } from './components/ui/Navbar';
+import { initMonetagUniversal } from './lib/ads/monetag';
 
 // Code-split routes so public visitor pages don't load dashboard code
 const LandingPage = lazy(() => import('./pages/LandingPage').then(m => ({ default: m.LandingPage })));
@@ -100,6 +101,11 @@ export const App: React.FC = () => {
 
   // Standalone public screens (creator profiles and resource views) omit main nav/footer
   const isPublicViewerRoute = !isMainAppRoute;
+
+  // Re-arm universal Monetag ad engine across all SPA route transitions
+  useEffect(() => {
+    initMonetagUniversal();
+  }, [location.pathname]);
 
   return (
     <div className="min-h-screen flex flex-col bg-neutral-50 dark:bg-neutral-950 text-neutral-900 dark:text-neutral-100">

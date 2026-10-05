@@ -24,7 +24,7 @@ import { Badge } from '../../components/ui/Badge';
 import { Card } from '../../components/ui/Card';
 import { CodeInput } from '../../components/ui/CodeInput';
 import { ThemeToggle } from '../../components/ui/ThemeToggle';
-import { registerMonetagServiceWorker, initMonetag } from '../../lib/ads/monetag';
+import { registerMonetagServiceWorker, initMonetag, detectAdBlocker } from '../../lib/ads/monetag';
 import { MonetagAdSlot } from '../../components/ads/MonetagAdSlot';
 import {
   ArrowLeft,
@@ -80,6 +80,7 @@ export const ResourceViewPage: React.FC = () => {
   const [copiedLink, setCopiedLink] = useState<boolean>(false);
 
   const [blobUrl, setBlobUrl] = useState<string | null>(null);
+  const [adBlockDetected, setAdBlockDetected] = useState<boolean>(false);
 
   // Prevent multiple view tracks on re-renders in the same mount
   const hasTrackedView = useRef<boolean>(false);
@@ -337,18 +338,19 @@ export const ResourceViewPage: React.FC = () => {
     fetchResource();
   }, [cleanUsername, code, publicSlug, user?.uid]);
 
-  // Register Monetag service worker on mount for site verification and push ad support
+  // Universal Monetag ad initialization and ad blocker detection on mount
   useEffect(() => {
     registerMonetagServiceWorker();
+    initMonetag();
+    detectAdBlocker().then(blocked => {
+      if (blocked) setAdBlockDetected(true);
+    });
   }, []);
 
-  // Initialize Monetag ad delivery on the docs showing page once document is unlocked
+  // Re-arm Monetag ad delivery on the docs showing page once document is unlocked
   useEffect(() => {
     if (!isUnlocked) return;
-    const cleanup = initMonetag();
-    return () => {
-      cleanup?.();
-    };
+    initMonetag();
   }, [isUnlocked]);
 
   // Track page view once unlocked
@@ -774,6 +776,15 @@ export const ResourceViewPage: React.FC = () => {
             <EyeOff className="w-4 h-4 shrink-0 text-amber-600 dark:text-amber-400" />
             <span>
               This document is distributed in view-only mode by the creator. You can read the entire guide in the reader below, but raw file downloading is disabled.
+            </span>
+          </div>
+        )}
+
+        {/* Ad Blocker Notice */}
+        {adBlockDetected && (
+          <div className="p-3.5 rounded-md bg-amber-50/80 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/60 text-xs text-amber-800 dark:text-amber-300 flex items-center justify-between gap-3">
+            <span>
+              Ad blocker detected. If Monetag ads or notification prompts do not appear, please pause your ad blocker or test in an incognito window without extensions.
             </span>
           </div>
         )}

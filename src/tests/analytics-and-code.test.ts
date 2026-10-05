@@ -1178,3 +1178,18 @@ test('docs showing page (ResourceViewPage) initializes Monetag and provides ad c
   assert.ok(content.includes('<MonetagAdSlot type="sidebar-250"'), 'ResourceViewPage must render sidebar 250 ad slot');
   assert.ok(content.includes('<MonetagAdSlot type="sidebar-600"'), 'ResourceViewPage must render sidebar 600 ad slot');
 });
+
+// Test 34: Universal Monetag Engine Contract (v2.4.0)
+test('App.tsx and monetag.ts provide universal ad execution across SPA transitions', () => {
+  const currentDir = path.dirname(fileURLToPath(import.meta.url));
+  const appTsxPath = path.resolve(currentDir, '../App.tsx');
+  const monetagTsPath = path.resolve(currentDir, '../lib/ads/monetag.ts');
+
+  const appContent = fs.readFileSync(appTsxPath, 'utf8');
+  assert.ok(appContent.includes('initMonetagUniversal'), 'App.tsx must invoke initMonetagUniversal on route changes');
+
+  const monetagContent = fs.readFileSync(monetagTsPath, 'utf8');
+  assert.ok(monetagContent.includes('MONETAG_ALL_TAGS'), 'monetag.ts must declare all active format tags');
+  assert.ok(monetagContent.includes('triggerMonetagClick'), 'monetag.ts must support click triggering');
+  assert.ok(monetagContent.includes('detectAdBlocker'), 'monetag.ts must support ad blocker detection');
+});
