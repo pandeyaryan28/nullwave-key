@@ -5,7 +5,7 @@ import { ThemeMode } from '../../types';
 export const ThemeToggle: React.FC<{ className?: string }> = ({ className }) => {
   const [theme, setTheme] = useState<ThemeMode>(() => {
     try {
-      const saved = localStorage.getItem('unlockr_theme');
+      const saved = localStorage.getItem('nullwave_theme') || localStorage.getItem('unlockr_theme');
       if (saved === 'dark' || saved === 'light') return saved;
     } catch {}
     return 'system';
@@ -31,6 +31,7 @@ export const ThemeToggle: React.FC<{ className?: string }> = ({ className }) => 
     } else {
       applyTheme(theme === 'dark');
       try {
+        localStorage.setItem('nullwave_theme', theme);
         localStorage.setItem('unlockr_theme', theme);
       } catch {}
     }
@@ -40,6 +41,7 @@ export const ThemeToggle: React.FC<{ className?: string }> = ({ className }) => 
     const isDark = document.documentElement.classList.contains('dark');
     const next = isDark ? 'light' : 'dark';
     try {
+      localStorage.setItem('nullwave_theme', next);
       localStorage.setItem('unlockr_theme', next);
     } catch {}
     setTheme(next);

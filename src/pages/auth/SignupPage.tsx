@@ -4,7 +4,7 @@ import { useAuth } from '../../lib/auth/authContext';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
-import { Lock, AlertCircle } from 'lucide-react';
+import { Waves, AlertCircle } from 'lucide-react';
 
 export const SignupPage: React.FC = () => {
   const { signUpWithEmail, signInWithGoogle, user, profile } = useAuth();
@@ -72,13 +72,13 @@ export const SignupPage: React.FC = () => {
       <div className="w-full max-w-sm space-y-6">
         <div className="text-center space-y-2">
           <div className="w-10 h-10 rounded-md bg-neutral-900 text-neutral-50 dark:bg-neutral-100 dark:text-neutral-900 flex items-center justify-center mx-auto mb-3">
-            <Lock className="w-5 h-5" />
+            <Waves className="w-5 h-5" />
           </div>
           <h1 className="text-2xl font-bold tracking-tight text-neutral-900 dark:text-neutral-50">
-            Create Creator Account
+            Create Wave Station
           </h1>
           <p className="text-xs text-neutral-500 dark:text-neutral-400">
-            Start distributing your guides and resources frictionlessly.
+            Start transmitting your resources with direct 6-digit wave codes.
           </p>
         </div>
 

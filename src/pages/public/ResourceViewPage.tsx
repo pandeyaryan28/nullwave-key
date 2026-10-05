@@ -22,7 +22,8 @@ import { ThemeToggle } from '../../components/ui/ThemeToggle';
 import {
   ArrowLeft,
   Download,
-  Lock,
+  Waves,
+  Radio,
   ExternalLink,
   FileText,
   Eye,
@@ -106,11 +107,12 @@ export const ResourceViewPage: React.FC = () => {
   // Check rate limit cooldown for this specific resource
   useEffect(() => {
     if (!cleanUsername || !publicSlug) return;
-    const cooldownKey = `unlockr_cooldown_${cleanUsername}_${publicSlug}`;
+    const nullwaveKey = `nullwave_cooldown_${cleanUsername}_${publicSlug}`;
+    const unlockrKey = `unlockr_cooldown_${cleanUsername}_${publicSlug}`;
 
     const checkCooldown = () => {
       try {
-        const stored = sessionStorage.getItem(cooldownKey);
+        const stored = sessionStorage.getItem(nullwaveKey) || sessionStorage.getItem(unlockrKey);
         if (stored) {
           const expiresAt = parseInt(stored, 10);
           const remaining = Math.max(0, Math.ceil((expiresAt - Date.now()) / 1000));
@@ -172,13 +174,15 @@ export const ResourceViewPage: React.FC = () => {
         // Local storage fallback for creator profile
         if (!creatorData) {
           try {
-            const localProfile = localStorage.getItem(`unlockr_profile_${cleanUsername}`);
+            const localProfile =
+              localStorage.getItem(`nullwave_profile_${cleanUsername}`) ||
+              localStorage.getItem(`unlockr_profile_${cleanUsername}`);
             if (localProfile) {
               creatorData = JSON.parse(localProfile);
             } else {
               for (let i = 0; i < localStorage.length; i++) {
                 const k = localStorage.key(i);
-                if (k?.startsWith('unlockr_profile_')) {
+                if (k?.startsWith('nullwave_profile_') || k?.startsWith('unlockr_profile_')) {
                   const val = localStorage.getItem(k);
                   if (val) {
                     const parsed = JSON.parse(val);
@@ -231,7 +235,9 @@ export const ResourceViewPage: React.FC = () => {
         // Fallback to local storage if not found in Firestore
         if (!resData) {
           try {
-            const localListStr = localStorage.getItem(`unlockr_resources_${creatorData.uid}`);
+            const localListStr =
+              localStorage.getItem(`nullwave_resources_${creatorData.uid}`) ||
+              localStorage.getItem(`unlockr_resources_${creatorData.uid}`);
             if (localListStr) {
               const localList = JSON.parse(localListStr) as Resource[];
               resData = localList.find(
@@ -251,6 +257,7 @@ export const ResourceViewPage: React.FC = () => {
 
         // Check if unlocked in session or if logged in creator owns the resource
         const alreadyUnlocked =
+          sessionStorage.getItem(`nullwave_unlocked_${resData.id}`) === 'true' ||
           sessionStorage.getItem(`unlockr_unlocked_${resData.id}`) === 'true' ||
           user?.uid === resData.creatorId;
 
@@ -295,8 +302,10 @@ export const ResourceViewPage: React.FC = () => {
   const handleInlineCodeSubmit = (enteredCode: string) => {
     if (!resource) return;
 
-    const cooldownKey = `unlockr_cooldown_${cleanUsername}_${publicSlug}`;
-    const attemptsKey = `unlockr_attempts_${cleanUsername}_${publicSlug}`;
+    const nullwaveCooldownKey = `nullwave_cooldown_${cleanUsername}_${publicSlug}`;
+    const unlockrCooldownKey = `unlockr_cooldown_${cleanUsername}_${publicSlug}`;
+    const nullwaveAttemptsKey = `nullwave_attempts_${cleanUsername}_${publicSlug}`;
+    const unlockrAttemptsKey = `unlockr_attempts_${cleanUsername}_${publicSlug}`;
 
     if (cooldownSeconds > 0) {
       setCodeError(`Too many failed attempts. Please wait ${cooldownSeconds}s before trying again.`);
@@ -308,15 +317,17 @@ export const ResourceViewPage: React.FC = () => {
 
     if (enteredCode.trim() === resource.code) {
       try {
+        sessionStorage.setItem(`nullwave_unlocked_${resource.id}`, 'true');
         sessionStorage.setItem(`unlockr_unlocked_${resource.id}`, 'true');
-        sessionStorage.removeItem(attemptsKey);
+        sessionStorage.removeItem(nullwaveAttemptsKey);
+        sessionStorage.removeItem(unlockrAttemptsKey);
       } catch {}
       setIsUnlocked(true);
       setIsVerifying(false);
     } else {
       let attempts = 0;
       try {
-        const stored = sessionStorage.getItem(attemptsKey);
+        const stored = sessionStorage.getItem(nullwaveAttemptsKey) || sessionStorage.getItem(unlockrAttemptsKey);
         attempts = stored ? parseInt(stored, 10) : 0;
       } catch {}
       attempts += 1;
@@ -325,14 +336,17 @@ export const ResourceViewPage: React.FC = () => {
         const cooldownDurationMs = 30000;
         const expiresAt = Date.now() + cooldownDurationMs;
         try {
-          sessionStorage.setItem(cooldownKey, expiresAt.toString());
-          sessionStorage.removeItem(attemptsKey);
+          sessionStorage.setItem(nullwaveCooldownKey, expiresAt.toString());
+          sessionStorage.setItem(unlockrCooldownKey, expiresAt.toString());
+          sessionStorage.removeItem(nullwaveAttemptsKey);
+          sessionStorage.removeItem(unlockrAttemptsKey);
         } catch {}
         setCooldownSeconds(30);
         setCodeError('Incorrect code. Too many failed attempts, please wait 30 seconds.');
       } else {
         try {
-          sessionStorage.setItem(attemptsKey, attempts.toString());
+          sessionStorage.setItem(nullwaveAttemptsKey, attempts.toString());
+          sessionStorage.setItem(unlockrAttemptsKey, attempts.toString());
         } catch {}
         setCodeError('Incorrect 6-digit access code. Please check the code shared by the creator.');
       }
@@ -398,7 +412,7 @@ export const ResourceViewPage: React.FC = () => {
     return (
       <div className="min-h-screen bg-neutral-50 dark:bg-neutral-950 flex flex-col items-center justify-center p-6 text-center">
         <div className="w-12 h-12 rounded-md bg-neutral-200 dark:bg-neutral-800 flex items-center justify-center mb-4 text-neutral-500">
-          <Lock className="w-6 h-6" />
+          <Waves className="w-6 h-6" />
         </div>
         <h1 className="text-xl font-bold text-neutral-900 dark:text-neutral-100 mb-2">
           Resource Unavailable
@@ -449,8 +463,8 @@ export const ResourceViewPage: React.FC = () => {
               </Button>
             ) : (
               <div className="text-xs text-neutral-500 flex items-center gap-1.5 font-medium">
-                <Lock className="w-3.5 h-3.5" />
-                <span>Protected</span>
+                <Radio className="w-3.5 h-3.5" />
+                <span>Wave Protected</span>
               </div>
             )}
           </div>
@@ -527,13 +541,13 @@ export const ResourceViewPage: React.FC = () => {
         {!isUnlocked ? (
           <Card className="p-8 text-center border-neutral-300 dark:border-neutral-700 shadow-sm max-w-lg mx-auto">
             <div className="w-12 h-12 rounded-md bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 flex items-center justify-center mx-auto mb-4 border border-neutral-200 dark:border-neutral-700">
-              <Lock className="w-6 h-6" />
+              <Radio className="w-6 h-6" />
             </div>
             <h2 className="text-lg font-bold text-neutral-900 dark:text-neutral-100 mb-1">
-              Enter 6-digit access code
+              Enter 6-Digit Wave Code
             </h2>
             <p className="text-xs text-neutral-500 dark:text-neutral-400 mb-6 max-w-sm mx-auto">
-              This document is protected. Enter the 6-digit code shared by {creator.displayName || creator.username} to view and download it.
+              This document is protected. Enter the 6-digit wave code shared by {creator.displayName || creator.username} to view and download it.
             </p>
 
             {cooldownSeconds > 0 && (
@@ -628,8 +642,12 @@ export const ResourceViewPage: React.FC = () => {
       </main>
 
       {/* Clean Footer */}
-      <footer className="border-t border-neutral-200 dark:border-neutral-800 py-6 text-center text-xs text-neutral-500 dark:text-neutral-400 mt-auto">
-        Distributed via Unlockr
+      <footer className="border-t border-neutral-200 dark:border-neutral-800 py-6 text-center text-xs text-neutral-500 dark:text-neutral-400 mt-auto flex items-center justify-center gap-1.5">
+        <span>Distributed via</span>
+        <Link to="/" className="inline-flex items-center gap-1 font-semibold text-neutral-700 dark:text-neutral-300 hover:text-neutral-950 dark:hover:text-white transition-colors">
+          <Waves className="w-3.5 h-3.5" />
+          <span>NullWave</span>
+        </Link>
       </footer>
     </div>
   );

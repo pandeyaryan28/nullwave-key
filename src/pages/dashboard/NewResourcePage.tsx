@@ -157,9 +157,12 @@ export const NewResourcePage: React.FC = () => {
 
       // Cache in localStorage for offline / mock testing resilience
       try {
-        const localKey = `unlockr_resources_${user.uid}`;
-        const existing = JSON.parse(localStorage.getItem(localKey) || '[]');
-        localStorage.setItem(localKey, JSON.stringify([newResource, ...existing]));
+        const nullwaveKey = `nullwave_resources_${user.uid}`;
+        const unlockrKey = `unlockr_resources_${user.uid}`;
+        const existing = JSON.parse(localStorage.getItem(nullwaveKey) || localStorage.getItem(unlockrKey) || '[]');
+        const updated = [newResource, ...existing];
+        localStorage.setItem(nullwaveKey, JSON.stringify(updated));
+        localStorage.setItem(unlockrKey, JSON.stringify(updated));
       } catch {}
 
       setUploadProgress(100);
@@ -197,16 +200,16 @@ export const NewResourcePage: React.FC = () => {
           </div>
 
           <h1 className="text-xl font-bold text-neutral-900 dark:text-neutral-50 mb-1">
-            Resource created
+            Wave created successfully
           </h1>
           <p className="text-xs text-neutral-500 dark:text-neutral-400 mb-6">
-            Your resource is published and ready for distribution.
+            Your resource is published to your station and ready for broadcast.
           </p>
 
           {/* Prominent 6-Digit Code Box */}
           <div className="p-6 rounded-lg bg-neutral-100 dark:bg-neutral-800/80 border border-neutral-300 dark:border-neutral-700 mb-6">
             <p className="text-xs font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400 mb-2">
-              Your 6-Digit Access Code
+              6-Digit Wave Code
             </p>
             <div className="text-4xl sm:text-5xl font-mono font-bold tracking-widest text-neutral-950 dark:text-neutral-50 my-2">
               {createdResource.code}
@@ -214,12 +217,12 @@ export const NewResourcePage: React.FC = () => {
             <div className="flex items-center justify-center gap-3 mt-4">
               <Button size="md" variant="primary" onClick={copyCode}>
                 {copiedCode ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
-                <span>{copiedCode ? 'Code Copied!' : 'Copy code'}</span>
+                <span>{copiedCode ? 'Code Copied!' : 'Copy Wave Code'}</span>
               </Button>
 
               <Button size="md" variant="outline" onClick={copyCreatorLink}>
                 {copiedLink ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4" />}
-                <span>{copiedLink ? 'Link Copied!' : 'Copy creator link'}</span>
+                <span>{copiedLink ? 'Link Copied!' : 'Copy Station Link'}</span>
               </Button>
             </div>
           </div>
@@ -230,7 +233,7 @@ export const NewResourcePage: React.FC = () => {
               How to share on Instagram Reels & Stories:
             </p>
             <p className="italic">
-              &quot;Link in bio (unlockr.com/{profile?.username}). Enter code <span className="font-mono font-bold text-neutral-900 dark:text-neutral-100">{createdResource.code}</span> to get the guide.&quot;
+              &quot;Link in bio (nullwave.com/{profile?.username}). Enter code <span className="font-mono font-bold text-neutral-900 dark:text-neutral-100">{createdResource.code}</span> to get the guide.&quot;
             </p>
           </div>
 

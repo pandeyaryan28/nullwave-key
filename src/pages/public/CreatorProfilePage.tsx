@@ -15,7 +15,7 @@ import { Card } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
 import { CodeInput } from '../../components/ui/CodeInput';
 import { ThemeToggle } from '../../components/ui/ThemeToggle';
-import { Lock, FileText, ArrowRight, Instagram, Globe } from 'lucide-react';
+import { Waves, Radio, FileText, ArrowRight, Instagram, Globe } from 'lucide-react';
 
 export const CreatorProfilePage: React.FC = () => {
   const { username } = useParams<{ username: string }>();
@@ -50,7 +50,9 @@ export const CreatorProfilePage: React.FC = () => {
 
     const checkCooldown = () => {
       try {
-        const stored = sessionStorage.getItem(`unlockr_cooldown_${cleanUsername}`);
+        const stored =
+          sessionStorage.getItem(`nullwave_cooldown_${cleanUsername}`) ||
+          sessionStorage.getItem(`unlockr_cooldown_${cleanUsername}`);
         if (stored) {
           const expiresAt = parseInt(stored, 10);
           const remaining = Math.max(0, Math.ceil((expiresAt - Date.now()) / 1000));
@@ -70,7 +72,9 @@ export const CreatorProfilePage: React.FC = () => {
       const unlocked = new Set<string>();
       for (let i = 0; i < sessionStorage.length; i++) {
         const key = sessionStorage.key(i);
-        if (key?.startsWith('unlockr_unlocked_')) {
+        if (key?.startsWith('nullwave_unlocked_')) {
+          unlocked.add(key.replace('nullwave_unlocked_', ''));
+        } else if (key?.startsWith('unlockr_unlocked_')) {
           unlocked.add(key.replace('unlockr_unlocked_', ''));
         }
       }
@@ -128,14 +132,16 @@ export const CreatorProfilePage: React.FC = () => {
         // 3. Check local storage fallback if not found in Firestore
         if (!creatorData) {
           try {
-            const localKey = `unlockr_profile_${cleanUsername}`;
+            const localKey = localStorage.getItem(`nullwave_profile_${cleanUsername}`)
+              ? `nullwave_profile_${cleanUsername}`
+              : `unlockr_profile_${cleanUsername}`;
             const localData = localStorage.getItem(localKey);
             if (localData) {
               creatorData = JSON.parse(localData);
             } else {
               for (let i = 0; i < localStorage.length; i++) {
                 const k = localStorage.key(i);
-                if (k?.startsWith('unlockr_profile_')) {
+                if (k?.startsWith('nullwave_profile_') || k?.startsWith('unlockr_profile_')) {
                   const val = localStorage.getItem(k);
                   if (val) {
                     const parsed = JSON.parse(val);
@@ -184,7 +190,9 @@ export const CreatorProfilePage: React.FC = () => {
       // Local storage fallback for offline/demo resources if list is empty
       if (resList.length === 0) {
         try {
-          const localListStr = localStorage.getItem(`unlockr_resources_${creatorId}`);
+          const localListStr =
+            localStorage.getItem(`nullwave_resources_${creatorId}`) ||
+            localStorage.getItem(`unlockr_resources_${creatorId}`);
           if (localListStr) {
             const localList = JSON.parse(localListStr) as Resource[];
             resList = localList.filter(r => r.status === 'active');
@@ -198,7 +206,9 @@ export const CreatorProfilePage: React.FC = () => {
       console.warn('Error fetching creator resources:', err);
       // Fallback to local storage if Firestore error
       try {
-        const localListStr = localStorage.getItem(`unlockr_resources_${creatorId}`);
+        const localListStr =
+          localStorage.getItem(`nullwave_resources_${creatorId}`) ||
+          localStorage.getItem(`unlockr_resources_${creatorId}`);
         if (localListStr) {
           const localList = JSON.parse(localListStr) as Resource[];
           const filtered = localList.filter(r => r.status === 'active');
@@ -230,7 +240,9 @@ export const CreatorProfilePage: React.FC = () => {
     );
     if (memoryMatch) {
       try {
+        sessionStorage.setItem(`nullwave_unlocked_${memoryMatch.id}`, 'true');
         sessionStorage.setItem(`unlockr_unlocked_${memoryMatch.id}`, 'true');
+        sessionStorage.removeItem(`nullwave_attempts_${cleanUsername}`);
         sessionStorage.removeItem(`unlockr_attempts_${cleanUsername}`);
       } catch {}
       navigate(`/${creator.username}/resource/${memoryMatch.publicSlug}`);
@@ -253,7 +265,9 @@ export const CreatorProfilePage: React.FC = () => {
         // Also check local storage fallback
         let localMatch: Resource | null = null;
         try {
-          const localListStr = localStorage.getItem(`unlockr_resources_${creator.uid}`);
+          const localListStr =
+            localStorage.getItem(`nullwave_resources_${creator.uid}`) ||
+            localStorage.getItem(`unlockr_resources_${creator.uid}`);
           if (localListStr) {
             const localList = JSON.parse(localListStr) as Resource[];
             localMatch = localList.find(r => r.code === trimmedCode && r.status === 'active') || null;
@@ -262,7 +276,9 @@ export const CreatorProfilePage: React.FC = () => {
 
         if (localMatch) {
           try {
+            sessionStorage.setItem(`nullwave_unlocked_${localMatch.id}`, 'true');
             sessionStorage.setItem(`unlockr_unlocked_${localMatch.id}`, 'true');
+            sessionStorage.removeItem(`nullwave_attempts_${cleanUsername}`);
             sessionStorage.removeItem(`unlockr_attempts_${cleanUsername}`);
           } catch {}
           navigate(`/${creator.username}/resource/${localMatch.publicSlug}`);
@@ -272,7 +288,9 @@ export const CreatorProfilePage: React.FC = () => {
         // Record failed attempt in sessionStorage
         let attempts = 0;
         try {
-          const stored = sessionStorage.getItem(`unlockr_attempts_${cleanUsername}`);
+          const stored =
+            sessionStorage.getItem(`nullwave_attempts_${cleanUsername}`) ||
+            sessionStorage.getItem(`unlockr_attempts_${cleanUsername}`);
           attempts = stored ? parseInt(stored, 10) : 0;
         } catch {}
         attempts += 1;
@@ -281,16 +299,19 @@ export const CreatorProfilePage: React.FC = () => {
           const cooldownDurationMs = 30000; // 30-second cooldown
           const expiresAt = Date.now() + cooldownDurationMs;
           try {
+            sessionStorage.setItem(`nullwave_cooldown_${cleanUsername}`, expiresAt.toString());
             sessionStorage.setItem(`unlockr_cooldown_${cleanUsername}`, expiresAt.toString());
+            sessionStorage.removeItem(`nullwave_attempts_${cleanUsername}`);
             sessionStorage.removeItem(`unlockr_attempts_${cleanUsername}`);
           } catch {}
           setCooldownSeconds(30);
           setCodeError('Incorrect code. Too many failed attempts, please wait 30 seconds.');
         } else {
           try {
+            sessionStorage.setItem(`nullwave_attempts_${cleanUsername}`, attempts.toString());
             sessionStorage.setItem(`unlockr_attempts_${cleanUsername}`, attempts.toString());
           } catch {}
-          setCodeError('Incorrect code. Check the 6-digit code shared by the creator.');
+          setCodeError('Incorrect code. Check the 6-digit wave code shared by the creator.');
         }
         setIsVerifying(false);
         return;
@@ -299,7 +320,9 @@ export const CreatorProfilePage: React.FC = () => {
       // Valid code found!
       const targetResource = { id: snap.docs[0].id, ...snap.docs[0].data() } as Resource;
       try {
+        sessionStorage.setItem(`nullwave_unlocked_${targetResource.id}`, 'true');
         sessionStorage.setItem(`unlockr_unlocked_${targetResource.id}`, 'true');
+        sessionStorage.removeItem(`nullwave_attempts_${cleanUsername}`);
         sessionStorage.removeItem(`unlockr_attempts_${cleanUsername}`);
       } catch {}
 
@@ -325,19 +348,19 @@ export const CreatorProfilePage: React.FC = () => {
     return (
       <div className="min-h-screen bg-neutral-50 dark:bg-neutral-950 flex flex-col items-center justify-center p-6 text-center">
         <div className="w-12 h-12 rounded-md bg-neutral-200 dark:bg-neutral-800 flex items-center justify-center mb-4 text-neutral-500">
-          <Lock className="w-6 h-6" />
+          <Waves className="w-6 h-6" />
         </div>
         <h1 className="text-xl font-bold text-neutral-900 dark:text-neutral-100 mb-2">
-          Creator Not Found
+          Station Not Found
         </h1>
         <p className="text-sm text-neutral-600 dark:text-neutral-400 max-w-sm mb-6">
-          The creator profile <span className="font-semibold text-neutral-900 dark:text-neutral-200">{cleanUsername}</span> does not exist or may have changed their username.
+          The creator station <span className="font-semibold text-neutral-900 dark:text-neutral-200">{cleanUsername}</span> does not exist or may have changed their handle.
         </p>
         <Link
           to="/"
           className="text-sm font-medium text-neutral-900 dark:text-neutral-100 underline hover:no-underline"
         >
-          Return to Unlockr home
+          Return to NullWave home
         </Link>
       </div>
     );
@@ -347,14 +370,14 @@ export const CreatorProfilePage: React.FC = () => {
     <div className="min-h-screen bg-neutral-50 dark:bg-neutral-950 flex flex-col selection:bg-neutral-200 dark:selection:bg-neutral-800">
       {/* Minimal Top Bar */}
       <header className="w-full px-4 sm:px-6 py-4 flex items-center justify-between max-w-md mx-auto">
-        <div className="flex items-center gap-2">
+        <Link to="/" className="flex items-center gap-2">
           <div className="w-6 h-6 rounded-md bg-neutral-900 text-neutral-50 dark:bg-neutral-100 dark:text-neutral-900 flex items-center justify-center">
-            <Lock className="w-3.5 h-3.5" />
+            <Waves className="w-3.5 h-3.5" />
           </div>
-          <span className="font-semibold text-sm tracking-tight text-neutral-900 dark:text-neutral-100">
-            Unlockr
+          <span className="font-bold text-sm tracking-tight text-neutral-900 dark:text-neutral-100">
+            NullWave
           </span>
-        </div>
+        </Link>
         <ThemeToggle />
       </header>
 
@@ -413,10 +436,10 @@ export const CreatorProfilePage: React.FC = () => {
           <Card className="p-6 mb-8 border-neutral-300 dark:border-neutral-700 shadow-sm">
             <div className="text-center mb-6">
               <h2 className="text-base font-semibold text-neutral-900 dark:text-neutral-100">
-                Access a resource
+                Tune to 6-Digit Wave Code
               </h2>
               <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
-                Enter the 6-digit code shared by the creator.
+                Enter the wave code shared by the creator to unlock the guide.
               </p>
 
               {hintMessage && (
@@ -517,7 +540,7 @@ export const CreatorProfilePage: React.FC = () => {
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex items-start gap-3 min-w-0">
                         <div className="w-9 h-9 rounded-md bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 flex items-center justify-center shrink-0 border border-neutral-200 dark:border-neutral-700">
-                          <Lock className="w-4 h-4" />
+                          <Radio className="w-4 h-4" />
                         </div>
                         <div className="min-w-0">
                           <div className="flex items-center gap-2">
@@ -558,8 +581,13 @@ export const CreatorProfilePage: React.FC = () => {
       </main>
 
       {/* Clean Bottom Attribution */}
-      <footer className="w-full py-4 text-center text-xs text-neutral-400 dark:text-neutral-600 mt-auto">
-        Powered by Unlockr
+      <footer className="w-full py-6 text-center text-xs text-neutral-400 dark:text-neutral-600 mt-auto flex items-center justify-center gap-1.5">
+        <span>Powered by</span>
+        <Link to="/" className="inline-flex items-center gap-1 font-semibold text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors">
+          <Waves className="w-3.5 h-3.5" />
+          <span>NullWave</span>
+        </Link>
+        <span>• Zero-friction creator distribution</span>
       </footer>
     </div>
   );

@@ -6,6 +6,10 @@ import { Footer } from './components/ui/Footer';
 
 // Code-split routes so public visitor pages don't load dashboard code
 const LandingPage = lazy(() => import('./pages/LandingPage').then(m => ({ default: m.LandingPage })));
+const FeaturesPage = lazy(() => import('./pages/public/FeaturesPage').then(m => ({ default: m.FeaturesPage })));
+const HowItWorksPage = lazy(() => import('./pages/public/HowItWorksPage').then(m => ({ default: m.HowItWorksPage })));
+const PricingPage = lazy(() => import('./pages/public/PricingPage').then(m => ({ default: m.PricingPage })));
+const AboutPage = lazy(() => import('./pages/public/AboutPage').then(m => ({ default: m.AboutPage })));
 const LoginPage = lazy(() => import('./pages/auth/LoginPage').then(m => ({ default: m.LoginPage })));
 const SignupPage = lazy(() => import('./pages/auth/SignupPage').then(m => ({ default: m.SignupPage })));
 const OnboardingPage = lazy(() => import('./pages/auth/OnboardingPage').then(m => ({ default: m.OnboardingPage })));
@@ -84,7 +88,7 @@ export const App: React.FC = () => {
 
   // Non-viewer routes that should show the main creator navbar/footer
   const isMainAppRoute =
-    ['/', '/login', '/signup', '/onboarding'].includes(location.pathname) ||
+    ['/', '/login', '/signup', '/onboarding', '/features', '/how-it-works', '/pricing', '/about'].includes(location.pathname) ||
     location.pathname.startsWith('/dashboard');
 
   // Standalone public screens (creator profiles and resource views) omit main nav/footer
@@ -97,8 +101,14 @@ export const App: React.FC = () => {
       <div className="flex-1">
         <Suspense fallback={<PageLoader />}>
           <Routes>
-            {/* Public Home & Auth */}
+            {/* Public Marketing & Multi-Page Routes */}
             <Route path="/" element={<HomeRoute />} />
+            <Route path="/features" element={<FeaturesPage />} />
+            <Route path="/how-it-works" element={<HowItWorksPage />} />
+            <Route path="/pricing" element={<PricingPage />} />
+            <Route path="/about" element={<AboutPage />} />
+
+            {/* Auth */}
             <Route path="/login" element={<LoginPage />} />
             <Route path="/signup" element={<SignupPage />} />
 

@@ -33,8 +33,9 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Local fallback user storage key for development resilience
-const LOCAL_USER_KEY = 'unlockr_local_auth_user';
+// Local fallback user storage keys for development resilience
+const LOCAL_USER_KEY = 'nullwave_local_auth_user';
+const LEGACY_LOCAL_USER_KEY = 'unlockr_local_auth_user';
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -57,7 +58,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     // Check local fallback
     try {
-      const local = localStorage.getItem(`unlockr_profile_${uid}`);
+      const local =
+        localStorage.getItem(`nullwave_profile_${uid}`) ||
+        localStorage.getItem(`unlockr_profile_${uid}`);
       if (local) {
         setProfile(JSON.parse(local));
       }
@@ -66,7 +69,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   useEffect(() => {
     // Check if local guest session exists first
-    const storedLocalUser = localStorage.getItem(LOCAL_USER_KEY);
+    const storedLocalUser =
+      localStorage.getItem(LOCAL_USER_KEY) ||
+      localStorage.getItem(LEGACY_LOCAL_USER_KEY);
     if (storedLocalUser) {
       try {
         const parsed = JSON.parse(storedLocalUser);
@@ -177,6 +182,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         try {
           await setDoc(doc(db, 'users', mockUid), newProfile);
         } catch {}
+        localStorage.setItem(`nullwave_profile_${mockUid}`, JSON.stringify(newProfile));
         localStorage.setItem(`unlockr_profile_${mockUid}`, JSON.stringify(newProfile));
         setProfile(newProfile);
         return;
@@ -187,6 +193,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signOut = async () => {
     localStorage.removeItem(LOCAL_USER_KEY);
+    localStorage.removeItem(LEGACY_LOCAL_USER_KEY);
     await firebaseSignOut(auth).catch(() => {});
     setUser(null);
     setProfile(null);
@@ -242,6 +249,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         updatedAt: Date.now(),
       };
       setProfile(updatedProfile);
+      localStorage.setItem(`nullwave_profile_${user.uid}`, JSON.stringify(updatedProfile));
+      localStorage.setItem(`nullwave_profile_${username}`, JSON.stringify(updatedProfile));
       localStorage.setItem(`unlockr_profile_${user.uid}`, JSON.stringify(updatedProfile));
       localStorage.setItem(`unlockr_profile_${username}`, JSON.stringify(updatedProfile));
 
@@ -269,8 +278,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     setProfile(prev => {
       const merged = prev ? { ...prev, ...cleanData } : (cleanData as UserProfile);
+      localStorage.setItem(`nullwave_profile_${user.uid}`, JSON.stringify(merged));
       localStorage.setItem(`unlockr_profile_${user.uid}`, JSON.stringify(merged));
       if (merged.username) {
+        localStorage.setItem(`nullwave_profile_${merged.username}`, JSON.stringify(merged));
         localStorage.setItem(`unlockr_profile_${merged.username}`, JSON.stringify(merged));
       }
       return merged;

@@ -7,8 +7,10 @@ import {
 } from 'firebase/firestore';
 import { db } from '../firebase/config.ts';
 
-const VISITOR_ID_KEY = 'unlockr_visitor_id';
-const VIEW_HISTORY_PREFIX = 'unlockr_viewed_';
+const VISITOR_ID_KEY = 'nullwave_visitor_id';
+const LEGACY_VISITOR_ID_KEY = 'unlockr_visitor_id';
+export const VIEW_HISTORY_PREFIX = 'nullwave_viewed_';
+export const LEGACY_VIEW_HISTORY_PREFIX = 'unlockr_viewed_';
 const UNIQUENESS_WINDOW_MS = 24 * 60 * 60 * 1000; // 24-hour uniqueness window
 
 /**
@@ -17,7 +19,7 @@ const UNIQUENESS_WINDOW_MS = 24 * 60 * 60 * 1000; // 24-hour uniqueness window
  */
 export function getOrCreateVisitorId(): string {
   try {
-    let visitorId = localStorage.getItem(VISITOR_ID_KEY);
+    let visitorId = localStorage.getItem(VISITOR_ID_KEY) || localStorage.getItem(LEGACY_VISITOR_ID_KEY);
     if (!visitorId) {
       visitorId = 'v_' + Math.random().toString(36).substring(2, 12) + Date.now().toString(36);
       localStorage.setItem(VISITOR_ID_KEY, visitorId);
@@ -56,10 +58,11 @@ export function evaluateUniquenessWindow(
   const now = currentTime ?? Date.now();
   const storage: StorageLike | null = storageOverride ?? (typeof localStorage !== 'undefined' ? localStorage : null);
   const storageKey = `${VIEW_HISTORY_PREFIX}${resourceId}`;
+  const legacyKey = `${LEGACY_VIEW_HISTORY_PREFIX}${resourceId}`;
 
   let lastViewedStr: string | null = null;
   try {
-    lastViewedStr = storage ? storage.getItem(storageKey) : null;
+    lastViewedStr = storage ? (storage.getItem(storageKey) || storage.getItem(legacyKey)) : null;
   } catch {}
 
   const previousTimestamp = lastViewedStr;
@@ -69,10 +72,16 @@ export function evaluateUniquenessWindow(
       isUnique: true,
       now,
       commit: () => {
-        try { storage?.setItem(storageKey, now.toString()); } catch {}
+        try {
+          storage?.setItem(storageKey, now.toString());
+          storage?.setItem(legacyKey, now.toString());
+        } catch {}
       },
       rollback: () => {
-        try { storage?.removeItem?.(storageKey); } catch {}
+        try {
+          storage?.removeItem?.(storageKey);
+          storage?.removeItem?.(legacyKey);
+        } catch {}
       },
     };
   }
@@ -83,12 +92,20 @@ export function evaluateUniquenessWindow(
       isUnique: true,
       now,
       commit: () => {
-        try { storage?.setItem(storageKey, now.toString()); } catch {}
+        try {
+          storage?.setItem(storageKey, now.toString());
+          storage?.setItem(legacyKey, now.toString());
+        } catch {}
       },
       rollback: () => {
         try {
-          if (previousTimestamp) storage?.setItem(storageKey, previousTimestamp);
-          else storage?.removeItem?.(storageKey);
+          if (previousTimestamp) {
+            storage?.setItem(storageKey, previousTimestamp);
+            storage?.setItem(legacyKey, previousTimestamp);
+          } else {
+            storage?.removeItem?.(storageKey);
+            storage?.removeItem?.(legacyKey);
+          }
         } catch {}
       },
     };

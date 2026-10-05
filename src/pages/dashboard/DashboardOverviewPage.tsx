@@ -24,6 +24,8 @@ import {
   Check,
   ExternalLink,
   ArrowRight,
+  Waves,
+  Radio,
 } from 'lucide-react';
 
 export const DashboardOverviewPage: React.FC = () => {
@@ -116,17 +118,17 @@ export const DashboardOverviewPage: React.FC = () => {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold tracking-tight text-neutral-900 dark:text-neutral-50">
-              Welcome{profile?.displayName ? `, ${profile.displayName}` : ''}
+              Station Overview{profile?.displayName ? ` • ${profile.displayName}` : ''}
             </h1>
             <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-1">
-              Distribute digital resources to your audience with frictionless 6-digit codes.
+              Transmit digital resources to your audience with frictionless 6-digit wave codes.
             </p>
           </div>
 
           {profile?.username && (
             <Button variant="outline" size="sm" onClick={copyProfileUrl}>
               {copiedProfileLink ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4" />}
-              <span>{copiedProfileLink ? 'Link Copied!' : `Copy /${profile.username}`}</span>
+              <span>{copiedProfileLink ? 'Station Link Copied!' : `Copy /${profile.username}`}</span>
             </Button>
           )}
         </div>
@@ -134,13 +136,13 @@ export const DashboardOverviewPage: React.FC = () => {
         {/* Empty State Banner */}
         <Card className="p-12 text-center border-dashed border-2 border-neutral-300 dark:border-neutral-700">
           <div className="w-12 h-12 rounded-md bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 flex items-center justify-center mx-auto mb-4 border border-neutral-200 dark:border-neutral-700">
-            <FileText className="w-6 h-6" />
+            <Waves className="w-6 h-6" />
           </div>
           <h2 className="text-lg font-bold text-neutral-900 dark:text-neutral-100 mb-2">
-            Your resource library is empty.
+            No waves transmitted yet.
           </h2>
           <p className="text-sm text-neutral-600 dark:text-neutral-400 max-w-md mx-auto mb-6">
-            Upload your first PDF resource, receive an instant 6-digit access code, and share it in your Instagram bio or Reels.
+            Upload your first PDF resource, receive an instant 6-digit wave code, and broadcast it in your Instagram bio or video captions.
           </p>
           <Button
             size="md"
@@ -148,7 +150,7 @@ export const DashboardOverviewPage: React.FC = () => {
             onClick={() => navigate('/dashboard/resources/new')}
           >
             <Plus className="w-4 h-4" />
-            <span>Upload your first resource</span>
+            <span>Upload First Resource</span>
           </Button>
         </Card>
       </div>
@@ -157,32 +159,51 @@ export const DashboardOverviewPage: React.FC = () => {
 
   return (
     <div className="space-y-8">
-      {/* Header and Quick Actions */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-neutral-900 dark:text-neutral-50">
-            Overview
-          </h1>
-          <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-0.5">
-            Real-time access and distribution analytics for your resources.
-          </p>
+      {/* Wave Station Header Banner */}
+      <div className="p-4 sm:p-5 rounded-lg border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-md bg-neutral-900 text-white dark:bg-neutral-100 dark:text-neutral-900 flex items-center justify-center font-bold shrink-0">
+            <Radio className="w-4 h-4" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-semibold uppercase tracking-wider text-neutral-500">
+                Your Wave Station
+              </span>
+              <span className="w-1.5 h-1.5 rounded-sm bg-emerald-600 dark:bg-emerald-400"></span>
+              <span className="text-[11px] font-medium text-emerald-700 dark:text-emerald-400">Live</span>
+            </div>
+            <div className="font-mono text-sm font-bold text-neutral-900 dark:text-neutral-100">
+              {window.location.origin}/{profile?.username}
+            </div>
+          </div>
         </div>
 
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-2 w-full sm:w-auto">
           {profile?.username && (
-            <Button variant="outline" size="sm" onClick={copyProfileUrl}>
-              {copiedProfileLink ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4" />}
-              <span>{copiedProfileLink ? 'Copied' : `/${profile.username}`}</span>
-            </Button>
+            <>
+              <Button variant="outline" size="sm" onClick={copyProfileUrl} className="flex-1 sm:flex-initial">
+                {copiedProfileLink ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4" />}
+                <span>{copiedProfileLink ? 'Link Copied' : 'Copy Station Link'}</span>
+              </Button>
+
+              <Link to={`/${profile.username}`} target="_blank" rel="noreferrer">
+                <Button variant="secondary" size="sm">
+                  <span>Visit Station</span>
+                  <ExternalLink className="w-3.5 h-3.5" />
+                </Button>
+              </Link>
+            </>
           )}
 
           <Button
             variant="primary"
             size="sm"
             onClick={() => navigate('/dashboard/resources/new')}
+            className="flex-1 sm:flex-initial"
           >
             <Plus className="w-4 h-4" />
-            <span>Upload Resource</span>
+            <span>Upload</span>
           </Button>
         </div>
       </div>
@@ -191,7 +212,7 @@ export const DashboardOverviewPage: React.FC = () => {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <Card className="p-5">
           <div className="flex items-center justify-between text-neutral-500 dark:text-neutral-400 mb-3">
-            <span className="text-xs font-semibold uppercase tracking-wider">Total Resources</span>
+            <span className="text-xs font-semibold uppercase tracking-wider">Active Resources</span>
             <FileText className="w-4 h-4 text-neutral-600 dark:text-neutral-400" />
           </div>
           <div className="text-2xl sm:text-3xl font-bold text-neutral-900 dark:text-neutral-100 font-mono">
@@ -211,7 +232,7 @@ export const DashboardOverviewPage: React.FC = () => {
 
         <Card className="p-5">
           <div className="flex items-center justify-between text-neutral-500 dark:text-neutral-400 mb-3">
-            <span className="text-xs font-semibold uppercase tracking-wider">Unique Views (24h)</span>
+            <span className="text-xs font-semibold uppercase tracking-wider">Unique Audience (24h)</span>
             <Users className="w-4 h-4 text-neutral-600 dark:text-neutral-400" />
           </div>
           <div className="text-2xl sm:text-3xl font-bold text-neutral-900 dark:text-neutral-100 font-mono">
@@ -234,7 +255,7 @@ export const DashboardOverviewPage: React.FC = () => {
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-base font-bold text-neutral-900 dark:text-neutral-100">
-            Recent Resources
+            Recent Transmissions
           </h2>
           <Link
             to="/dashboard/resources"
@@ -280,8 +301,8 @@ export const DashboardOverviewPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => copyCode(res.id, res.code)}
-                  title="Copy 6-digit access code"
-                  className="inline-flex items-center gap-2 px-3 py-1.5 rounded-md border border-neutral-300 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900/80 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors text-xs font-mono font-bold text-neutral-900 dark:text-neutral-100"
+                  title="Copy 6-digit wave code"
+                  className="inline-flex items-center gap-2 px-3 py-1.5 rounded-md border border-neutral-300 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900/80 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors text-xs font-mono font-bold text-neutral-900 dark:text-neutral-100 cursor-pointer"
                 >
                   <span className="tracking-widest text-sm">{res.code}</span>
                   {copiedCodeId === res.id ? (

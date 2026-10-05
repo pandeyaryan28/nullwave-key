@@ -66,10 +66,10 @@ export const SettingsPage: React.FC = () => {
     <div className="max-w-2xl mx-auto space-y-6">
       <div>
         <h1 className="text-2xl font-bold tracking-tight text-neutral-900 dark:text-neutral-50">
-          Profile Settings
+          Wave Station Settings
         </h1>
         <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-0.5">
-          Customize your public creator page and bio details.
+          Customize your public creator station and bio details.
         </p>
       </div>
 

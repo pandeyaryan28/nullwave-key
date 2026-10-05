@@ -4,7 +4,7 @@ import { useAuth } from '../../lib/auth/authContext';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
-import { Globe, Check, AlertCircle } from 'lucide-react';
+import { Waves, Check, AlertCircle } from 'lucide-react';
 
 export const OnboardingPage: React.FC = () => {
   const { user, profile, claimUsername } = useAuth();
@@ -59,13 +59,13 @@ export const OnboardingPage: React.FC = () => {
       <div className="w-full max-w-md space-y-6">
         <div className="text-center space-y-2">
           <div className="w-10 h-10 rounded-md bg-neutral-900 text-neutral-50 dark:bg-neutral-100 dark:text-neutral-900 flex items-center justify-center mx-auto mb-3">
-            <Globe className="w-5 h-5" />
+            <Waves className="w-5 h-5" />
           </div>
           <h1 className="text-2xl font-bold tracking-tight text-neutral-900 dark:text-neutral-50">
-            Choose Your Profile URL
+            Claim Your Wave Station Handle
           </h1>
           <p className="text-xs text-neutral-500 dark:text-neutral-400">
-            This will be your shareable Instagram bio link.
+            This will be your permanent bio link for broadcasting resources.
           </p>
         </div>
 
