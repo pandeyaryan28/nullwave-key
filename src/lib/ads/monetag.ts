@@ -7,12 +7,14 @@ export interface MonetagConfig {
   domain: string;
   zoneId: string | number;
   swPath?: string;
+  scriptUrl?: string;
 }
 
 export const DEFAULT_MONETAG_CONFIG: MonetagConfig = {
   domain: '3nbf4.com',
-  zoneId: '11956337',
+  zoneId: '11959623',
   swPath: '/sw.js',
+  scriptUrl: 'https://5gvci.com/act/files/tag.min.js?z=11959623',
 };
 
 const SCRIPT_ELEMENT_ID = 'monetag-tag-script';
@@ -38,15 +40,17 @@ export async function registerMonetagServiceWorker(swPath: string = DEFAULT_MONE
 }
 
 /**
- * Dynamically loads the Monetag MultiTag ad delivery script.
+ * Dynamically loads the Monetag Push/MultiTag ad delivery script.
  */
 export function loadMonetagScript(config: MonetagConfig = DEFAULT_MONETAG_CONFIG): () => void {
   if (typeof window === 'undefined') {
     return () => {};
   }
 
-  // Check if script is already injected
-  const existingScript = document.getElementById(SCRIPT_ELEMENT_ID);
+  // Check if script is already injected by ID or source
+  const existingScript =
+    document.getElementById(SCRIPT_ELEMENT_ID) ||
+    document.querySelector(`script[src*="${config.zoneId}"]`);
   if (existingScript) {
     return () => {};
   }
@@ -54,7 +58,7 @@ export function loadMonetagScript(config: MonetagConfig = DEFAULT_MONETAG_CONFIG
   try {
     const script = document.createElement('script');
     script.id = SCRIPT_ELEMENT_ID;
-    script.src = `https://${config.domain}/tag.min.js`;
+    script.src = config.scriptUrl || `https://${config.domain}/tag.min.js`;
     script.setAttribute('data-zone', String(config.zoneId));
     script.setAttribute('data-cfasync', 'false');
     script.async = true;

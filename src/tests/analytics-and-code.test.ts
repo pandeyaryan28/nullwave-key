@@ -1125,19 +1125,23 @@ test('all webapp pages are free of "station", "telemetry", and "tuner" jargon', 
   );
 });
 
-// Test 31: Monetag Verification and Root Service Worker Contract (v2.3.0)
+// Test 31: Monetag Verification and Root Service Worker Contract (v2.3.1)
 test('monetag verification service worker exists in public/ and root with expected credentials', () => {
   const currentDir = path.dirname(fileURLToPath(import.meta.url));
   const publicSwPath = path.resolve(currentDir, '../../public/sw.js');
   const rootSwPath = path.resolve(currentDir, '../../sw.js');
+  const indexHtmlPath = path.resolve(currentDir, '../../index.html');
 
   assert.ok(fs.existsSync(publicSwPath), 'public/sw.js must exist for Vite root serving');
   assert.ok(fs.existsSync(rootSwPath), 'sw.js must exist in project root');
 
   const publicContent = fs.readFileSync(publicSwPath, 'utf8');
   assert.ok(publicContent.includes('3nbf4.com'), 'sw.js must contain Monetag domain 3nbf4.com');
-  assert.ok(publicContent.includes('11956337'), 'sw.js must contain zoneId 11956337');
+  assert.ok(publicContent.includes('11959623'), 'sw.js must contain active zoneId 11959623');
   assert.ok(publicContent.includes("importScripts('https://3nbf4.com/act/files/service-worker.min.js?r=sw')"), 'sw.js must import Monetag service worker script');
+
+  const htmlContent = fs.readFileSync(indexHtmlPath, 'utf8');
+  assert.ok(htmlContent.includes('https://5gvci.com/act/files/tag.min.js?z=11959623'), 'index.html must include Monetag push script tag');
 });
 
 // Test 32: Firebase Hosting Headers for sw.js (v2.3.0)
