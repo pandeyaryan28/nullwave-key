@@ -4,6 +4,13 @@
  * SPA route-change re-arming, click-trigger forwarding, and ad-block detection.
  */
 
+/**
+ * Global Advertising Master Switch
+ * Set to false to disable all ad network integrations, third-party scripts,
+ * popunders, vignettes, in-page push, and ad slot containers.
+ */
+export const ADS_ENABLED = false;
+
 export interface MonetagTagDefinition {
   src: string;
   zone: string;
@@ -53,10 +60,47 @@ export const MONETAG_ALL_TAGS: MonetagTagDefinition[] = [
 ];
 
 /**
+ * Unregisters any active service workers from the browser.
+ */
+export async function unregisterMonetagServiceWorker(): Promise<boolean> {
+  if (typeof window === 'undefined' || !('serviceWorker' in navigator)) {
+    return false;
+  }
+  try {
+    const registrations = await navigator.serviceWorker.getRegistrations();
+    for (const reg of registrations) {
+      await reg.unregister();
+    }
+    return true;
+  } catch (err) {
+    console.debug('[Monetag] Unregister service worker note:', err);
+    return false;
+  }
+}
+
+/**
+ * Removes any dynamically injected Monetag tags from the DOM.
+ */
+export function removeAllMonetagTags(): void {
+  if (typeof window === 'undefined') return;
+  const elements = document.querySelectorAll(
+    '[id^="monetag-tag-"], script[data-zone], script[src*="quge5.com"], script[src*="b3mny.com"], script[src*="ekhay.com"], script[src*="auqot.com"], script[src*="5gvci.com"]'
+  );
+  elements.forEach((el) => {
+    el.remove();
+  });
+}
+
+/**
  * Registers the Monetag Service Worker (sw.js) required for Web Push,
  * In-Page Push notifications, and site verification.
  */
 export async function registerMonetagServiceWorker(swPath: string = DEFAULT_MONETAG_CONFIG.swPath || '/sw.js'): Promise<ServiceWorkerRegistration | null> {
+  if (!ADS_ENABLED) {
+    await unregisterMonetagServiceWorker();
+    return null;
+  }
+
   if (typeof window === 'undefined' || !('serviceWorker' in navigator)) {
     return null;
   }
@@ -76,6 +120,11 @@ export async function registerMonetagServiceWorker(swPath: string = DEFAULT_MONE
  * Dynamically injects all Monetag ad tags across the web application.
  */
 export function loadAllMonetagTags(): void {
+  if (!ADS_ENABLED) {
+    removeAllMonetagTags();
+    return;
+  }
+
   if (typeof window === 'undefined') {
     return;
   }
@@ -107,6 +156,10 @@ export function loadAllMonetagTags(): void {
  * Legacy compatibility export for single-call loaders.
  */
 export function loadMonetagScript(_config: MonetagConfig = DEFAULT_MONETAG_CONFIG): () => void {
+  if (!ADS_ENABLED) {
+    removeAllMonetagTags();
+    return () => {};
+  }
   loadAllMonetagTags();
   return () => {};
 }
@@ -116,6 +169,7 @@ export function loadMonetagScript(_config: MonetagConfig = DEFAULT_MONETAG_CONFI
  * Useful in SPAs when clicking custom buttons, PDF overlays, or ad slots.
  */
 export function triggerMonetagClick(event?: MouseEvent | React.MouseEvent): void {
+  if (!ADS_ENABLED) return;
   if (typeof window === 'undefined') return;
 
   try {
@@ -134,6 +188,7 @@ export function triggerMonetagClick(event?: MouseEvent | React.MouseEvent): void
  * Checks whether an adblocker is actively blocking Monetag scripts.
  */
 export async function detectAdBlocker(): Promise<boolean> {
+  if (!ADS_ENABLED) return false;
   if (typeof window === 'undefined') return false;
 
   try {
@@ -153,6 +208,11 @@ export async function detectAdBlocker(): Promise<boolean> {
  * Registers the root service worker and attaches all MultiTag scripts.
  */
 export function initMonetag(_config: MonetagConfig = DEFAULT_MONETAG_CONFIG): () => void {
+  if (!ADS_ENABLED) {
+    unregisterMonetagServiceWorker();
+    removeAllMonetagTags();
+    return () => {};
+  }
   registerMonetagServiceWorker();
   loadAllMonetagTags();
   return () => {};
@@ -162,6 +222,11 @@ export function initMonetag(_config: MonetagConfig = DEFAULT_MONETAG_CONFIG): ()
  * Universal initializer called on SPA route changes.
  */
 export function initMonetagUniversal(): void {
+  if (!ADS_ENABLED) {
+    unregisterMonetagServiceWorker();
+    removeAllMonetagTags();
+    return;
+  }
   registerMonetagServiceWorker();
   loadAllMonetagTags();
 }

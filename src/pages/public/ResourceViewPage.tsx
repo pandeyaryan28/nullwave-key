@@ -24,7 +24,7 @@ import { Badge } from '../../components/ui/Badge';
 import { Card } from '../../components/ui/Card';
 import { CodeInput } from '../../components/ui/CodeInput';
 import { ThemeToggle } from '../../components/ui/ThemeToggle';
-import { registerMonetagServiceWorker, initMonetag, detectAdBlocker } from '../../lib/ads/monetag';
+import { ADS_ENABLED, registerMonetagServiceWorker, initMonetag, detectAdBlocker } from '../../lib/ads/monetag';
 import { MonetagAdSlot } from '../../components/ads/MonetagAdSlot';
 import {
   ArrowLeft,
@@ -338,8 +338,9 @@ export const ResourceViewPage: React.FC = () => {
     fetchResource();
   }, [cleanUsername, code, publicSlug, user?.uid]);
 
-  // Universal Monetag ad initialization and ad blocker detection on mount
+  // Universal Monetag ad initialization and ad blocker detection on mount (when enabled)
   useEffect(() => {
+    if (!ADS_ENABLED) return;
     registerMonetagServiceWorker();
     initMonetag();
     detectAdBlocker().then(blocked => {
@@ -349,7 +350,7 @@ export const ResourceViewPage: React.FC = () => {
 
   // Re-arm Monetag ad delivery on the docs showing page once document is unlocked
   useEffect(() => {
-    if (!isUnlocked) return;
+    if (!ADS_ENABLED || !isUnlocked) return;
     initMonetag();
   }, [isUnlocked]);
 
@@ -780,8 +781,8 @@ export const ResourceViewPage: React.FC = () => {
           </div>
         )}
 
-        {/* Ad Blocker Notice */}
-        {adBlockDetected && (
+        {/* Ad Blocker Notice (only when ads are enabled) */}
+        {ADS_ENABLED && adBlockDetected && (
           <div className="p-3.5 rounded-md bg-amber-50/80 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/60 text-xs text-amber-800 dark:text-amber-300 flex items-center justify-between gap-3">
             <span>
               Ad blocker detected. If Monetag ads or notification prompts do not appear, please pause your ad blocker or test in an incognito window without extensions.
@@ -859,10 +860,10 @@ export const ResourceViewPage: React.FC = () => {
           /* Native PDF Document Viewer with Dedicated Monetag Ad Placement Zones */
           <div className="space-y-4">
             {/* Top Banner Ad Slot */}
-            <MonetagAdSlot type="top-banner" />
+            {ADS_ENABLED && <MonetagAdSlot type="top-banner" />}
 
             {/* Document Reader Layout: Main View + Side Rail Ad Space */}
-            <div className="flex flex-col lg:flex-row gap-6 w-full items-start">
+            <div className={`flex flex-col ${ADS_ENABLED ? 'lg:flex-row' : ''} gap-6 w-full items-start`}>
               {/* Native Document Reader */}
               <div className="flex-1 w-full space-y-4">
                 <div className="w-full min-h-[85vh] sm:min-h-[90vh] h-[85vh] sm:h-[90vh] bg-white dark:bg-neutral-900 rounded-md overflow-hidden border border-neutral-200 dark:border-neutral-800 shadow-sm relative">
@@ -896,15 +897,17 @@ export const ResourceViewPage: React.FC = () => {
                 )}
               </div>
 
-              {/* Side Rail Ad Slots (visible on wide screens) */}
-              <div className="hidden lg:flex flex-col gap-4 w-72 shrink-0">
-                <MonetagAdSlot type="sidebar-250" />
-                <MonetagAdSlot type="sidebar-600" />
-              </div>
+              {/* Side Rail Ad Slots (visible on wide screens when enabled) */}
+              {ADS_ENABLED && (
+                <div className="hidden lg:flex flex-col gap-4 w-72 shrink-0">
+                  <MonetagAdSlot type="sidebar-250" />
+                  <MonetagAdSlot type="sidebar-600" />
+                </div>
+              )}
             </div>
 
             {/* Bottom Banner Ad Slot */}
-            <MonetagAdSlot type="bottom-banner" />
+            {ADS_ENABLED && <MonetagAdSlot type="bottom-banner" />}
           </div>
         )}
       </main>

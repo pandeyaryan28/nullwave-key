@@ -1,5 +1,5 @@
 import React from 'react';
-import { triggerMonetagClick } from '../../lib/ads/monetag';
+import { ADS_ENABLED, triggerMonetagClick } from '../../lib/ads/monetag';
 
 export type AdSlotType = 'top-banner' | 'sidebar-250' | 'sidebar-600' | 'bottom-banner';
 
@@ -41,6 +41,10 @@ export const MonetagAdSlot: React.FC<MonetagAdSlotProps> = ({
   className = '',
   id,
 }) => {
+  if (!ADS_ENABLED) {
+    return null;
+  }
+
   const config = SLOT_CONFIGS[type];
   const slotId = id || `monetag-slot-${type}`;
 

@@ -1193,3 +1193,31 @@ test('App.tsx and monetag.ts provide universal ad execution across SPA transitio
   assert.ok(monetagContent.includes('triggerMonetagClick'), 'monetag.ts must support click triggering');
   assert.ok(monetagContent.includes('detectAdBlocker'), 'monetag.ts must support ad blocker detection');
 });
+
+// Test 35: Global Ad Kill-Switch and Safe Deactivation Contract (v2.4.1)
+test('ads are disabled globally via ADS_ENABLED kill-switch, service workers unregister, and ad slots are inactive', () => {
+  const currentDir = path.dirname(fileURLToPath(import.meta.url));
+  const monetagTsPath = path.resolve(currentDir, '../lib/ads/monetag.ts');
+  const adSlotPath = path.resolve(currentDir, '../components/ads/MonetagAdSlot.tsx');
+  const resourceViewPath = path.resolve(currentDir, '../pages/public/ResourceViewPage.tsx');
+  const indexHtmlPath = path.resolve(currentDir, '../../index.html');
+  const swJsPath = path.resolve(currentDir, '../../public/sw.js');
+
+  const monetagContent = fs.readFileSync(monetagTsPath, 'utf8');
+  assert.ok(monetagContent.includes('export const ADS_ENABLED = false;'), 'ADS_ENABLED must be false');
+  assert.ok(monetagContent.includes('unregisterMonetagServiceWorker'), 'monetag.ts must support unregistering service workers');
+  assert.ok(monetagContent.includes('removeAllMonetagTags'), 'monetag.ts must support removing ad tags from DOM');
+
+  const adSlotContent = fs.readFileSync(adSlotPath, 'utf8');
+  assert.ok(adSlotContent.includes('if (!ADS_ENABLED)'), 'MonetagAdSlot must return null when ADS_ENABLED is false');
+
+  const resourceViewContent = fs.readFileSync(resourceViewPath, 'utf8');
+  assert.ok(resourceViewContent.includes('if (!ADS_ENABLED) return;'), 'ResourceViewPage must skip ad initialization when disabled');
+  assert.ok(resourceViewContent.includes('ADS_ENABLED && <MonetagAdSlot'), 'ResourceViewPage must guard ad slots with ADS_ENABLED');
+
+  const htmlContent = fs.readFileSync(indexHtmlPath, 'utf8');
+  assert.ok(htmlContent.includes('<!-- Monetag Universal MultiTag & Direct Format Tags (Disabled)'), 'index.html must have Monetag scripts commented out/disabled');
+
+  const swContent = fs.readFileSync(swJsPath, 'utf8');
+  assert.ok(swContent.includes('self.registration.unregister()'), 'sw.js must self-unregister when active in visitor browsers');
+});
