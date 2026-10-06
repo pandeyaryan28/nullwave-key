@@ -24,8 +24,6 @@ import { Badge } from '../../components/ui/Badge';
 import { Card } from '../../components/ui/Card';
 import { CodeInput } from '../../components/ui/CodeInput';
 import { ThemeToggle } from '../../components/ui/ThemeToggle';
-import { ADS_ENABLED, registerMonetagServiceWorker, initMonetag, detectAdBlocker } from '../../lib/ads/monetag';
-import { MonetagAdSlot } from '../../components/ads/MonetagAdSlot';
 import {
   ArrowLeft,
   Download,
@@ -80,7 +78,6 @@ export const ResourceViewPage: React.FC = () => {
   const [copiedLink, setCopiedLink] = useState<boolean>(false);
 
   const [blobUrl, setBlobUrl] = useState<string | null>(null);
-  const [adBlockDetected, setAdBlockDetected] = useState<boolean>(false);
 
   // Prevent multiple view tracks on re-renders in the same mount
   const hasTrackedView = useRef<boolean>(false);
@@ -337,22 +334,6 @@ export const ResourceViewPage: React.FC = () => {
 
     fetchResource();
   }, [cleanUsername, code, publicSlug, user?.uid]);
-
-  // Universal Monetag ad initialization and ad blocker detection on mount (when enabled)
-  useEffect(() => {
-    if (!ADS_ENABLED) return;
-    registerMonetagServiceWorker();
-    initMonetag();
-    detectAdBlocker().then(blocked => {
-      if (blocked) setAdBlockDetected(true);
-    });
-  }, []);
-
-  // Re-arm Monetag ad delivery on the docs showing page once document is unlocked
-  useEffect(() => {
-    if (!ADS_ENABLED || !isUnlocked) return;
-    initMonetag();
-  }, [isUnlocked]);
 
   // Track page view once unlocked
   useEffect(() => {
@@ -781,15 +762,6 @@ export const ResourceViewPage: React.FC = () => {
           </div>
         )}
 
-        {/* Ad Blocker Notice (only when ads are enabled) */}
-        {ADS_ENABLED && adBlockDetected && (
-          <div className="p-3.5 rounded-md bg-amber-50/80 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/60 text-xs text-amber-800 dark:text-amber-300 flex items-center justify-between gap-3">
-            <span>
-              Ad blocker detected. If Monetag ads or notification prompts do not appear, please pause your ad blocker or test in an incognito window without extensions.
-            </span>
-          </div>
-        )}
-
         {/* Gated Access: 6-Digit Code Input OR Native PDF Document Reader */}
         {!isUnlocked ? (
           <Card className="p-8 text-center border-neutral-300 dark:border-neutral-700 shadow-sm max-w-lg mx-auto">
@@ -857,57 +829,37 @@ export const ResourceViewPage: React.FC = () => {
             </div>
           </Card>
         ) : (
-          /* Native PDF Document Viewer with Dedicated Monetag Ad Placement Zones */
+          /* Native PDF Document Viewer */
           <div className="space-y-4">
-            {/* Top Banner Ad Slot */}
-            {ADS_ENABLED && <MonetagAdSlot type="top-banner" />}
-
-            {/* Document Reader Layout: Main View + Side Rail Ad Space */}
-            <div className={`flex flex-col ${ADS_ENABLED ? 'lg:flex-row' : ''} gap-6 w-full items-start`}>
-              {/* Native Document Reader */}
-              <div className="flex-1 w-full space-y-4">
-                <div className="w-full min-h-[85vh] sm:min-h-[90vh] h-[85vh] sm:h-[90vh] bg-white dark:bg-neutral-900 rounded-md overflow-hidden border border-neutral-200 dark:border-neutral-800 shadow-sm relative">
-                  <object
-                    data={`${blobUrl || resource.fileUrl}#view=FitH`}
-                    type="application/pdf"
-                    className="w-full h-full"
-                  >
-                    <iframe
-                      src={`${blobUrl || resource.fileUrl}#view=FitH`}
-                      title={resource.title}
-                      className="w-full h-full border-none"
-                    />
-                  </object>
-                </div>
-
-                {/* Social In-App Browser Helper */}
-                {(allowDownload || isOwner) && (
-                  <div className="px-4 py-2 bg-neutral-100 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-md text-[11px] text-neutral-500 text-center">
-                    Viewing inside Instagram or a social in-app browser? If preview is blank, tap{' '}
-                    <a
-                      href={blobUrl || resource.fileUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="font-medium underline text-neutral-700 dark:text-neutral-300"
-                    >
-                      Open in new tab
-                    </a>
-                    .
-                  </div>
-                )}
-              </div>
-
-              {/* Side Rail Ad Slots (visible on wide screens when enabled) */}
-              {ADS_ENABLED && (
-                <div className="hidden lg:flex flex-col gap-4 w-72 shrink-0">
-                  <MonetagAdSlot type="sidebar-250" />
-                  <MonetagAdSlot type="sidebar-600" />
-                </div>
-              )}
+            <div className="w-full min-h-[85vh] sm:min-h-[90vh] h-[85vh] sm:h-[90vh] bg-white dark:bg-neutral-900 rounded-md overflow-hidden border border-neutral-200 dark:border-neutral-800 shadow-sm relative">
+              <object
+                data={`${blobUrl || resource.fileUrl}#view=FitH`}
+                type="application/pdf"
+                className="w-full h-full"
+              >
+                <iframe
+                  src={`${blobUrl || resource.fileUrl}#view=FitH`}
+                  title={resource.title}
+                  className="w-full h-full border-none"
+                />
+              </object>
             </div>
 
-            {/* Bottom Banner Ad Slot */}
-            {ADS_ENABLED && <MonetagAdSlot type="bottom-banner" />}
+            {/* Social In-App Browser Helper */}
+            {(allowDownload || isOwner) && (
+              <div className="px-4 py-2 bg-neutral-100 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-md text-[11px] text-neutral-500 text-center">
+                Viewing inside Instagram or a social in-app browser? If preview is blank, tap{' '}
+                <a
+                  href={blobUrl || resource.fileUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="font-medium underline text-neutral-700 dark:text-neutral-300"
+                >
+                  Open in new tab
+                </a>
+                .
+              </div>
+            )}
           </div>
         )}
       </main>

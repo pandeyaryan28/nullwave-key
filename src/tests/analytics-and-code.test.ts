@@ -1165,18 +1165,17 @@ test('firebase.json includes caching and service-worker headers for sw.js', () =
   }
 });
 
-// Test 33: ResourceViewPage Monetag Ad Setup Contract (v2.3.0)
-test('docs showing page (ResourceViewPage) initializes Monetag and provides ad containers', () => {
+// Test 33: ResourceViewPage Clean Document Viewer Contract (Ad Slots Removed)
+test('docs showing page (ResourceViewPage) provides clean full-width document viewer without ad slots', () => {
   const currentDir = path.dirname(fileURLToPath(import.meta.url));
   const resourceViewPath = path.resolve(currentDir, '../pages/public/ResourceViewPage.tsx');
 
   const content = fs.readFileSync(resourceViewPath, 'utf8');
-  assert.ok(content.includes('registerMonetagServiceWorker'), 'ResourceViewPage must register Monetag service worker');
-  assert.ok(content.includes('initMonetag'), 'ResourceViewPage must initialize Monetag');
-  assert.ok(content.includes('<MonetagAdSlot type="top-banner"'), 'ResourceViewPage must render top banner ad slot');
-  assert.ok(content.includes('<MonetagAdSlot type="bottom-banner"'), 'ResourceViewPage must render bottom banner ad slot');
-  assert.ok(content.includes('<MonetagAdSlot type="sidebar-250"'), 'ResourceViewPage must render sidebar 250 ad slot');
-  assert.ok(content.includes('<MonetagAdSlot type="sidebar-600"'), 'ResourceViewPage must render sidebar 600 ad slot');
+  assert.strictEqual(content.includes('<MonetagAdSlot'), false, 'ResourceViewPage must not contain MonetagAdSlot');
+  assert.strictEqual(content.includes('adBlockDetected'), false, 'ResourceViewPage must not contain adBlockDetected state');
+  assert.strictEqual(content.includes('initMonetag'), false, 'ResourceViewPage must not call initMonetag');
+  assert.ok(content.includes('<object'), 'ResourceViewPage must render native PDF object viewer');
+  assert.ok(content.includes('<iframe'), 'ResourceViewPage must render fallback PDF iframe');
 });
 
 // Test 34: Universal Monetag Engine Contract (v2.4.0)
@@ -1212,8 +1211,7 @@ test('ads are disabled globally via ADS_ENABLED kill-switch, service workers unr
   assert.ok(adSlotContent.includes('if (!ADS_ENABLED)'), 'MonetagAdSlot must return null when ADS_ENABLED is false');
 
   const resourceViewContent = fs.readFileSync(resourceViewPath, 'utf8');
-  assert.ok(resourceViewContent.includes('if (!ADS_ENABLED) return;'), 'ResourceViewPage must skip ad initialization when disabled');
-  assert.ok(resourceViewContent.includes('ADS_ENABLED && <MonetagAdSlot'), 'ResourceViewPage must guard ad slots with ADS_ENABLED');
+  assert.strictEqual(resourceViewContent.includes('<MonetagAdSlot'), false, 'ResourceViewPage must have ad slots removed');
 
   const htmlContent = fs.readFileSync(indexHtmlPath, 'utf8');
   assert.ok(htmlContent.includes('<!-- Monetag Universal MultiTag & Direct Format Tags (Disabled)'), 'index.html must have Monetag scripts commented out/disabled');
