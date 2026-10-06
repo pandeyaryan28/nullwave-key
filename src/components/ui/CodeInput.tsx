@@ -124,7 +124,10 @@ export const CodeInput: React.FC<CodeInputProps> = ({
   return (
     <div className="w-full flex flex-col items-center">
       <div
-        className="flex items-center justify-center gap-2 sm:gap-3"
+        className={clsx(
+          'flex items-center justify-center gap-2 sm:gap-3 transition-transform',
+          error && 'animate-clay-wiggle'
+        )}
         onPaste={handlePaste}
       >
         {Array.from({ length }).map((_, index) => (
@@ -143,14 +146,12 @@ export const CodeInput: React.FC<CodeInputProps> = ({
             onKeyDown={e => handleKeyDown(index, e)}
             aria-label={`Digit ${index + 1} of ${length}`}
             className={clsx(
-              'w-11 h-14 sm:w-13 sm:h-16 text-center font-mono text-2xl font-bold rounded-md border transition-all select-none',
-              'bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100',
-              'focus:outline-none focus:ring-2 focus:ring-neutral-900 dark:focus:ring-neutral-100 focus:border-neutral-900 dark:focus:border-neutral-100',
-              error
-                ? 'border-red-500 text-red-600 dark:text-red-400 focus:ring-red-500 focus:border-red-500'
-                : digits[index]
-                ? 'border-neutral-700 dark:border-neutral-300'
-                : 'border-neutral-300 dark:border-neutral-700 hover:border-neutral-400 dark:hover:border-neutral-600',
+              'w-11 h-14 sm:w-13 sm:h-16 text-center font-mono text-2xl font-bold rounded-xl border transition-all duration-150 select-none',
+              digits[index]
+                ? 'bg-white dark:bg-[#1a1e28] shadow-clay-card border-slate-300 dark:border-white/20 animate-clay-pop text-neutral-900 dark:text-neutral-100'
+                : 'bg-[#e7ecf3]/70 dark:bg-[#12151e]/80 shadow-clay-inset border-slate-200/80 dark:border-white/10 text-neutral-900 dark:text-neutral-100',
+              'focus:outline-none focus:ring-2 focus:ring-neutral-900 dark:focus:ring-neutral-100 focus:shadow-clay-card',
+              error && 'border-red-500 text-red-600 dark:text-red-400 focus:ring-red-500 focus:border-red-500',
               (disabled || isLoading) && 'opacity-60 cursor-not-allowed'
             )}
           />

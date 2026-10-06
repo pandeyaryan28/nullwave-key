@@ -164,7 +164,7 @@ export const DashboardOverviewPage: React.FC = () => {
   return (
     <div className="space-y-8 animate-fade-in-up">
       {/* Redesigned Dashboard Header */}
-      <div className="p-6 rounded-lg border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-6">
+      <div className="p-6 rounded-2xl border border-slate-200/80 dark:border-white/10 bg-white dark:bg-[#1a1e28] shadow-clay-card flex flex-col md:flex-row md:items-center justify-between gap-6 transition-all duration-200">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
             <h1 className="text-2xl font-bold tracking-tight text-neutral-900 dark:text-neutral-50">
@@ -234,40 +234,48 @@ export const DashboardOverviewPage: React.FC = () => {
 
       {/* Metric Counters */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="p-5">
+        <Card variant="elevated" className="p-5 hover:shadow-clay-card-hover transition-all">
           <div className="flex items-center justify-between text-neutral-500 dark:text-neutral-400 mb-2">
             <span className="text-xs font-semibold uppercase tracking-wider">Total Documents</span>
-            <FileText className="w-4 h-4 text-neutral-600 dark:text-neutral-400" />
+            <div className="w-8 h-8 rounded-xl bg-[#e7ecf3] dark:bg-[#131720] shadow-clay-inset flex items-center justify-center border border-slate-200/60 dark:border-white/5">
+              <FileText className="w-4 h-4 text-neutral-700 dark:text-neutral-300" />
+            </div>
           </div>
           <div className="text-2xl sm:text-3xl font-bold text-neutral-900 dark:text-neutral-100 font-mono">
             {totalResources.toLocaleString()}
           </div>
         </Card>
 
-        <Card className="p-5">
+        <Card variant="elevated" className="p-5 hover:shadow-clay-card-hover transition-all">
           <div className="flex items-center justify-between text-neutral-500 dark:text-neutral-400 mb-2">
             <span className="text-xs font-semibold uppercase tracking-wider">Total Views</span>
-            <Eye className="w-4 h-4 text-neutral-600 dark:text-neutral-400" />
+            <div className="w-8 h-8 rounded-xl bg-[#e7ecf3] dark:bg-[#131720] shadow-clay-inset flex items-center justify-center border border-slate-200/60 dark:border-white/5">
+              <Eye className="w-4 h-4 text-neutral-700 dark:text-neutral-300" />
+            </div>
           </div>
           <div className="text-2xl sm:text-3xl font-bold text-neutral-900 dark:text-neutral-100 font-mono">
             {totalViews.toLocaleString()}
           </div>
         </Card>
 
-        <Card className="p-5">
+        <Card variant="elevated" className="p-5 hover:shadow-clay-card-hover transition-all">
           <div className="flex items-center justify-between text-neutral-500 dark:text-neutral-400 mb-2">
             <span className="text-xs font-semibold uppercase tracking-wider">Unique Visitors</span>
-            <Users className="w-4 h-4 text-neutral-600 dark:text-neutral-400" />
+            <div className="w-8 h-8 rounded-xl bg-[#e7ecf3] dark:bg-[#131720] shadow-clay-inset flex items-center justify-center border border-slate-200/60 dark:border-white/5">
+              <Users className="w-4 h-4 text-neutral-700 dark:text-neutral-300" />
+            </div>
           </div>
           <div className="text-2xl sm:text-3xl font-bold text-neutral-900 dark:text-neutral-100 font-mono">
             {uniqueViews.toLocaleString()}
           </div>
         </Card>
 
-        <Card className="p-5">
+        <Card variant="elevated" className="p-5 hover:shadow-clay-card-hover transition-all">
           <div className="flex items-center justify-between text-neutral-500 dark:text-neutral-400 mb-2">
             <span className="text-xs font-semibold uppercase tracking-wider">Total Downloads</span>
-            <Download className="w-4 h-4 text-neutral-600 dark:text-neutral-400" />
+            <div className="w-8 h-8 rounded-xl bg-[#e7ecf3] dark:bg-[#131720] shadow-clay-inset flex items-center justify-center border border-slate-200/60 dark:border-white/5">
+              <Download className="w-4 h-4 text-neutral-700 dark:text-neutral-300" />
+            </div>
           </div>
           <div className="text-2xl sm:text-3xl font-bold text-neutral-900 dark:text-neutral-100 font-mono">
             {totalDownloads.toLocaleString()}
@@ -277,24 +285,24 @@ export const DashboardOverviewPage: React.FC = () => {
 
       {/* Tabs & Search Controls */}
       <div className="space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-neutral-200 dark:border-neutral-800 pb-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200/80 dark:border-white/10 pb-3">
           <div className="flex items-center gap-2">
             <button
               onClick={() => setActiveTab('uploads')}
-              className={`px-3 py-1.5 text-sm font-semibold rounded-md transition-colors cursor-pointer ${
+              className={`px-3.5 py-1.5 text-sm font-semibold rounded-xl transition-all cursor-pointer ${
                 activeTab === 'uploads'
-                  ? 'bg-neutral-900 text-neutral-50 dark:bg-neutral-100 dark:text-neutral-900'
-                  : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100'
+                  ? 'bg-neutral-900 text-neutral-50 dark:bg-neutral-100 dark:text-neutral-900 shadow-clay-btn'
+                  : 'bg-white/60 dark:bg-[#1a1e28]/60 text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 border border-slate-200/80 dark:border-white/10 shadow-clay-sm'
               }`}
             >
               My Uploads ({resources.length})
             </button>
             <button
               onClick={() => setActiveTab('saved')}
-              className={`px-3 py-1.5 text-sm font-semibold rounded-md transition-colors cursor-pointer flex items-center gap-1.5 ${
+              className={`px-3.5 py-1.5 text-sm font-semibold rounded-xl transition-all cursor-pointer flex items-center gap-1.5 ${
                 activeTab === 'saved'
-                  ? 'bg-neutral-900 text-neutral-50 dark:bg-neutral-100 dark:text-neutral-900'
-                  : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100'
+                  ? 'bg-neutral-900 text-neutral-50 dark:bg-neutral-100 dark:text-neutral-900 shadow-clay-btn'
+                  : 'bg-white/60 dark:bg-[#1a1e28]/60 text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 border border-slate-200/80 dark:border-white/10 shadow-clay-sm'
               }`}
             >
               <Bookmark className="w-3.5 h-3.5" />
@@ -319,8 +327,8 @@ export const DashboardOverviewPage: React.FC = () => {
         {activeTab === 'uploads' && (
           <div>
             {resources.length === 0 ? (
-              <Card className="p-12 text-center border-dashed border-2 border-neutral-300 dark:border-neutral-700">
-                <div className="w-12 h-12 rounded-md bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 flex items-center justify-center mx-auto mb-4 border border-neutral-200 dark:border-neutral-700">
+              <Card variant="inset" className="p-12 text-center border-dashed border-2 border-slate-300 dark:border-neutral-700">
+                <div className="w-12 h-12 rounded-xl bg-white dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 flex items-center justify-center mx-auto mb-4 border border-slate-200/80 dark:border-white/10 shadow-clay-sm">
                   <FileText className="w-6 h-6" />
                 </div>
                 <h2 className="text-lg font-bold text-neutral-900 dark:text-neutral-100 mb-2">
@@ -339,7 +347,7 @@ export const DashboardOverviewPage: React.FC = () => {
                 </Button>
               </Card>
             ) : filteredResources.length === 0 ? (
-              <Card className="p-8 text-center border-neutral-300 dark:border-neutral-700">
+              <Card variant="inset" className="p-8 text-center border-slate-200/80 dark:border-white/10">
                 <p className="text-sm text-neutral-600 dark:text-neutral-400">
                   No documents found matching &quot;{searchQuery}&quot;.
                 </p>
@@ -349,10 +357,11 @@ export const DashboardOverviewPage: React.FC = () => {
                 {filteredResources.map(res => (
                   <Card
                     key={res.id}
-                    className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:border-neutral-300 dark:hover:border-neutral-700 transition-colors"
+                    variant="interactive"
+                    className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
                   >
                     <div className="flex items-start gap-4 min-w-0">
-                      <div className="w-10 h-10 rounded-md bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 flex items-center justify-center shrink-0 border border-neutral-200 dark:border-neutral-700">
+                      <div className="w-10 h-10 rounded-xl bg-[#e7ecf3] dark:bg-[#131720] text-neutral-700 dark:text-neutral-300 flex items-center justify-center shrink-0 border border-slate-200/60 dark:border-white/5 shadow-clay-inset">
                         <FileText className="w-5 h-5" />
                       </div>
 
@@ -401,7 +410,7 @@ export const DashboardOverviewPage: React.FC = () => {
                         type="button"
                         onClick={() => copyCode(res.id, res.code)}
                         title="Click to copy access code"
-                        className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md border border-neutral-300 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors text-xs font-mono font-bold text-neutral-900 dark:text-neutral-100 cursor-pointer"
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200/80 dark:border-white/10 bg-[#e7ecf3] dark:bg-[#131720] shadow-clay-inset hover:shadow-clay-sm transition-all text-xs font-mono font-bold text-neutral-900 dark:text-neutral-100 cursor-pointer active:scale-95"
                       >
                         <span className="tracking-wider">{res.code}</span>
                         {copiedCodeId === res.id ? (
@@ -462,8 +471,8 @@ export const DashboardOverviewPage: React.FC = () => {
         {activeTab === 'saved' && (
           <div>
             {savedResources.length === 0 ? (
-              <Card className="p-12 text-center border-dashed border-2 border-neutral-300 dark:border-neutral-700">
-                <div className="w-12 h-12 rounded-md bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 flex items-center justify-center mx-auto mb-4 border border-neutral-200 dark:border-neutral-700">
+              <Card variant="inset" className="p-12 text-center border-dashed border-2 border-slate-300 dark:border-neutral-700">
+                <div className="w-12 h-12 rounded-xl bg-white dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 flex items-center justify-center mx-auto mb-4 border border-slate-200/80 dark:border-white/10 shadow-clay-sm">
                   <Bookmark className="w-6 h-6" />
                 </div>
                 <h2 className="text-lg font-bold text-neutral-900 dark:text-neutral-100 mb-1">
@@ -483,10 +492,11 @@ export const DashboardOverviewPage: React.FC = () => {
                 {savedResources.map(item => (
                   <Card
                     key={item.resourceId}
-                    className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:border-neutral-300 dark:hover:border-neutral-700 transition-colors"
+                    variant="interactive"
+                    className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
                   >
                     <div className="flex items-start gap-4 min-w-0">
-                      <div className="w-10 h-10 rounded-md bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 flex items-center justify-center shrink-0 border border-neutral-200 dark:border-neutral-700">
+                      <div className="w-10 h-10 rounded-xl bg-[#e7ecf3] dark:bg-[#131720] text-neutral-700 dark:text-neutral-300 flex items-center justify-center shrink-0 border border-slate-200/60 dark:border-white/5 shadow-clay-inset">
                         <FileText className="w-5 h-5" />
                       </div>
                       <div className="min-w-0 space-y-1">

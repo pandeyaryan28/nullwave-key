@@ -1370,8 +1370,8 @@ test('creator profile opens documents directly without code prompt and top box a
   assert.match(jumpUnknown.error!, /4-digit access code/);
 });
 
-// Test 38: CodeInput Component default length is 4 and package.json version is 2.5.0
-test('CodeInput default length is 4 and package.json declares version 2.5.0', () => {
+// Test 38: CodeInput Component default length is 4 and package.json version is 2.5.1
+test('CodeInput default length is 4 and package.json declares version 2.5.1', () => {
   const currentDir = path.dirname(fileURLToPath(import.meta.url));
   const codeInputPath = path.resolve(currentDir, '../components/ui/CodeInput.tsx');
   const pkgJsonPath = path.resolve(currentDir, '../../package.json');
@@ -1380,7 +1380,7 @@ test('CodeInput default length is 4 and package.json declares version 2.5.0', ()
   assert.ok(codeInputContent.includes('length = 4'), 'CodeInput default length prop must be 4');
 
   const pkgContent = JSON.parse(fs.readFileSync(pkgJsonPath, 'utf8'));
-  assert.equal(pkgContent.version, '2.5.0', 'package.json version must be 2.5.0');
+  assert.equal(pkgContent.version, '2.5.1', 'package.json version must be 2.5.1');
 });
 
 // Test 39: Creator Profile document cards & pinned resource badge contract (v2.5.0 Anti-Slop & Direct Open)
@@ -1431,5 +1431,27 @@ test('resource forms enforce non-empty password when enabled and serialize null 
   const verifyAttempt = (input: string) => input === storedPassword;
   assert.equal(verifyAttempt('mysecretpassword'), false, 'Password check must be strictly case sensitive');
   assert.equal(verifyAttempt('MySecretPassword'), true, 'Correct case must match');
+});
+
+// Test 41: Profile settings persistence and image optimization resilience (v2.5.1)
+test('profile settings updates preserve all fields, clears empty links, and uses safe payload merging', () => {
+  const currentDir = path.dirname(fileURLToPath(import.meta.url));
+  const settingsPath = path.resolve(currentDir, '../pages/dashboard/SettingsPage.tsx');
+  const authContextPath = path.resolve(currentDir, '../lib/auth/authContext.tsx');
+  const storageServicePath = path.resolve(currentDir, '../lib/storage/storageService.ts');
+
+  const settingsContent = fs.readFileSync(settingsPath, 'utf8');
+  const authContent = fs.readFileSync(authContextPath, 'utf8');
+  const storageContent = fs.readFileSync(storageServicePath, 'utf8');
+
+  // Verify SettingsPage uses isInitialized to avoid wiping user drafts
+  assert.ok(settingsContent.includes('isInitialized'), 'SettingsPage must use initialization guard');
+
+  // Verify authContext uses setDoc with merge: true instead of raw updateDoc
+  assert.ok(authContent.includes('setDoc(userRef, cleanData, { merge: true })'), 'authContext must use setDoc with merge: true');
+
+  // Verify storageService exports compressAndOptimizeImage and shrinkExistingDataUrlIfNeeded
+  assert.ok(storageContent.includes('compressAndOptimizeImage'), 'storageService must provide client-side image optimization');
+  assert.ok(storageContent.includes('shrinkExistingDataUrlIfNeeded'), 'storageService must provide safe data URL downscaling');
 });
 

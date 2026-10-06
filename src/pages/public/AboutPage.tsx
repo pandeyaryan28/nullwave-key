@@ -52,8 +52,8 @@ export const AboutPage: React.FC = () => {
         </h2>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-          <Card className="p-6 space-y-3">
-            <div className="w-8 h-8 rounded-md bg-neutral-100 dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 flex items-center justify-center font-bold text-xs border border-neutral-200 dark:border-neutral-700">
+          <Card variant="interactive" className="p-6 space-y-3">
+            <div className="w-9 h-9 rounded-xl bg-[#e7ecf3]/80 dark:bg-[#131720]/90 text-neutral-900 dark:text-neutral-100 flex items-center justify-center font-bold text-xs border border-slate-200/70 dark:border-white/10 shadow-clay-sm">
               01
             </div>
             <h3 className="text-base font-bold text-neutral-900 dark:text-neutral-100">
@@ -64,8 +64,8 @@ export const AboutPage: React.FC = () => {
             </p>
           </Card>
 
-          <Card className="p-6 space-y-3">
-            <div className="w-8 h-8 rounded-md bg-neutral-100 dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 flex items-center justify-center font-bold text-xs border border-neutral-200 dark:border-neutral-700">
+          <Card variant="interactive" className="p-6 space-y-3">
+            <div className="w-9 h-9 rounded-xl bg-[#e7ecf3]/80 dark:bg-[#131720]/90 text-neutral-900 dark:text-neutral-100 flex items-center justify-center font-bold text-xs border border-slate-200/70 dark:border-white/10 shadow-clay-sm">
               02
             </div>
             <h3 className="text-base font-bold text-neutral-900 dark:text-neutral-100">
@@ -76,8 +76,8 @@ export const AboutPage: React.FC = () => {
             </p>
           </Card>
 
-          <Card className="p-6 space-y-3">
-            <div className="w-8 h-8 rounded-md bg-neutral-100 dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 flex items-center justify-center font-bold text-xs border border-neutral-200 dark:border-neutral-700">
+          <Card variant="interactive" className="p-6 space-y-3">
+            <div className="w-9 h-9 rounded-xl bg-[#e7ecf3]/80 dark:bg-[#131720]/90 text-neutral-900 dark:text-neutral-100 flex items-center justify-center font-bold text-xs border border-slate-200/70 dark:border-white/10 shadow-clay-sm">
               03
             </div>
             <h3 className="text-base font-bold text-neutral-900 dark:text-neutral-100">
@@ -88,8 +88,8 @@ export const AboutPage: React.FC = () => {
             </p>
           </Card>
 
-          <Card className="p-6 space-y-3">
-            <div className="w-8 h-8 rounded-md bg-neutral-100 dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 flex items-center justify-center font-bold text-xs border border-neutral-200 dark:border-neutral-700">
+          <Card variant="interactive" className="p-6 space-y-3">
+            <div className="w-9 h-9 rounded-xl bg-[#e7ecf3]/80 dark:bg-[#131720]/90 text-neutral-900 dark:text-neutral-100 flex items-center justify-center font-bold text-xs border border-slate-200/70 dark:border-white/10 shadow-clay-sm">
               04
             </div>
             <h3 className="text-base font-bold text-neutral-900 dark:text-neutral-100">
@@ -103,7 +103,7 @@ export const AboutPage: React.FC = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="p-8 sm:p-12 rounded-lg bg-neutral-100 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 text-center space-y-4">
+      <section className="p-8 sm:p-12 rounded-2xl bg-[#e7ecf3]/60 dark:bg-[#131720]/70 border border-slate-200/70 dark:border-white/10 shadow-clay-card text-center space-y-4">
         <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-neutral-950 dark:text-neutral-50">
           Join creators distributing cleanly
         </h2>

@@ -39,7 +39,7 @@ export const Navbar: React.FC = () => {
   ];
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-neutral-200 dark:border-neutral-800 bg-white/95 dark:bg-neutral-950/95 backdrop-blur-md">
+    <header className="sticky top-0 z-40 w-full border-b border-slate-200/80 dark:border-white/10 bg-white/85 dark:bg-[#141822]/90 backdrop-blur-md shadow-clay-sm">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
         {/* Brand Logo & Main Nav */}
         <div className="flex items-center gap-8">
@@ -47,23 +47,23 @@ export const Navbar: React.FC = () => {
             to={user ? (isViewer ? '/dashboard/saved' : '/dashboard') : '/'}
             className="flex items-center gap-2.5 text-neutral-950 dark:text-neutral-50 font-bold text-lg tracking-tight focus-visible:outline-none select-none"
           >
-            <div className="w-8 h-8 rounded-md bg-neutral-900 text-neutral-50 dark:bg-neutral-100 dark:text-neutral-900 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-lg bg-neutral-900 text-neutral-50 dark:bg-neutral-100 dark:text-neutral-900 flex items-center justify-center shadow-clay-sm">
               <Waves className="w-4 h-4" />
             </div>
             <span className="font-bold tracking-tight text-neutral-950 dark:text-neutral-50">NullWave</span>
           </Link>
 
           {/* Desktop Nav */}
-          <nav className="hidden md:flex items-center gap-1">
+          <nav className="hidden md:flex items-center gap-1.5">
             {user
               ? dashboardLinks.map(link => (
                   <Link
                     key={link.path}
                     to={link.path}
-                    className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+                    className={`px-3 py-1.5 text-sm font-medium rounded-md transition-all duration-150 ${
                       isActive(link.path)
-                        ? 'bg-neutral-100 text-neutral-950 dark:bg-neutral-800 dark:text-neutral-50'
-                        : 'text-neutral-600 hover:text-neutral-900 hover:bg-neutral-50 dark:text-neutral-400 dark:hover:text-neutral-200 dark:hover:bg-neutral-900'
+                        ? 'bg-white dark:bg-neutral-800 text-neutral-950 dark:text-neutral-50 shadow-clay-sm font-semibold'
+                        : 'text-neutral-600 hover:text-neutral-900 hover:bg-white/60 dark:text-neutral-400 dark:hover:text-neutral-200 dark:hover:bg-white/10 hover:-translate-y-0.5'
                     }`}
                   >
                     {link.label}
@@ -73,10 +73,10 @@ export const Navbar: React.FC = () => {
                   <Link
                     key={link.path}
                     to={link.path}
-                    className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+                    className={`px-3 py-1.5 text-sm font-medium rounded-md transition-all duration-150 ${
                       isActive(link.path)
-                        ? 'bg-neutral-100 text-neutral-950 dark:bg-neutral-800 dark:text-neutral-50'
-                        : 'text-neutral-600 hover:text-neutral-900 hover:bg-neutral-50 dark:text-neutral-400 dark:hover:text-neutral-200 dark:hover:bg-neutral-900'
+                        ? 'bg-white dark:bg-neutral-800 text-neutral-950 dark:text-neutral-50 shadow-clay-sm font-semibold'
+                        : 'text-neutral-600 hover:text-neutral-900 hover:bg-white/60 dark:text-neutral-400 dark:hover:text-neutral-200 dark:hover:bg-white/10 hover:-translate-y-0.5'
                     }`}
                   >
                     {link.label}
@@ -96,7 +96,7 @@ export const Navbar: React.FC = () => {
                   to={`/${profile.username}`}
                   target="_blank"
                   rel="noreferrer"
-                  className="flex items-center gap-1.5 text-xs font-medium text-neutral-600 dark:text-neutral-400 hover:text-neutral-950 dark:hover:text-neutral-100 px-2.5 py-1.5 rounded-md border border-neutral-200 dark:border-neutral-800 hover:border-neutral-300 dark:hover:border-neutral-700 transition-colors"
+                  className="flex items-center gap-1.5 text-xs font-medium text-neutral-600 dark:text-neutral-400 hover:text-neutral-950 dark:hover:text-neutral-100 px-2.5 py-1.5 rounded-md border border-slate-200/80 dark:border-white/10 bg-white/50 dark:bg-neutral-900/50 shadow-clay-sm hover:shadow-clay-card hover:-translate-y-0.5 transition-all duration-150"
                 >
                   <span>/{profile.username}</span>
                   <ExternalLink className="w-3 h-3" />

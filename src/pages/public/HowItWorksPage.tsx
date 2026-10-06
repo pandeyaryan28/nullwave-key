@@ -53,8 +53,8 @@ export const HowItWorksPage: React.FC = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <Card className="p-6 space-y-4">
-            <div className="w-10 h-10 rounded-md bg-neutral-100 dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 flex items-center justify-center font-bold text-sm border border-neutral-200 dark:border-neutral-700">
+          <Card variant="interactive" className="p-6 space-y-4">
+            <div className="w-10 h-10 rounded-xl bg-[#e7ecf3]/80 dark:bg-[#131720]/90 text-neutral-900 dark:text-neutral-100 flex items-center justify-center font-bold text-sm border border-slate-200/70 dark:border-white/10 shadow-clay-sm">
               <Upload className="w-5 h-5" />
             </div>
             <div className="space-y-2">
@@ -67,8 +67,8 @@ export const HowItWorksPage: React.FC = () => {
             </div>
           </Card>
 
-          <Card className="p-6 space-y-4">
-            <div className="w-10 h-10 rounded-md bg-neutral-100 dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 flex items-center justify-center font-bold text-sm border border-neutral-200 dark:border-neutral-700">
+          <Card variant="interactive" className="p-6 space-y-4">
+            <div className="w-10 h-10 rounded-xl bg-[#e7ecf3]/80 dark:bg-[#131720]/90 text-neutral-900 dark:text-neutral-100 flex items-center justify-center font-bold text-sm border border-slate-200/70 dark:border-white/10 shadow-clay-sm">
               <Radio className="w-5 h-5" />
             </div>
             <div className="space-y-2">
@@ -81,8 +81,8 @@ export const HowItWorksPage: React.FC = () => {
             </div>
           </Card>
 
-          <Card className="p-6 space-y-4">
-            <div className="w-10 h-10 rounded-md bg-neutral-100 dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 flex items-center justify-center font-bold text-sm border border-neutral-200 dark:border-neutral-700">
+          <Card variant="interactive" className="p-6 space-y-4">
+            <div className="w-10 h-10 rounded-xl bg-[#e7ecf3]/80 dark:bg-[#131720]/90 text-neutral-900 dark:text-neutral-100 flex items-center justify-center font-bold text-sm border border-slate-200/70 dark:border-white/10 shadow-clay-sm">
               <Share2 className="w-5 h-5" />
             </div>
             <div className="space-y-2">
@@ -109,9 +109,9 @@ export const HowItWorksPage: React.FC = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <Card className="p-6 space-y-4 border-neutral-300 dark:border-neutral-700">
+          <Card variant="interactive" className="p-6 space-y-4 border-slate-200/80 dark:border-white/10">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-md bg-neutral-900 text-white dark:bg-neutral-100 dark:text-neutral-900 flex items-center justify-center font-mono font-bold text-sm">
+              <div className="w-8 h-8 rounded-xl bg-neutral-900 text-white dark:bg-neutral-100 dark:text-neutral-900 flex items-center justify-center font-mono font-bold text-sm shadow-clay-sm">
                 01
               </div>
               <h3 className="text-lg font-bold text-neutral-900 dark:text-neutral-100">
@@ -121,14 +121,14 @@ export const HowItWorksPage: React.FC = () => {
             <p className="text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed">
               When a follower clicks your profile link from Instagram, TikTok, or YouTube, your profile loads in under 250 milliseconds with a dedicated numeric code box front-and-center.
             </p>
-            <div className="p-3 bg-neutral-100 dark:bg-neutral-900 rounded-md font-mono text-xs text-neutral-700 dark:text-neutral-300 border border-neutral-200 dark:border-neutral-800">
+            <div className="p-3.5 bg-[#e7ecf3]/80 dark:bg-[#131720]/80 rounded-xl font-mono text-xs text-neutral-700 dark:text-neutral-300 border border-slate-200/60 dark:border-white/5 shadow-clay-inset">
               Profile: nullwave.com/aryan • Status: Active
             </div>
           </Card>
 
-          <Card className="p-6 space-y-4 border-neutral-300 dark:border-neutral-700">
+          <Card variant="interactive" className="p-6 space-y-4 border-slate-200/80 dark:border-white/10">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-md bg-neutral-900 text-white dark:bg-neutral-100 dark:text-neutral-900 flex items-center justify-center font-mono font-bold text-sm">
+              <div className="w-8 h-8 rounded-xl bg-neutral-900 text-white dark:bg-neutral-100 dark:text-neutral-900 flex items-center justify-center font-mono font-bold text-sm shadow-clay-sm">
                 02
               </div>
               <h3 className="text-lg font-bold text-neutral-900 dark:text-neutral-100">
@@ -138,7 +138,7 @@ export const HowItWorksPage: React.FC = () => {
             <p className="text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed">
               The viewer enters the 4 digits (e.g. <span className="font-mono font-bold text-neutral-900 dark:text-neutral-100">4827</span>) or opens the document directly from your profile. The platform verifies access and opens the PDF immediately for online reading or local file download.
             </p>
-            <div className="flex items-center gap-2 text-xs text-emerald-700 dark:text-emerald-400 font-medium">
+            <div className="p-3.5 bg-[#e7ecf3]/80 dark:bg-[#131720]/80 rounded-xl border border-slate-200/60 dark:border-white/5 shadow-clay-inset flex items-center gap-2 text-xs text-emerald-700 dark:text-emerald-400 font-medium">
               <FileCheck className="w-4 h-4 shrink-0" />
               <span>Zero credentials required • Session unlocked immediately</span>
             </div>
@@ -158,9 +158,11 @@ export const HowItWorksPage: React.FC = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <Card className="p-6 space-y-4">
+          <Card variant="interactive" className="p-6 space-y-4">
             <div className="flex items-center gap-3">
-              <Shield className="w-5 h-5 text-neutral-900 dark:text-neutral-100" />
+              <div className="w-9 h-9 rounded-xl bg-[#e7ecf3]/80 dark:bg-[#131720]/90 text-neutral-900 dark:text-neutral-100 flex items-center justify-center border border-slate-200/70 dark:border-white/10 shadow-clay-sm">
+                <Shield className="w-5 h-5 text-neutral-900 dark:text-neutral-100" />
+              </div>
               <h3 className="text-base font-bold text-neutral-900 dark:text-neutral-100">
                 Brute-Force Rate Limiting
               </h3>
@@ -180,9 +182,11 @@ export const HowItWorksPage: React.FC = () => {
             </div>
           </Card>
 
-          <Card className="p-6 space-y-4">
+          <Card variant="interactive" className="p-6 space-y-4">
             <div className="flex items-center gap-3">
-              <Eye className="w-5 h-5 text-neutral-900 dark:text-neutral-100" />
+              <div className="w-9 h-9 rounded-xl bg-[#e7ecf3]/80 dark:bg-[#131720]/90 text-neutral-900 dark:text-neutral-100 flex items-center justify-center border border-slate-200/70 dark:border-white/10 shadow-clay-sm">
+                <Eye className="w-5 h-5 text-neutral-900 dark:text-neutral-100" />
+              </div>
               <h3 className="text-base font-bold text-neutral-900 dark:text-neutral-100">
                 24-Hour Unique Window Measurement
               </h3>
@@ -205,7 +209,7 @@ export const HowItWorksPage: React.FC = () => {
       </section>
 
       {/* CTA */}
-      <section className="p-8 sm:p-12 rounded-lg bg-neutral-100 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 text-center space-y-4">
+      <section className="p-8 sm:p-12 rounded-2xl bg-[#e7ecf3]/60 dark:bg-[#131720]/70 border border-slate-200/70 dark:border-white/10 shadow-clay-card text-center space-y-4">
         <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-neutral-950 dark:text-neutral-50">
           Start sharing your resources today
         </h2>

@@ -633,7 +633,7 @@ export const ResourceViewPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-neutral-50 dark:bg-neutral-950 flex flex-col selection:bg-neutral-200 dark:selection:bg-neutral-800">
       {/* Top Sticky Document Control Bar */}
-      <header className="sticky top-0 z-40 border-b border-neutral-200 dark:border-neutral-800 bg-white/95 dark:bg-neutral-950/95 backdrop-blur-md">
+      <header className="sticky top-0 z-40 border-b border-slate-200/80 dark:border-white/10 bg-white/85 dark:bg-[#141822]/90 backdrop-blur-md shadow-clay-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3 min-w-0">
             <Link
@@ -727,7 +727,7 @@ export const ResourceViewPage: React.FC = () => {
       {/* Main Document Container */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 flex-1 w-full space-y-6">
         {/* Document Metadata Bar */}
-        <div className="flex flex-col md:flex-row items-start justify-between gap-4 p-5 rounded-md border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900">
+        <div className="flex flex-col md:flex-row items-start justify-between gap-4 p-5 sm:p-6 rounded-2xl border border-slate-200/80 dark:border-white/10 bg-white dark:bg-[#1a1e28] shadow-clay-card">
           <div className="space-y-2 flex-1 min-w-0">
             <div className="flex flex-wrap items-center gap-2">
               {resource.category && (
@@ -809,7 +809,7 @@ export const ResourceViewPage: React.FC = () => {
           </div>
 
           {resource.coverUrl && (
-            <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-md overflow-hidden border border-neutral-200 dark:border-neutral-800 shrink-0">
+            <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-xl overflow-hidden border border-slate-200/80 dark:border-white/10 shadow-clay-sm shrink-0">
               <img
                 src={resource.coverUrl}
                 alt={resource.title}
@@ -821,7 +821,7 @@ export const ResourceViewPage: React.FC = () => {
 
         {/* Expired Notice */}
         {isExpired && !isOwner && (
-          <div className="p-4 rounded-md bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 text-xs text-red-700 dark:text-red-300 flex items-center gap-2.5">
+          <div className="p-4 rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 text-xs text-red-700 dark:text-red-300 flex items-center gap-2.5 shadow-clay-sm">
             <Clock className="w-4 h-4 shrink-0 text-red-600 dark:text-red-400" />
             <span>
               This document expired on {new Date(resource.expiresAt!).toLocaleString()}. Access has closed.
@@ -831,7 +831,7 @@ export const ResourceViewPage: React.FC = () => {
 
         {/* Capacity Cap Notice */}
         {isCapacityReached && !isUnlocked && !isOwner && (
-          <div className="p-4 rounded-md bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-xs text-amber-800 dark:text-amber-300 flex items-center gap-2.5">
+          <div className="p-4 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-xs text-amber-800 dark:text-amber-300 flex items-center gap-2.5 shadow-clay-sm">
             <Users className="w-4 h-4 shrink-0 text-amber-600 dark:text-amber-400" />
             <span>
               This document had a limit of {resource.maxUnlocks} viewers, and all slots have been claimed.
@@ -841,7 +841,7 @@ export const ResourceViewPage: React.FC = () => {
 
         {/* View-Only Notice */}
         {!allowDownload && isUnlocked && (
-          <div className="p-3.5 rounded-md bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/60 text-xs text-amber-800 dark:text-amber-300 flex items-center gap-2">
+          <div className="p-3.5 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/60 text-xs text-amber-800 dark:text-amber-300 flex items-center gap-2 shadow-clay-sm">
             <EyeOff className="w-4 h-4 shrink-0 text-amber-600 dark:text-amber-400" />
             <span>
               This document is distributed in view-only mode by the creator. You can read the entire guide in the reader below, but raw file downloading is disabled.
@@ -851,8 +851,8 @@ export const ResourceViewPage: React.FC = () => {
 
         {/* Gated Access: 4-Digit Code Input OR Password Gate OR Native PDF Document Reader */}
         {!isUnlocked ? (
-          <Card className="p-8 text-center border-neutral-300 dark:border-neutral-700 shadow-sm max-w-lg mx-auto">
-            <div className="w-12 h-12 rounded-md bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 flex items-center justify-center mx-auto mb-4 border border-neutral-200 dark:border-neutral-700">
+          <Card className="p-8 text-center border-slate-200/80 dark:border-white/10 shadow-clay-card max-w-lg mx-auto">
+            <div className="w-12 h-12 rounded-xl bg-[#e7ecf3] dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 flex items-center justify-center mx-auto mb-4 border border-slate-200/80 dark:border-white/10 shadow-clay-sm">
               {isExpired || (isCapacityReached && !isOwner) ? (
                 <Lock className="w-6 h-6 text-red-500" />
               ) : (
@@ -879,17 +879,17 @@ export const ResourceViewPage: React.FC = () => {
             </p>
 
             {cooldownSeconds > 0 && (
-              <div className="mb-4 p-2.5 rounded-md bg-amber-50 dark:bg-amber-950/40 text-xs text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
+              <div className="mb-4 p-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 text-xs text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800 shadow-clay-sm">
                 Rate limit cooldown active. Please wait {cooldownSeconds}s before trying again.
               </div>
             )}
 
             {isExpired && !isOwner ? (
-              <div className="p-4 rounded-md bg-neutral-100 dark:bg-neutral-800 text-xs text-neutral-600 dark:text-neutral-400">
+              <div className="p-4 rounded-xl bg-[#e7ecf3]/70 dark:bg-[#12151e]/80 shadow-clay-inset border border-slate-200/80 dark:border-white/10 text-xs text-neutral-600 dark:text-neutral-400">
                 Document availability has ended. Contact @{creator.username} for updates.
               </div>
             ) : isCapacityReached && !isOwner ? (
-              <div className="p-4 rounded-md bg-neutral-100 dark:bg-neutral-800 text-xs text-neutral-600 dark:text-neutral-400">
+              <div className="p-4 rounded-xl bg-[#e7ecf3]/70 dark:bg-[#12151e]/80 shadow-clay-inset border border-slate-200/80 dark:border-white/10 text-xs text-neutral-600 dark:text-neutral-400">
                 All {resource.maxUnlocks} access slots have been claimed.
               </div>
             ) : (
@@ -906,7 +906,7 @@ export const ResourceViewPage: React.FC = () => {
               />
             )}
 
-            <div className="mt-6 pt-4 border-t border-neutral-100 dark:border-neutral-800">
+            <div className="mt-6 pt-4 border-t border-slate-100 dark:border-white/10">
               <Link
                 to={`/${creator.username}`}
                 className="text-xs text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors"
@@ -917,8 +917,8 @@ export const ResourceViewPage: React.FC = () => {
           </Card>
         ) : resource.password && !isPasswordUnlocked && !isOwner ? (
           /* Password Protection Gate */
-          <Card className="p-8 text-center border-neutral-300 dark:border-neutral-700 shadow-sm max-w-lg mx-auto">
-            <div className="w-12 h-12 rounded-md bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 flex items-center justify-center mx-auto mb-4 border border-neutral-200 dark:border-neutral-700">
+          <Card className="p-8 text-center border-slate-200/80 dark:border-white/10 shadow-clay-card max-w-lg mx-auto">
+            <div className="w-12 h-12 rounded-xl bg-[#e7ecf3] dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 flex items-center justify-center mx-auto mb-4 border border-slate-200/80 dark:border-white/10 shadow-clay-sm">
               <Key className="w-6 h-6" />
             </div>
 
@@ -931,7 +931,7 @@ export const ResourceViewPage: React.FC = () => {
             </p>
 
             {cooldownSeconds > 0 && (
-              <div className="mb-4 p-2.5 rounded-md bg-amber-50 dark:bg-amber-950/40 text-xs text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
+              <div className="mb-4 p-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 text-xs text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800 shadow-clay-sm">
                 Rate limit cooldown active. Please wait {cooldownSeconds}s before trying again.
               </div>
             )}
@@ -948,7 +948,7 @@ export const ResourceViewPage: React.FC = () => {
                   placeholder="Enter document password"
                   autoFocus
                   disabled={cooldownSeconds > 0}
-                  className="w-full h-10 px-3 pr-10 text-xs rounded-md border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100 placeholder-neutral-400 focus:outline-none focus:ring-1 focus:ring-neutral-400"
+                  className="w-full h-11 px-3.5 pr-10 text-sm rounded-xl border border-slate-200/80 dark:border-white/10 bg-[#e7ecf3]/70 dark:bg-[#12151e]/80 text-neutral-900 dark:text-neutral-100 font-mono shadow-clay-inset focus:outline-none focus:bg-white dark:focus:bg-[#1a1e28] focus:shadow-clay-inset-focus"
                 />
                 <button
                   type="button"
@@ -978,7 +978,7 @@ export const ResourceViewPage: React.FC = () => {
               </Button>
             </form>
 
-            <div className="mt-6 pt-4 border-t border-neutral-100 dark:border-neutral-800">
+            <div className="mt-6 pt-4 border-t border-slate-100 dark:border-white/10">
               <Link
                 to={`/${creator.username}`}
                 className="text-xs text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors"
@@ -990,7 +990,7 @@ export const ResourceViewPage: React.FC = () => {
         ) : (
           /* Native PDF Document Viewer */
           <div className="space-y-4">
-            <div className="w-full min-h-[85vh] sm:min-h-[90vh] h-[85vh] sm:h-[90vh] bg-white dark:bg-neutral-900 rounded-md overflow-hidden border border-neutral-200 dark:border-neutral-800 shadow-sm relative">
+            <div className="w-full min-h-[85vh] sm:min-h-[90vh] h-[85vh] sm:h-[90vh] bg-white dark:bg-[#141822] rounded-2xl overflow-hidden border border-slate-200/80 dark:border-white/10 shadow-clay-card relative">
               <object
                 data={`${blobUrl || resource.fileUrl}#view=FitH`}
                 type="application/pdf"
@@ -1006,7 +1006,7 @@ export const ResourceViewPage: React.FC = () => {
 
             {/* Social In-App Browser Helper */}
             {(allowDownload || isOwner) && (
-              <div className="px-4 py-2 bg-neutral-100 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-md text-[11px] text-neutral-500 text-center">
+              <div className="px-4 py-2.5 bg-white/80 dark:bg-neutral-900/80 border border-slate-200/80 dark:border-white/10 rounded-xl shadow-clay-sm text-[11px] text-neutral-500 text-center">
                 Viewing inside Instagram or a social in-app browser? If preview is blank, tap{' '}
                 <a
                   href={blobUrl || resource.fileUrl}
@@ -1026,7 +1026,7 @@ export const ResourceViewPage: React.FC = () => {
       {/* Viewer Account Modal (for guests clicking "Save to Library") */}
       {showAuthModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in-up">
-          <Card className="w-full max-w-sm p-6 relative border-neutral-300 dark:border-neutral-700 shadow-lg">
+          <Card className="w-full max-w-sm p-6 relative border-slate-200/80 dark:border-white/15 shadow-clay-card animate-clay-pop">
             <button
               onClick={() => setShowAuthModal(false)}
               className="absolute top-4 right-4 p-1 text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 rounded-md"
@@ -1035,7 +1035,7 @@ export const ResourceViewPage: React.FC = () => {
               <X className="w-4 h-4" />
             </button>
 
-            <div className="w-10 h-10 rounded-md bg-neutral-900 text-neutral-50 dark:bg-neutral-100 dark:text-neutral-900 flex items-center justify-center mb-3">
+            <div className="w-10 h-10 rounded-xl bg-neutral-900 text-neutral-50 dark:bg-neutral-100 dark:text-neutral-900 flex items-center justify-center mb-3 shadow-clay-sm">
               <Bookmark className="w-5 h-5" />
             </div>
 

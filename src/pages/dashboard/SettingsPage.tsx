@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../lib/auth/authContext';
-import { uploadImageFile } from '../../lib/storage/storageService';
+import { uploadImageFile, shrinkExistingDataUrlIfNeeded } from '../../lib/storage/storageService';
 import type { UserProfile } from '../../types';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
@@ -31,8 +31,20 @@ export const SettingsPage: React.FC = () => {
   const [location, setLocation] = useState<string>(profile?.location || '');
   const [photoURL, setPhotoURL] = useState<string>(profile?.photoURL || '');
   const [bannerURL, setBannerURL] = useState<string>(profile?.bannerURL || '');
+  const [isInitialized, setIsInitialized] = useState<boolean>(false);
 
   const getInitialSocials = (p?: UserProfile | null) => {
+    if (p?.socialLinks) {
+      return {
+        instagram: p.socialLinks.instagram || '',
+        twitter: p.socialLinks.twitter || '',
+        youtube: p.socialLinks.youtube || '',
+        linkedin: p.socialLinks.linkedin || '',
+        github: p.socialLinks.github || '',
+        website: p.socialLinks.website || '',
+      };
+    }
+
     const isDedicated = (domain: string) => Boolean(p?.socialLink?.toLowerCase().includes(domain));
     const isKnown =
       isDedicated('instagram.com') ||
@@ -43,12 +55,12 @@ export const SettingsPage: React.FC = () => {
       isDedicated('github.com');
 
     return {
-      instagram: p?.socialLinks?.instagram || (isDedicated('instagram.com') ? p?.socialLink : '') || '',
-      twitter: p?.socialLinks?.twitter || (isDedicated('twitter.com') || isDedicated('x.com') ? p?.socialLink : '') || '',
-      youtube: p?.socialLinks?.youtube || (isDedicated('youtube.com') ? p?.socialLink : '') || '',
-      linkedin: p?.socialLinks?.linkedin || (isDedicated('linkedin.com') ? p?.socialLink : '') || '',
-      github: p?.socialLinks?.github || (isDedicated('github.com') ? p?.socialLink : '') || '',
-      website: p?.socialLinks?.website || (!p?.socialLinks && !isKnown && p?.socialLink ? p.socialLink : '') || '',
+      instagram: (isDedicated('instagram.com') ? p?.socialLink : '') || '',
+      twitter: (isDedicated('twitter.com') || isDedicated('x.com') ? p?.socialLink : '') || '',
+      youtube: (isDedicated('youtube.com') ? p?.socialLink : '') || '',
+      linkedin: (isDedicated('linkedin.com') ? p?.socialLink : '') || '',
+      github: (isDedicated('github.com') ? p?.socialLink : '') || '',
+      website: (!isKnown && p?.socialLink ? p.socialLink : '') || '',
     };
   };
 
@@ -61,7 +73,7 @@ export const SettingsPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (profile) {
+    if (profile && !isInitialized) {
       setDisplayName(profile.displayName || '');
       setHeadline(profile.headline || '');
       setBio(profile.bio || '');
@@ -69,8 +81,9 @@ export const SettingsPage: React.FC = () => {
       setPhotoURL(profile.photoURL || '');
       setBannerURL(profile.bannerURL || '');
       setSocialLinks(getInitialSocials(profile));
+      setIsInitialized(true);
     }
-  }, [profile]);
+  }, [profile, isInitialized]);
 
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!user || !e.target.files || !e.target.files[0]) return;
@@ -85,6 +98,7 @@ export const SettingsPage: React.FC = () => {
       setSuccessMessage('Avatar updated successfully!');
       setTimeout(() => setSuccessMessage(null), 3000);
     } catch (err: unknown) {
+      console.error('Avatar upload failed:', err);
       setError((err as Error).message || 'Failed to upload avatar.');
     } finally {
       setUploadingAvatar(false);
@@ -115,6 +129,7 @@ export const SettingsPage: React.FC = () => {
       setSuccessMessage('Banner updated successfully!');
       setTimeout(() => setSuccessMessage(null), 3000);
     } catch (err: unknown) {
+      console.error('Banner upload failed:', err);
       setError((err as Error).message || 'Failed to upload banner.');
     } finally {
       setUploadingBanner(false);
@@ -148,27 +163,32 @@ export const SettingsPage: React.FC = () => {
       '';
 
     try {
+      // Guard against any oversized pre-existing data URLs
+      const safeBanner = bannerURL ? await shrinkExistingDataUrlIfNeeded(bannerURL, 1500, 500) : '';
+      const safeAvatar = photoURL ? await shrinkExistingDataUrlIfNeeded(photoURL, 400, 400) : '';
+
       await updateCreatorProfile({
         displayName: displayName.trim(),
         headline: headline.trim(),
         bio: bio.trim(),
         location: location.trim(),
-        photoURL: photoURL || undefined,
-        bannerURL: bannerURL || undefined,
+        photoURL: safeAvatar,
+        bannerURL: safeBanner,
         socialLinks: {
-          instagram: socialLinks.instagram.trim() || undefined,
-          twitter: socialLinks.twitter.trim() || undefined,
-          youtube: socialLinks.youtube.trim() || undefined,
-          linkedin: socialLinks.linkedin.trim() || undefined,
-          github: socialLinks.github.trim() || undefined,
-          website: socialLinks.website.trim() || undefined,
+          instagram: socialLinks.instagram.trim(),
+          twitter: socialLinks.twitter.trim(),
+          youtube: socialLinks.youtube.trim(),
+          linkedin: socialLinks.linkedin.trim(),
+          github: socialLinks.github.trim(),
+          website: socialLinks.website.trim(),
         },
         socialLink: primarySocial,
       });
       setSuccessMessage('Profile saved successfully!');
       setTimeout(() => setSuccessMessage(null), 3000);
     } catch (err: unknown) {
-      setError((err as Error).message || 'Failed to save profile.');
+      console.error('Profile update failed:', err);
+      setError((err as Error).message || 'Failed to save profile changes. Please try again.');
     } finally {
       setSaving(false);
     }
@@ -185,147 +205,150 @@ export const SettingsPage: React.FC = () => {
         </p>
       </div>
 
-      <Card className="p-6 sm:p-8">
-        <form onSubmit={handleSubmit} className="space-y-8">
+      <Card className="p-6 sm:p-8 rounded-2xl shadow-clay-card animate-clay-pop border-slate-200/80 dark:border-white/10">
+        <form onSubmit={handleSubmit} className="space-y-6">
           {error && (
-            <div className="p-3 rounded-md bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 text-xs text-red-700 dark:text-red-300 flex items-center gap-2">
+            <div className="p-3.5 rounded-xl bg-red-50/90 dark:bg-red-950/40 border border-red-200/80 dark:border-red-800/80 text-xs text-red-700 dark:text-red-300 flex items-center gap-2 shadow-clay-sm">
               <AlertCircle className="w-4 h-4 shrink-0" />
               <span>{error}</span>
             </div>
           )}
 
           {successMessage && (
-            <div className="p-3 rounded-md bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-xs text-emerald-700 dark:text-emerald-300 flex items-center gap-2">
+            <div className="p-3.5 rounded-xl bg-emerald-50/90 dark:bg-emerald-950/40 border border-emerald-200/80 dark:border-emerald-800/80 text-xs text-emerald-700 dark:text-emerald-300 flex items-center gap-2 shadow-clay-sm">
               <Check className="w-4 h-4 shrink-0" />
               <span>{successMessage}</span>
             </div>
           )}
 
-          {/* Banner Cover Image Section */}
-          <div className="space-y-3">
-            <label className="block text-xs font-semibold uppercase tracking-wider text-neutral-700 dark:text-neutral-300">
-              Profile Header Banner
-            </label>
+          {/* Profile Media Section (Banner & Avatar) */}
+          <div className="p-6 rounded-2xl bg-[#e7ecf3]/40 dark:bg-[#131720]/50 border border-slate-200/70 dark:border-white/10 shadow-clay-sm space-y-6">
+            <div className="space-y-3">
+              <label className="block text-xs font-semibold uppercase tracking-wider text-neutral-700 dark:text-neutral-300">
+                Profile Header Banner
+              </label>
 
-            <div className="relative w-full h-36 sm:h-44 rounded-lg overflow-hidden border border-neutral-200 dark:border-neutral-800 bg-neutral-100 dark:bg-neutral-900">
-              {bannerURL ? (
-                <img
-                  src={bannerURL}
-                  alt="Profile Banner"
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <div className="w-full h-full flex flex-col items-center justify-center text-neutral-400 dark:text-neutral-600 gap-2">
-                  <ImageIcon className="w-8 h-8" />
-                  <span className="text-xs">No custom banner set (default gradient will be displayed)</span>
+              <div className="relative w-full h-36 sm:h-44 rounded-2xl overflow-hidden border border-slate-200/80 dark:border-white/10 bg-[#e7ecf3]/70 dark:bg-[#131720]/80 shadow-clay-inset">
+                {bannerURL ? (
+                  <img
+                    src={bannerURL}
+                    alt="Profile Banner"
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full flex flex-col items-center justify-center text-neutral-400 dark:text-neutral-500 gap-2">
+                    <ImageIcon className="w-8 h-8" />
+                    <span className="text-xs">No custom banner set (default gradient will be displayed)</span>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
+                <div className="flex items-center gap-3">
+                  <label className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-slate-200/80 dark:border-white/10 bg-white dark:bg-[#1a1e28] hover:bg-slate-50 dark:hover:bg-neutral-800 text-xs font-semibold cursor-pointer transition-all text-neutral-800 dark:text-neutral-200 shadow-clay-sm hover:shadow-clay-card active:scale-[0.98]">
+                    <ImageIcon className="w-3.5 h-3.5" />
+                    <span>{bannerURL ? 'Change Banner' : 'Upload Banner'}</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleBannerUpload}
+                      disabled={uploadingBanner}
+                      className="hidden"
+                    />
+                  </label>
+
+                  {bannerURL && (
+                    <button
+                      type="button"
+                      onClick={handleRemoveBanner}
+                      className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-red-200 dark:border-red-900/60 bg-white dark:bg-[#1a1e28] text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 text-xs font-semibold transition-all shadow-clay-sm hover:shadow-clay-card active:scale-[0.98]"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                      <span>Remove</span>
+                    </button>
+                  )}
                 </div>
-              )}
+
+                <span className="text-xs text-neutral-500 dark:text-neutral-400">
+                  Recommended 1500 × 500 px • Max 5MB
+                </span>
+              </div>
             </div>
 
-            <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
-              <div className="flex items-center gap-3">
-                <label className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-neutral-300 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800 text-xs font-medium cursor-pointer transition-colors text-neutral-800 dark:text-neutral-200">
-                  <ImageIcon className="w-3.5 h-3.5" />
-                  <span>{bannerURL ? 'Change Banner' : 'Upload Banner'}</span>
+            {/* Profile Picture Section */}
+            <div className="flex items-center gap-5 pt-4 border-t border-slate-200/80 dark:border-white/10">
+              {photoURL ? (
+                <img
+                  src={photoURL}
+                  alt="Avatar"
+                  className="w-16 h-16 rounded-2xl object-cover border border-slate-200/80 dark:border-white/10 shadow-clay-card"
+                />
+              ) : (
+                <div className="w-16 h-16 rounded-2xl bg-neutral-900 text-neutral-50 dark:bg-neutral-100 dark:text-neutral-900 flex items-center justify-center font-bold text-xl border border-slate-200/80 dark:border-white/10 shadow-clay-card">
+                  {displayName ? displayName[0].toUpperCase() : 'C'}
+                </div>
+              )}
+
+              <div className="space-y-1.5">
+                <label className="block text-xs font-semibold uppercase tracking-wider text-neutral-700 dark:text-neutral-300">
+                  Profile Avatar
+                </label>
+                <div className="flex items-center gap-3">
                   <input
                     type="file"
                     accept="image/*"
-                    onChange={handleBannerUpload}
-                    disabled={uploadingBanner}
-                    className="hidden"
+                    onChange={handleAvatarUpload}
+                    disabled={uploadingAvatar}
+                    className="text-xs text-neutral-600 dark:text-neutral-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border file:border-slate-200/80 dark:file:border-white/10 file:text-xs file:font-semibold file:bg-white dark:file:bg-[#1a1e28] file:text-neutral-900 dark:file:text-neutral-100 hover:file:bg-slate-50 dark:hover:file:bg-neutral-800 file:shadow-clay-sm cursor-pointer"
                   />
-                </label>
-
-                {bannerURL && (
-                  <button
-                    type="button"
-                    onClick={handleRemoveBanner}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-red-200 dark:border-red-900/60 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 text-xs font-medium transition-colors"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                    <span>Remove</span>
-                  </button>
+                  {photoURL && (
+                    <button
+                      type="button"
+                      onClick={handleRemoveAvatar}
+                      className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl border border-red-200 dark:border-red-900/60 bg-white dark:bg-[#1a1e28] text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 text-xs font-semibold transition-all shadow-clay-sm hover:shadow-clay-card active:scale-[0.98]"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                      <span>Remove</span>
+                    </button>
+                  )}
+                </div>
+                {uploadingAvatar && (
+                  <p className="text-[11px] text-neutral-500">Uploading avatar...</p>
                 )}
               </div>
-
-              <span className="text-xs text-neutral-500 dark:text-neutral-400">
-                Recommended 1500 × 500 px • Max 5MB
-              </span>
             </div>
-          </div>
-
-          {/* Profile Picture Section */}
-          <div className="flex items-center gap-5 pt-2 border-t border-neutral-100 dark:border-neutral-800">
-            {photoURL ? (
-              <img
-                src={photoURL}
-                alt="Avatar"
-                className="w-16 h-16 rounded-md object-cover border border-neutral-200 dark:border-neutral-800"
-              />
-            ) : (
-              <div className="w-16 h-16 rounded-md bg-neutral-200 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 flex items-center justify-center font-bold text-xl border border-neutral-300 dark:border-neutral-700">
-                {displayName ? displayName[0].toUpperCase() : 'C'}
-              </div>
-            )}
-
-            <div className="space-y-1.5">
-              <label className="block text-xs font-semibold uppercase tracking-wider text-neutral-700 dark:text-neutral-300">
-                Profile Avatar
-              </label>
-              <div className="flex items-center gap-3">
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleAvatarUpload}
-                  disabled={uploadingAvatar}
-                  className="text-xs text-neutral-600 dark:text-neutral-400 file:mr-3 file:py-1 file:px-2.5 file:rounded-md file:border-0 file:text-xs file:font-medium file:bg-neutral-100 dark:file:bg-neutral-800 file:text-neutral-900 dark:file:text-neutral-100 hover:file:bg-neutral-200"
-                />
-                {photoURL && (
-                  <button
-                    type="button"
-                    onClick={handleRemoveAvatar}
-                    className="text-xs text-red-600 dark:text-red-400 hover:underline"
-                  >
-                    Remove
-                  </button>
-                )}
-              </div>
-              {uploadingAvatar && (
-                <p className="text-[11px] text-neutral-500">Uploading avatar...</p>
-              )}
-            </div>
-          </div>
-
-          {/* Username (Read Only with profile link) */}
-          <div className="space-y-1.5 pt-2 border-t border-neutral-100 dark:border-neutral-800">
-            <label className="block text-xs font-semibold uppercase tracking-wider text-neutral-700 dark:text-neutral-300">
-              Profile Handle
-            </label>
-            <div className="flex items-center gap-2">
-              <input
-                type="text"
-                disabled
-                value={profile?.username || ''}
-                className="w-full h-10 px-3 py-2 text-sm rounded-md border border-neutral-200 dark:border-neutral-800 bg-neutral-100 dark:bg-neutral-800/50 text-neutral-500 dark:text-neutral-400 font-mono select-none"
-              />
-              {profile?.username && (
-                <Link
-                  to={`/${profile.username}`}
-                  target="_blank"
-                  className="px-3 h-10 inline-flex items-center gap-1.5 rounded-md border border-neutral-300 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800 text-xs font-medium shrink-0"
-                >
-                  <span>View Profile</span>
-                  <ExternalLink className="w-3.5 h-3.5" />
-                </Link>
-              )}
-            </div>
-            <p className="text-xs text-neutral-500">
-              Your public profile address is {window.location.origin}/{profile?.username}
-            </p>
           </div>
 
           {/* Creator Core Identity */}
-          <div className="space-y-4">
+          <div className="p-6 rounded-2xl bg-[#e7ecf3]/40 dark:bg-[#131720]/50 border border-slate-200/70 dark:border-white/10 shadow-clay-sm space-y-4">
+            {/* Username (Read Only with profile link) */}
+            <div className="space-y-1.5">
+              <label className="block text-xs font-semibold uppercase tracking-wider text-neutral-700 dark:text-neutral-300">
+                Profile Handle
+              </label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  disabled
+                  value={profile?.username || ''}
+                  className="w-full h-10 px-3.5 py-2 text-sm rounded-xl border border-slate-200/80 dark:border-white/10 bg-[#e7ecf3]/80 dark:bg-[#12151e]/80 text-neutral-600 dark:text-neutral-400 font-mono select-none shadow-clay-inset"
+                />
+                {profile?.username && (
+                  <Link
+                    to={`/${profile.username}`}
+                    target="_blank"
+                    className="px-3.5 h-10 inline-flex items-center gap-1.5 rounded-xl border border-slate-200/80 dark:border-white/10 bg-white dark:bg-[#1a1e28] hover:bg-slate-50 dark:hover:bg-neutral-800 text-xs font-semibold shrink-0 shadow-clay-sm hover:shadow-clay-card transition-all active:scale-[0.98]"
+                  >
+                    <span>View Profile</span>
+                    <ExternalLink className="w-3.5 h-3.5" />
+                  </Link>
+                )}
+              </div>
+              <p className="text-xs text-neutral-500">
+                Your public profile address is {window.location.origin}/{profile?.username}
+              </p>
+            </div>
+
             <Input
               label="Display Name / Brand *"
               placeholder="e.g. Aryan Pandey"
@@ -357,12 +380,12 @@ export const SettingsPage: React.FC = () => {
                 value={location}
                 onChange={e => setLocation(e.target.value)}
               />
-              <MapPin className="w-4 h-4 text-neutral-400 absolute right-3 top-8 pointer-events-none" />
+              <MapPin className="w-4 h-4 text-neutral-400 absolute right-3.5 top-8 pointer-events-none" />
             </div>
           </div>
 
           {/* Structured Social Links */}
-          <div className="space-y-4 pt-4 border-t border-neutral-100 dark:border-neutral-800">
+          <div className="p-6 rounded-2xl bg-[#e7ecf3]/40 dark:bg-[#131720]/50 border border-slate-200/70 dark:border-white/10 shadow-clay-sm space-y-4">
             <div>
               <h2 className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">
                 Connected Social Links
@@ -380,7 +403,7 @@ export const SettingsPage: React.FC = () => {
                   value={socialLinks.instagram}
                   onChange={e => setSocialLinks(prev => ({ ...prev, instagram: e.target.value }))}
                 />
-                <Instagram className="w-4 h-4 text-neutral-400 absolute right-3 top-8 pointer-events-none" />
+                <Instagram className="w-4 h-4 text-neutral-400 absolute right-3.5 top-8 pointer-events-none" />
               </div>
 
               <div className="relative">
@@ -390,7 +413,7 @@ export const SettingsPage: React.FC = () => {
                   value={socialLinks.twitter}
                   onChange={e => setSocialLinks(prev => ({ ...prev, twitter: e.target.value }))}
                 />
-                <Twitter className="w-4 h-4 text-neutral-400 absolute right-3 top-8 pointer-events-none" />
+                <Twitter className="w-4 h-4 text-neutral-400 absolute right-3.5 top-8 pointer-events-none" />
               </div>
 
               <div className="relative">
@@ -400,7 +423,7 @@ export const SettingsPage: React.FC = () => {
                   value={socialLinks.youtube}
                   onChange={e => setSocialLinks(prev => ({ ...prev, youtube: e.target.value }))}
                 />
-                <Youtube className="w-4 h-4 text-neutral-400 absolute right-3 top-8 pointer-events-none" />
+                <Youtube className="w-4 h-4 text-neutral-400 absolute right-3.5 top-8 pointer-events-none" />
               </div>
 
               <div className="relative">
@@ -410,7 +433,7 @@ export const SettingsPage: React.FC = () => {
                   value={socialLinks.linkedin}
                   onChange={e => setSocialLinks(prev => ({ ...prev, linkedin: e.target.value }))}
                 />
-                <Linkedin className="w-4 h-4 text-neutral-400 absolute right-3 top-8 pointer-events-none" />
+                <Linkedin className="w-4 h-4 text-neutral-400 absolute right-3.5 top-8 pointer-events-none" />
               </div>
 
               <div className="relative">
@@ -420,7 +443,7 @@ export const SettingsPage: React.FC = () => {
                   value={socialLinks.github}
                   onChange={e => setSocialLinks(prev => ({ ...prev, github: e.target.value }))}
                 />
-                <Github className="w-4 h-4 text-neutral-400 absolute right-3 top-8 pointer-events-none" />
+                <Github className="w-4 h-4 text-neutral-400 absolute right-3.5 top-8 pointer-events-none" />
               </div>
 
               <div className="relative">
@@ -430,13 +453,13 @@ export const SettingsPage: React.FC = () => {
                   value={socialLinks.website}
                   onChange={e => setSocialLinks(prev => ({ ...prev, website: e.target.value }))}
                 />
-                <Globe className="w-4 h-4 text-neutral-400 absolute right-3 top-8 pointer-events-none" />
+                <Globe className="w-4 h-4 text-neutral-400 absolute right-3.5 top-8 pointer-events-none" />
               </div>
             </div>
           </div>
 
-          <div className="flex justify-end pt-4 border-t border-neutral-100 dark:border-neutral-800">
-            <Button type="submit" variant="primary" isLoading={saving}>
+          <div className="flex justify-end pt-4 border-t border-slate-200/80 dark:border-white/10">
+            <Button type="submit" variant="primary" className="rounded-xl" isLoading={saving}>
               <Check className="w-4 h-4" />
               <span>Save Changes</span>
             </Button>

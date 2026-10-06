@@ -44,8 +44,8 @@ export const FeaturesPage: React.FC = () => {
 
       {/* Core Architectural Pillars */}
       <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <Card className="p-6 space-y-4">
-          <div className="w-10 h-10 rounded-md bg-neutral-100 dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 flex items-center justify-center border border-neutral-200 dark:border-neutral-700">
+        <Card variant="interactive" className="p-6 space-y-4">
+          <div className="w-10 h-10 rounded-xl bg-[#e7ecf3]/80 dark:bg-[#131720]/90 text-neutral-900 dark:text-neutral-100 flex items-center justify-center border border-slate-200/70 dark:border-white/10 shadow-clay-sm">
             <Cpu className="w-5 h-5" />
           </div>
           <div className="space-y-2">
@@ -58,8 +58,8 @@ export const FeaturesPage: React.FC = () => {
           </div>
         </Card>
 
-        <Card className="p-6 space-y-4">
-          <div className="w-10 h-10 rounded-md bg-neutral-100 dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 flex items-center justify-center border border-neutral-200 dark:border-neutral-700">
+        <Card variant="interactive" className="p-6 space-y-4">
+          <div className="w-10 h-10 rounded-xl bg-[#e7ecf3]/80 dark:bg-[#131720]/90 text-neutral-900 dark:text-neutral-100 flex items-center justify-center border border-slate-200/70 dark:border-white/10 shadow-clay-sm">
             <ShieldCheck className="w-5 h-5" />
           </div>
           <div className="space-y-2">
@@ -72,8 +72,8 @@ export const FeaturesPage: React.FC = () => {
           </div>
         </Card>
 
-        <Card className="p-6 space-y-4">
-          <div className="w-10 h-10 rounded-md bg-neutral-100 dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 flex items-center justify-center border border-neutral-200 dark:border-neutral-700">
+        <Card variant="interactive" className="p-6 space-y-4">
+          <div className="w-10 h-10 rounded-xl bg-[#e7ecf3]/80 dark:bg-[#131720]/90 text-neutral-900 dark:text-neutral-100 flex items-center justify-center border border-slate-200/70 dark:border-white/10 shadow-clay-sm">
             <HardDrive className="w-5 h-5" />
           </div>
           <div className="space-y-2">
@@ -86,8 +86,8 @@ export const FeaturesPage: React.FC = () => {
           </div>
         </Card>
 
-        <Card className="p-6 space-y-4">
-          <div className="w-10 h-10 rounded-md bg-neutral-100 dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 flex items-center justify-center border border-neutral-200 dark:border-neutral-700">
+        <Card variant="interactive" className="p-6 space-y-4">
+          <div className="w-10 h-10 rounded-xl bg-[#e7ecf3]/80 dark:bg-[#131720]/90 text-neutral-900 dark:text-neutral-100 flex items-center justify-center border border-slate-200/70 dark:border-white/10 shadow-clay-sm">
             <BarChart2 className="w-5 h-5" />
           </div>
           <div className="space-y-2">
@@ -100,8 +100,8 @@ export const FeaturesPage: React.FC = () => {
           </div>
         </Card>
 
-        <Card className="p-6 space-y-4">
-          <div className="w-10 h-10 rounded-md bg-neutral-100 dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 flex items-center justify-center border border-neutral-200 dark:border-neutral-700">
+        <Card variant="interactive" className="p-6 space-y-4">
+          <div className="w-10 h-10 rounded-xl bg-[#e7ecf3]/80 dark:bg-[#131720]/90 text-neutral-900 dark:text-neutral-100 flex items-center justify-center border border-slate-200/70 dark:border-white/10 shadow-clay-sm">
             <Layers className="w-5 h-5" />
           </div>
           <div className="space-y-2">
@@ -114,8 +114,8 @@ export const FeaturesPage: React.FC = () => {
           </div>
         </Card>
 
-        <Card className="p-6 space-y-4">
-          <div className="w-10 h-10 rounded-md bg-neutral-100 dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 flex items-center justify-center border border-neutral-200 dark:border-neutral-700">
+        <Card variant="interactive" className="p-6 space-y-4">
+          <div className="w-10 h-10 rounded-xl bg-[#e7ecf3]/80 dark:bg-[#131720]/90 text-neutral-900 dark:text-neutral-100 flex items-center justify-center border border-slate-200/70 dark:border-white/10 shadow-clay-sm">
             <FileText className="w-5 h-5" />
           </div>
           <div className="space-y-2">
@@ -140,9 +140,9 @@ export const FeaturesPage: React.FC = () => {
           </p>
         </div>
 
-        <div className="overflow-x-auto border border-neutral-200 dark:border-neutral-800 rounded-lg">
+        <div className="overflow-x-auto border border-slate-200/80 dark:border-white/10 rounded-2xl shadow-clay-card bg-white dark:bg-[#1a1e28]">
           <table className="w-full text-left text-sm">
-            <thead className="bg-neutral-100 dark:bg-neutral-900 text-xs uppercase tracking-wider text-neutral-600 dark:text-neutral-400 border-b border-neutral-200 dark:border-neutral-800">
+            <thead className="bg-[#e7ecf3]/60 dark:bg-[#131720]/70 text-xs uppercase tracking-wider text-neutral-600 dark:text-neutral-400 border-b border-slate-200/80 dark:border-white/10">
               <tr>
                 <th className="px-6 py-4 font-semibold">Capability</th>
                 <th className="px-6 py-4 font-semibold text-neutral-950 dark:text-neutral-50">
@@ -152,7 +152,7 @@ export const FeaturesPage: React.FC = () => {
                 <th className="px-6 py-4 font-semibold">Email Capture Portals</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-neutral-200 dark:divide-neutral-800 bg-white dark:bg-neutral-950">
+            <tbody className="divide-y divide-slate-200/80 dark:divide-white/10 bg-white dark:bg-[#1a1e28]">
               <tr>
                 <td className="px-6 py-4 font-medium text-neutral-900 dark:text-neutral-100">
                   Viewer Sign-Up Requirement
@@ -229,7 +229,7 @@ export const FeaturesPage: React.FC = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="p-8 sm:p-12 rounded-lg bg-neutral-100 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 text-center space-y-4">
+      <section className="p-8 sm:p-12 rounded-2xl bg-[#e7ecf3]/60 dark:bg-[#131720]/70 border border-slate-200/70 dark:border-white/10 shadow-clay-card text-center space-y-4">
         <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-neutral-950 dark:text-neutral-50">
           Ready to distribute without barriers?
         </h2>

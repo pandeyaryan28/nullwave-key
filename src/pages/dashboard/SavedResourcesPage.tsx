@@ -116,8 +116,8 @@ export const SavedResourcesPage: React.FC = () => {
 
       {/* Empty State */}
       {savedItems.length === 0 ? (
-        <Card className="p-12 text-center border-dashed border-2 border-neutral-300 dark:border-neutral-700">
-          <div className="w-12 h-12 rounded-md bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 flex items-center justify-center mx-auto mb-4 border border-neutral-200 dark:border-neutral-700">
+        <Card variant="inset" className="p-12 text-center border-dashed border-2 border-slate-300 dark:border-neutral-700">
+          <div className="w-12 h-12 rounded-xl bg-white dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 flex items-center justify-center mx-auto mb-4 border border-slate-200/80 dark:border-white/10 shadow-clay-sm">
             <Bookmark className="w-6 h-6" />
           </div>
           <h2 className="text-lg font-bold text-neutral-900 dark:text-neutral-100 mb-1">
@@ -133,7 +133,7 @@ export const SavedResourcesPage: React.FC = () => {
           </Link>
         </Card>
       ) : filteredItems.length === 0 ? (
-        <Card className="p-8 text-center border-neutral-300 dark:border-neutral-700">
+        <Card variant="inset" className="p-8 text-center border-slate-200/80 dark:border-white/10">
           <p className="text-sm text-neutral-600 dark:text-neutral-400">
             No saved documents matching &quot;{searchQuery}&quot;.
           </p>
@@ -144,10 +144,11 @@ export const SavedResourcesPage: React.FC = () => {
           {filteredItems.map(item => (
             <Card
               key={item.resourceId}
-              className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:border-neutral-300 dark:hover:border-neutral-700 transition-colors"
+              variant="interactive"
+              className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
             >
               <div className="flex items-start gap-4 min-w-0">
-                <div className="w-10 h-10 rounded-md bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 flex items-center justify-center shrink-0 border border-neutral-200 dark:border-neutral-700">
+                <div className="w-10 h-10 rounded-xl bg-[#e7ecf3] dark:bg-[#131720] text-neutral-700 dark:text-neutral-300 flex items-center justify-center shrink-0 border border-slate-200/60 dark:border-white/5 shadow-clay-inset">
                   <FileText className="w-5 h-5" />
                 </div>
 
@@ -208,7 +209,7 @@ export const SavedResourcesPage: React.FC = () => {
                 >
                   <Button size="sm" variant="primary" className="text-xs">
                     <span>Open</span>
-                    <ExternalLink className="w-3 h-3" />
+                    <ExternalLink className="w-3.5 h-3.5" />
                   </Button>
                 </Link>
 
@@ -217,7 +218,7 @@ export const SavedResourcesPage: React.FC = () => {
                   onClick={() => handleRemove(item.resourceId)}
                   title="Remove from saved library"
                   aria-label="Remove from saved library"
-                  className="p-2 text-neutral-400 hover:text-red-600 dark:hover:text-red-400 rounded-md hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors cursor-pointer"
+                  className="p-2 text-neutral-400 hover:text-red-600 dark:hover:text-red-400 rounded-xl hover:bg-red-50 dark:hover:bg-red-950/30 shadow-clay-sm transition-all active:scale-95 cursor-pointer"
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>

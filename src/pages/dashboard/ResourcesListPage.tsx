@@ -143,8 +143,8 @@ export const ResourcesListPage: React.FC = () => {
       </div>
 
       {resources.length === 0 ? (
-        <Card className="p-12 text-center border-dashed border-2">
-          <div className="w-12 h-12 rounded-md bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 flex items-center justify-center mx-auto mb-4 border border-neutral-200 dark:border-neutral-700">
+        <Card variant="inset" className="p-12 text-center border-dashed border-2 border-slate-300 dark:border-neutral-700">
+          <div className="w-12 h-12 rounded-xl bg-white dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 flex items-center justify-center mx-auto mb-4 border border-slate-200/80 dark:border-white/10 shadow-clay-sm">
             <FileText className="w-6 h-6" />
           </div>
           <h2 className="text-lg font-bold text-neutral-900 dark:text-neutral-100 mb-2">
@@ -167,7 +167,8 @@ export const ResourcesListPage: React.FC = () => {
           {resources.map(res => (
             <Card
               key={res.id}
-              className="p-5 sm:p-6 transition-all hover:border-neutral-300 dark:hover:border-neutral-700"
+              variant="interactive"
+              className="p-5 sm:p-6 transition-all"
             >
               <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
                 {/* Left Info */}
@@ -176,10 +177,10 @@ export const ResourcesListPage: React.FC = () => {
                     <img
                       src={res.coverUrl}
                       alt={res.title}
-                      className="w-16 h-16 rounded-md object-cover border border-neutral-200 dark:border-neutral-800 shrink-0"
+                      className="w-16 h-16 rounded-xl object-cover border border-slate-200/80 dark:border-white/10 shadow-clay-sm shrink-0"
                     />
                   ) : (
-                    <div className="w-16 h-16 rounded-md bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 flex items-center justify-center shrink-0 border border-neutral-200 dark:border-neutral-700">
+                    <div className="w-16 h-16 rounded-xl bg-[#e7ecf3] dark:bg-[#131720] text-neutral-700 dark:text-neutral-300 flex items-center justify-center shrink-0 border border-slate-200/60 dark:border-white/5 shadow-clay-inset">
                       <FileText className="w-7 h-7" />
                     </div>
                   )}
@@ -268,14 +269,14 @@ export const ResourcesListPage: React.FC = () => {
                 </div>
 
                 {/* Right: Prominent Code Box & Actions */}
-                <div className="flex flex-wrap sm:flex-nowrap items-center gap-3 shrink-0 self-start lg:self-center border-t lg:border-t-0 pt-4 lg:pt-0 border-neutral-100 dark:border-neutral-800 w-full lg:w-auto justify-between lg:justify-end">
+                <div className="flex flex-wrap sm:flex-nowrap items-center gap-3 shrink-0 self-start lg:self-center border-t lg:border-t-0 pt-4 lg:pt-0 border-slate-200/60 dark:border-white/5 w-full lg:w-auto justify-between lg:justify-end">
                   {/* Central "Copy Code" Feature */}
                   <div className="flex items-center gap-2">
                     <button
                       type="button"
                       onClick={() => handleCopyCode(res.id, res.code)}
                       title="Copy access code"
-                      className="px-3.5 py-2 rounded-md border border-neutral-300 dark:border-neutral-700 bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-colors flex items-center gap-2"
+                      className="px-3.5 py-2 rounded-xl border border-slate-200/80 dark:border-white/10 bg-[#e7ecf3] dark:bg-[#131720] shadow-clay-inset hover:shadow-clay-sm transition-all flex items-center gap-2 active:scale-95 cursor-pointer"
                     >
                       <span className="font-mono text-base font-bold tracking-widest text-neutral-950 dark:text-neutral-50">
                         {res.code}
@@ -293,7 +294,7 @@ export const ResourcesListPage: React.FC = () => {
                     <button
                       onClick={() => handleCopyLink(res)}
                       title="Copy public link"
-                      className="p-2 text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-md transition-colors"
+                      className="p-2 text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 hover:bg-white/80 dark:hover:bg-neutral-800 rounded-xl transition-all shadow-clay-sm active:scale-95 cursor-pointer"
                     >
                       {copiedLinkId === res.id ? (
                         <Check className="w-4 h-4 text-emerald-600" />
@@ -307,7 +308,7 @@ export const ResourcesListPage: React.FC = () => {
                         to={`/${profile.username}/${res.code}`}
                         target="_blank"
                         title="Open resource"
-                        className="p-2 text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-md transition-colors"
+                        className="p-2 text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 hover:bg-white/80 dark:hover:bg-neutral-800 rounded-xl transition-all shadow-clay-sm active:scale-95"
                       >
                         <ExternalLink className="w-4 h-4" />
                       </Link>
@@ -316,7 +317,7 @@ export const ResourcesListPage: React.FC = () => {
                     <Link
                       to={`/dashboard/resources/${res.id}/edit`}
                       title="Edit resource"
-                      className="p-2 text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-md transition-colors"
+                      className="p-2 text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 hover:bg-white/80 dark:hover:bg-neutral-800 rounded-xl transition-all shadow-clay-sm active:scale-95"
                     >
                       <Edit className="w-4 h-4" />
                     </Link>
@@ -324,10 +325,10 @@ export const ResourcesListPage: React.FC = () => {
                     <button
                       onClick={() => handleToggleStatus(res)}
                       title={res.status === 'active' ? 'Disable resource' : 'Enable resource'}
-                      className={`p-2 rounded-md transition-colors ${
+                      className={`p-2 rounded-xl transition-all shadow-clay-sm active:scale-95 cursor-pointer ${
                         res.status === 'active'
                           ? 'text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/30'
-                          : 'text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800'
+                          : 'text-neutral-400 hover:bg-white/80 dark:hover:bg-neutral-800'
                       }`}
                     >
                       <Power className="w-4 h-4" />
@@ -337,7 +338,7 @@ export const ResourcesListPage: React.FC = () => {
                       onClick={() => handleDelete(res.id)}
                       disabled={deletingId === res.id}
                       title="Delete resource"
-                      className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-md transition-colors"
+                      className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-xl transition-all shadow-clay-sm active:scale-95 cursor-pointer"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>

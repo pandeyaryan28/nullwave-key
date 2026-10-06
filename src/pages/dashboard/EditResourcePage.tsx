@@ -254,7 +254,7 @@ export const EditResourcePage: React.FC = () => {
       <div className="flex items-center gap-3">
         <button
           onClick={() => navigate('/dashboard/resources')}
-          className="p-1.5 rounded-md text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800"
+          className="p-2 rounded-xl text-neutral-600 dark:text-neutral-400 hover:bg-white dark:hover:bg-neutral-800 border border-slate-200/80 dark:border-white/10 shadow-clay-sm transition-all active:scale-95"
           aria-label="Back"
         >
           <ArrowLeft className="w-4 h-4" />
@@ -269,10 +269,10 @@ export const EditResourcePage: React.FC = () => {
         </div>
       </div>
 
-      <Card className="p-6 sm:p-8">
+      <Card className="p-6 sm:p-8 rounded-2xl shadow-clay-card animate-clay-pop border-slate-200/80 dark:border-white/10">
         <form onSubmit={handleSubmit} className="space-y-6">
           {error && (
-            <div className="p-3 rounded-md bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 text-xs text-red-700 dark:text-red-300 flex items-center gap-2">
+            <div className="p-3.5 rounded-xl bg-red-50/90 dark:bg-red-950/40 border border-red-200/80 dark:border-red-800/80 text-xs text-red-700 dark:text-red-300 flex items-center gap-2 shadow-clay-sm">
               <AlertCircle className="w-4 h-4 shrink-0" />
               <span>{error}</span>
             </div>
@@ -302,39 +302,43 @@ export const EditResourcePage: React.FC = () => {
             <label className="block text-xs font-semibold uppercase tracking-wider text-neutral-700 dark:text-neutral-300">
               Access Status
             </label>
-            <div className="flex gap-4">
-              <label className="flex items-center gap-2 text-sm text-neutral-800 dark:text-neutral-200 cursor-pointer">
-                <input
-                  type="radio"
-                  name="status"
-                  value="active"
-                  checked={status === 'active'}
-                  onChange={() => setStatus('active')}
-                  className="rounded text-neutral-900 dark:text-neutral-100"
-                />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 p-1.5 bg-[#e7ecf3] dark:bg-[#131720] rounded-xl border border-slate-200/70 dark:border-white/5 shadow-clay-inset">
+              <button
+                type="button"
+                onClick={() => setStatus('active')}
+                aria-pressed={status === 'active'}
+                className={`py-2 px-3 text-xs font-semibold rounded-lg transition-all cursor-pointer active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400 dark:focus-visible:ring-neutral-600 flex items-center justify-center gap-2 ${
+                  status === 'active'
+                    ? 'bg-white dark:bg-[#1a1e28] text-neutral-900 dark:text-neutral-50 shadow-clay-sm border border-slate-200/80 dark:border-white/10'
+                    : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 border border-transparent'
+                }`}
+              >
+                <span className={`w-2 h-2 rounded-sm ${status === 'active' ? 'bg-emerald-500' : 'bg-neutral-400'}`} />
                 <span>Active (accessible via 4-digit code)</span>
-              </label>
+              </button>
 
-              <label className="flex items-center gap-2 text-sm text-neutral-800 dark:text-neutral-200 cursor-pointer">
-                <input
-                  type="radio"
-                  name="status"
-                  value="disabled"
-                  checked={status === 'disabled'}
-                  onChange={() => setStatus('disabled')}
-                  className="rounded text-neutral-900 dark:text-neutral-100"
-                />
+              <button
+                type="button"
+                onClick={() => setStatus('disabled')}
+                aria-pressed={status === 'disabled'}
+                className={`py-2 px-3 text-xs font-semibold rounded-lg transition-all cursor-pointer active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400 dark:focus-visible:ring-neutral-600 flex items-center justify-center gap-2 ${
+                  status === 'disabled'
+                    ? 'bg-white dark:bg-[#1a1e28] text-neutral-900 dark:text-neutral-50 shadow-clay-sm border border-slate-200/80 dark:border-white/10'
+                    : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 border border-transparent'
+                }`}
+              >
+                <span className={`w-2 h-2 rounded-sm ${status === 'disabled' ? 'bg-amber-500' : 'bg-neutral-400'}`} />
                 <span>Disabled (hidden from viewers)</span>
-              </label>
+              </button>
             </div>
           </div>
 
           {/* Advanced Options Collapsible Accordion (Requirement 4) */}
-          <div className="rounded-lg border border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/50 overflow-hidden">
+          <div className="rounded-2xl border border-slate-200/80 dark:border-white/10 bg-[#e7ecf3]/50 dark:bg-[#131720]/60 shadow-clay-inset overflow-hidden">
             <button
               type="button"
               onClick={() => setIsAdvancedOpen(!isAdvancedOpen)}
-              className="w-full p-4 flex items-center justify-between text-left hover:bg-neutral-100/50 dark:hover:bg-neutral-800/40 transition-colors cursor-pointer"
+              className="w-full p-4 flex items-center justify-between text-left hover:bg-white/40 dark:hover:bg-[#1a1e28]/40 transition-colors cursor-pointer"
             >
               <div className="flex items-center gap-2">
                 <SlidersHorizontal className="w-4 h-4 text-neutral-700 dark:text-neutral-300" />
@@ -350,188 +354,250 @@ export const EditResourcePage: React.FC = () => {
             </button>
 
             {isAdvancedOpen && (
-              <div className="p-5 pt-2 border-t border-neutral-200 dark:border-neutral-800 space-y-5 animate-fade-in-up">
+              <div className="p-5 pt-3 border-t border-slate-200/80 dark:border-white/10 space-y-3.5 animate-fade-in-up">
                 {/* 1. Download Permission */}
-                <div className="space-y-1">
-                  <label className="flex items-start gap-2.5 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={allowDownload}
-                      onChange={e => setAllowDownload(e.target.checked)}
-                      className="mt-0.5 rounded border-neutral-300 dark:border-neutral-700 text-neutral-900 dark:text-neutral-100 focus:ring-neutral-500"
+                <div className="p-3.5 rounded-xl bg-white dark:bg-[#1a1e28] border border-slate-200/80 dark:border-white/10 shadow-clay-sm flex items-start justify-between gap-4">
+                  <div className="space-y-0.5">
+                    <span className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
+                      Allow viewers to download PDF file
+                    </span>
+                    <p className="text-xs text-neutral-500 dark:text-neutral-400">
+                      When unchecked, viewers can read the file in the high-fidelity reader, but direct download buttons and PDF export are disabled.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={allowDownload}
+                    aria-label="Allow viewers to download PDF file"
+                    onClick={() => setAllowDownload(!allowDownload)}
+                    className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-lg border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900 dark:focus-visible:ring-neutral-100 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-[#1a1e28] shadow-clay-inset active:scale-95 ${
+                      allowDownload ? 'bg-neutral-900 dark:bg-neutral-100' : 'bg-slate-300 dark:bg-neutral-800'
+                    }`}
+                  >
+                    <span
+                      className={`pointer-events-none inline-block h-5 w-5 transform rounded-md bg-white dark:bg-[#1a1e28] shadow-clay-sm transition duration-200 ease-in-out ${
+                        allowDownload ? 'translate-x-5' : 'translate-x-0'
+                      }`}
                     />
-                    <div>
-                      <span className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
-                        Allow viewers to download PDF file
-                      </span>
-                      <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">
-                        When unchecked, viewers can read the file in the high-fidelity reader, but direct download buttons and PDF export are disabled.
-                      </p>
-                    </div>
-                  </label>
+                  </button>
                 </div>
 
                 {/* 2. Viewer Library Save Permission (Requirement 3) */}
-                <div className="space-y-1 pt-2 border-t border-neutral-200/60 dark:border-neutral-800/60">
-                  <label className="flex items-start gap-2.5 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={allowSave}
-                      onChange={e => setAllowSave(e.target.checked)}
-                      className="mt-0.5 rounded border-neutral-300 dark:border-neutral-700 text-neutral-900 dark:text-neutral-100 focus:ring-neutral-500"
+                <div className="p-3.5 rounded-xl bg-white dark:bg-[#1a1e28] border border-slate-200/80 dark:border-white/10 shadow-clay-sm flex items-start justify-between gap-4">
+                  <div className="space-y-0.5">
+                    <span className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
+                      Allow viewers to save this file to their library
+                    </span>
+                    <p className="text-xs text-neutral-500 dark:text-neutral-400">
+                      When checked, visitors with viewer accounts can bookmark and save this document to their personal library to view anytime.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={allowSave}
+                    aria-label="Allow viewers to save this file to their library"
+                    onClick={() => setAllowSave(!allowSave)}
+                    className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-lg border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900 dark:focus-visible:ring-neutral-100 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-[#1a1e28] shadow-clay-inset active:scale-95 ${
+                      allowSave ? 'bg-neutral-900 dark:bg-neutral-100' : 'bg-slate-300 dark:bg-neutral-800'
+                    }`}
+                  >
+                    <span
+                      className={`pointer-events-none inline-block h-5 w-5 transform rounded-md bg-white dark:bg-[#1a1e28] shadow-clay-sm transition duration-200 ease-in-out ${
+                        allowSave ? 'translate-x-5' : 'translate-x-0'
+                      }`}
                     />
-                    <div>
-                      <span className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
-                        Allow viewers to save this file to their library
-                      </span>
-                      <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">
-                        When checked, visitors with viewer accounts can bookmark and save this document to their personal library to view anytime.
-                      </p>
-                    </div>
-                  </label>
+                  </button>
                 </div>
 
                 {/* 3. Public Listing Visibility */}
-                <div className="space-y-1 pt-2 border-t border-neutral-200/60 dark:border-neutral-800/60">
-                  <label className="flex items-start gap-2.5 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={isPublicListing}
-                      onChange={e => setIsPublicListing(e.target.checked)}
-                      className="mt-0.5 rounded border-neutral-300 dark:border-neutral-700 text-neutral-900 dark:text-neutral-100 focus:ring-neutral-500"
+                <div className="p-3.5 rounded-xl bg-white dark:bg-[#1a1e28] border border-slate-200/80 dark:border-white/10 shadow-clay-sm flex items-start justify-between gap-4">
+                  <div className="space-y-0.5">
+                    <span className="text-sm font-medium text-neutral-900 dark:text-neutral-100 flex items-center gap-1.5">
+                      <span>List publicly on Public Profile</span>
+                      {!isPublicListing && (
+                        <span className="text-[11px] font-normal text-neutral-500 flex items-center gap-1">
+                          <EyeOff className="w-3 h-3" /> Unlisted
+                        </span>
+                      )}
+                    </span>
+                    <p className="text-xs text-neutral-500 dark:text-neutral-400">
+                      When unchecked, this resource is unlisted and hidden from your public profile feed. Only visitors with the direct link or access code can access it.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={isPublicListing}
+                    aria-label="List publicly on Public Profile"
+                    onClick={() => setIsPublicListing(!isPublicListing)}
+                    className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-lg border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900 dark:focus-visible:ring-neutral-100 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-[#1a1e28] shadow-clay-inset active:scale-95 ${
+                      isPublicListing ? 'bg-neutral-900 dark:bg-neutral-100' : 'bg-slate-300 dark:bg-neutral-800'
+                    }`}
+                  >
+                    <span
+                      className={`pointer-events-none inline-block h-5 w-5 transform rounded-md bg-white dark:bg-[#1a1e28] shadow-clay-sm transition duration-200 ease-in-out ${
+                        isPublicListing ? 'translate-x-5' : 'translate-x-0'
+                      }`}
                     />
-                    <div>
-                      <span className="text-sm font-medium text-neutral-900 dark:text-neutral-100 flex items-center gap-1.5">
-                        <span>List publicly on Public Profile</span>
-                        {!isPublicListing && (
-                          <span className="text-[11px] font-normal text-neutral-500 flex items-center gap-1">
-                            <EyeOff className="w-3 h-3" /> Unlisted
-                          </span>
-                        )}
-                      </span>
-                      <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">
-                        When unchecked, this resource is unlisted and hidden from your public profile feed. Only visitors with the direct link or access code can access it.
-                      </p>
-                    </div>
-                  </label>
+                  </button>
                 </div>
 
                 {/* 4. Pin to Top */}
-                <div className="space-y-1 pt-2 border-t border-neutral-200/60 dark:border-neutral-800/60">
-                  <label className="flex items-start gap-2.5 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={isPinned}
-                      onChange={e => setIsPinned(e.target.checked)}
-                      className="mt-0.5 rounded border-neutral-300 dark:border-neutral-700 text-neutral-900 dark:text-neutral-100 focus:ring-neutral-500"
+                <div className="p-3.5 rounded-xl bg-white dark:bg-[#1a1e28] border border-slate-200/80 dark:border-white/10 shadow-clay-sm flex items-start justify-between gap-4">
+                  <div className="space-y-0.5">
+                    <span className="text-sm font-medium text-neutral-900 dark:text-neutral-100 flex items-center gap-1.5">
+                      <Pin className="w-3.5 h-3.5 text-neutral-500" />
+                      <span>Pin to top of Profile as Featured</span>
+                    </span>
+                    <p className="text-xs text-neutral-500 dark:text-neutral-400">
+                      Highlighted at the top of your document feed for high-priority drops.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={isPinned}
+                    aria-label="Pin to top of Profile as Featured"
+                    onClick={() => setIsPinned(!isPinned)}
+                    className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-lg border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900 dark:focus-visible:ring-neutral-100 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-[#1a1e28] shadow-clay-inset active:scale-95 ${
+                      isPinned ? 'bg-neutral-900 dark:bg-neutral-100' : 'bg-slate-300 dark:bg-neutral-800'
+                    }`}
+                  >
+                    <span
+                      className={`pointer-events-none inline-block h-5 w-5 transform rounded-md bg-white dark:bg-[#1a1e28] shadow-clay-sm transition duration-200 ease-in-out ${
+                        isPinned ? 'translate-x-5' : 'translate-x-0'
+                      }`}
                     />
-                    <div>
-                      <span className="text-sm font-medium text-neutral-900 dark:text-neutral-100 flex items-center gap-1.5">
-                        <Pin className="w-3.5 h-3.5 text-neutral-500" />
-                        <span>Pin to top of Profile as Featured</span>
-                      </span>
-                      <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">
-                        Highlighted at the top of your document feed for high-priority drops.
-                      </p>
-                    </div>
-                  </label>
+                  </button>
                 </div>
 
                 {/* 5. Drop Expiration */}
-                <div className="space-y-2 pt-2 border-t border-neutral-200/60 dark:border-neutral-800/60">
-                  <label className="flex items-start gap-2.5 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={hasExpiration}
-                      onChange={e => setHasExpiration(e.target.checked)}
-                      className="mt-0.5 rounded border-neutral-300 dark:border-neutral-700 text-neutral-900 dark:text-neutral-100 focus:ring-neutral-500"
-                    />
-                    <div>
+                <div className="p-3.5 rounded-xl bg-white dark:bg-[#1a1e28] border border-slate-200/80 dark:border-white/10 shadow-clay-sm space-y-2">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="space-y-0.5">
                       <span className="text-sm font-medium text-neutral-900 dark:text-neutral-100 flex items-center gap-1.5">
                         <Clock className="w-3.5 h-3.5 text-neutral-500" />
                         <span>Set drop expiration date & time</span>
                       </span>
-                      <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">
+                      <p className="text-xs text-neutral-500 dark:text-neutral-400">
                         Access is automatically closed after this timestamp.
                       </p>
                     </div>
-                  </label>
+                    <button
+                      type="button"
+                      role="switch"
+                      aria-checked={hasExpiration}
+                      aria-label="Set drop expiration date & time"
+                      onClick={() => setHasExpiration(!hasExpiration)}
+                      className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-lg border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900 dark:focus-visible:ring-neutral-100 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-[#1a1e28] shadow-clay-inset active:scale-95 ${
+                        hasExpiration ? 'bg-neutral-900 dark:bg-neutral-100' : 'bg-slate-300 dark:bg-neutral-800'
+                      }`}
+                    >
+                      <span
+                        className={`pointer-events-none inline-block h-5 w-5 transform rounded-md bg-white dark:bg-[#1a1e28] shadow-clay-sm transition duration-200 ease-in-out ${
+                          hasExpiration ? 'translate-x-5' : 'translate-x-0'
+                        }`}
+                      />
+                    </button>
+                  </div>
 
                   {hasExpiration && (
-                    <div className="pl-6 pt-1 max-w-xs">
+                    <div className="pt-2 max-w-xs">
                       <input
                         type="datetime-local"
                         value={expirationDate}
                         onChange={e => setExpirationDate(e.target.value)}
-                        className="w-full h-10 px-3 py-2 text-xs rounded-md border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100"
+                        className="w-full h-10 px-3.5 py-2 text-xs rounded-xl border border-slate-200/80 dark:border-white/10 bg-[#e7ecf3]/70 dark:bg-[#12151e]/80 text-neutral-900 dark:text-neutral-100 shadow-clay-inset focus:outline-none focus:bg-white dark:focus:bg-[#1a1e28] focus:shadow-clay-inset-focus transition-all"
                       />
                     </div>
                   )}
                 </div>
 
                 {/* 6. Unlock Capacity Cap */}
-                <div className="space-y-2 pt-2 border-t border-neutral-200/60 dark:border-neutral-800/60">
-                  <label className="flex items-start gap-2.5 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={hasCapacityCap}
-                      onChange={e => setHasCapacityCap(e.target.checked)}
-                      className="mt-0.5 rounded border-neutral-300 dark:border-neutral-700 text-neutral-900 dark:text-neutral-100 focus:ring-neutral-500"
-                    />
-                    <div>
+                <div className="p-3.5 rounded-xl bg-white dark:bg-[#1a1e28] border border-slate-200/80 dark:border-white/10 shadow-clay-sm space-y-2">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="space-y-0.5">
                       <span className="text-sm font-medium text-neutral-900 dark:text-neutral-100 flex items-center gap-1.5">
                         <Users className="w-3.5 h-3.5 text-neutral-500" />
                         <span>Limit maximum unlock capacity</span>
                       </span>
-                      <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">
+                      <p className="text-xs text-neutral-500 dark:text-neutral-400">
                         Access closes once total unique viewers reach this number.
                       </p>
                     </div>
-                  </label>
+                    <button
+                      type="button"
+                      role="switch"
+                      aria-checked={hasCapacityCap}
+                      aria-label="Limit maximum unlock capacity"
+                      onClick={() => setHasCapacityCap(!hasCapacityCap)}
+                      className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-lg border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900 dark:focus-visible:ring-neutral-100 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-[#1a1e28] shadow-clay-inset active:scale-95 ${
+                        hasCapacityCap ? 'bg-neutral-900 dark:bg-neutral-100' : 'bg-slate-300 dark:bg-neutral-800'
+                      }`}
+                    >
+                      <span
+                        className={`pointer-events-none inline-block h-5 w-5 transform rounded-md bg-white dark:bg-[#1a1e28] shadow-clay-sm transition duration-200 ease-in-out ${
+                          hasCapacityCap ? 'translate-x-5' : 'translate-x-0'
+                        }`}
+                      />
+                    </button>
+                  </div>
 
                   {hasCapacityCap && (
-                    <div className="pl-6 pt-1 max-w-xs">
+                    <div className="pt-2 max-w-xs">
                       <input
                         type="number"
                         min="1"
                         placeholder="e.g. 100"
                         value={maxUnlocks}
                         onChange={e => setMaxUnlocks(e.target.value)}
-                        className="w-full h-10 px-3 py-2 text-xs rounded-md border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100 font-mono"
+                        className="w-full h-10 px-3.5 py-2 text-xs rounded-xl border border-slate-200/80 dark:border-white/10 bg-[#e7ecf3]/70 dark:bg-[#12151e]/80 text-neutral-900 dark:text-neutral-100 font-mono shadow-clay-inset focus:outline-none focus:bg-white dark:focus:bg-[#1a1e28] focus:shadow-clay-inset-focus transition-all"
                       />
                     </div>
                   )}
                 </div>
 
                 {/* 7. Password Protection */}
-                <div className="space-y-2 pt-2 border-t border-neutral-200/60 dark:border-neutral-800/60">
-                  <label className="flex items-start gap-2.5 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={hasPassword}
-                      onChange={e => setHasPassword(e.target.checked)}
-                      className="mt-0.5 rounded border-neutral-300 dark:border-neutral-700 text-neutral-900 dark:text-neutral-100 focus:ring-neutral-500"
-                    />
-                    <div>
+                <div className="p-3.5 rounded-xl bg-white dark:bg-[#1a1e28] border border-slate-200/80 dark:border-white/10 shadow-clay-sm space-y-2">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="space-y-0.5">
                       <span className="text-sm font-medium text-neutral-900 dark:text-neutral-100 flex items-center gap-1.5">
                         <Key className="w-3.5 h-3.5 text-neutral-500" />
                         <span>Protect document with a password</span>
                       </span>
-                      <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">
+                      <p className="text-xs text-neutral-500 dark:text-neutral-400">
                         Requires visitors to enter this password before they can view or download the document.
                       </p>
                     </div>
-                  </label>
+                    <button
+                      type="button"
+                      role="switch"
+                      aria-checked={hasPassword}
+                      aria-label="Protect document with a password"
+                      onClick={() => setHasPassword(!hasPassword)}
+                      className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-lg border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900 dark:focus-visible:ring-neutral-100 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-[#1a1e28] shadow-clay-inset active:scale-95 ${
+                        hasPassword ? 'bg-neutral-900 dark:bg-neutral-100' : 'bg-slate-300 dark:bg-neutral-800'
+                      }`}
+                    >
+                      <span
+                        className={`pointer-events-none inline-block h-5 w-5 transform rounded-md bg-white dark:bg-[#1a1e28] shadow-clay-sm transition duration-200 ease-in-out ${
+                          hasPassword ? 'translate-x-5' : 'translate-x-0'
+                        }`}
+                      />
+                    </button>
+                  </div>
 
                   {hasPassword && (
-                    <div className="pl-6 pt-1 max-w-xs">
+                    <div className="pt-2 max-w-xs">
                       <div className="relative">
                         <input
                           type={showPassword ? 'text' : 'password'}
                           placeholder="Enter document password"
                           value={password}
                           onChange={e => setPassword(e.target.value)}
-                          className="w-full h-10 pl-3 pr-10 py-2 text-xs rounded-md border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100 font-mono"
+                          className="w-full h-10 pl-3.5 pr-10 py-2 text-xs rounded-xl border border-slate-200/80 dark:border-white/10 bg-[#e7ecf3]/70 dark:bg-[#12151e]/80 text-neutral-900 dark:text-neutral-100 font-mono shadow-clay-inset focus:outline-none focus:bg-white dark:focus:bg-[#1a1e28] focus:shadow-clay-inset-focus transition-all"
                         />
                         <button
                           type="button"
@@ -547,7 +613,7 @@ export const EditResourcePage: React.FC = () => {
                 </div>
 
                 {/* 8. Access Code */}
-                <div className="space-y-2 pt-2 border-t border-neutral-200/60 dark:border-neutral-800/60">
+                <div className="p-3.5 rounded-xl bg-white dark:bg-[#1a1e28] border border-slate-200/80 dark:border-white/10 shadow-clay-sm space-y-2">
                   <div className="flex items-start gap-2.5">
                     <Radio className="w-4 h-4 text-neutral-500 mt-0.5 shrink-0" />
                     <div className="flex-1">
@@ -560,7 +626,7 @@ export const EditResourcePage: React.FC = () => {
                     </div>
                   </div>
 
-                  <div className="pl-6 pt-1 flex items-center gap-2 max-w-xs">
+                  <div className="pt-1 flex items-center gap-2 max-w-xs">
                     <input
                       type="text"
                       maxLength={6}
@@ -570,12 +636,13 @@ export const EditResourcePage: React.FC = () => {
                         const val = e.target.value.replace(/\D/g, '').slice(0, 6);
                         setCode(val);
                       }}
-                      className="w-32 h-10 px-3 py-2 text-base font-mono font-bold tracking-widest text-center rounded-md border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100"
+                      className="w-32 h-10 px-3 py-2 text-base font-mono font-bold tracking-widest text-center rounded-xl border border-slate-200/80 dark:border-white/10 bg-[#e7ecf3]/70 dark:bg-[#12151e]/80 text-neutral-900 dark:text-neutral-100 shadow-clay-inset focus:outline-none focus:bg-white dark:focus:bg-[#1a1e28] focus:shadow-clay-inset-focus"
                     />
                     <Button
                       type="button"
                       size="sm"
-                      variant="outline"
+                      variant="secondary"
+                      className="rounded-xl shadow-clay-sm hover:shadow-clay-card"
                       onClick={handleGenerateRandomCode}
                       title="Generate new 4-digit random code"
                     >
@@ -588,16 +655,17 @@ export const EditResourcePage: React.FC = () => {
             )}
           </div>
 
-          <div className="flex items-center justify-end gap-3 pt-4 border-t border-neutral-100 dark:border-neutral-800">
+          <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-200/80 dark:border-white/10">
             <Button
               type="button"
               variant="outline"
+              className="rounded-xl shadow-clay-sm"
               onClick={() => navigate('/dashboard/resources')}
               disabled={saving}
             >
               Cancel
             </Button>
-            <Button type="submit" variant="primary" isLoading={saving}>
+            <Button type="submit" variant="primary" className="rounded-xl" isLoading={saving}>
               <Check className="w-4 h-4" />
               <span>Save Changes</span>
             </Button>

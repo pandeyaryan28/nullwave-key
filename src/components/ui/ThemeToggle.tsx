@@ -52,10 +52,10 @@ export const ThemeToggle: React.FC<{ className?: string }> = ({ className }) => 
       onClick={toggleTheme}
       type="button"
       aria-label="Toggle theme"
-      className={`inline-flex items-center justify-center w-9 h-9 rounded-md border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400 ${className || ''}`}
+      className={`inline-flex items-center justify-center w-9 h-9 rounded-md border border-slate-200/80 dark:border-white/10 bg-white dark:bg-[#1a1e28] text-neutral-700 dark:text-neutral-300 shadow-clay-sm hover:shadow-clay-card hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.96] transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400 ${className || ''}`}
     >
-      <Sun className="h-4 w-4 hidden dark:block" />
-      <Moon className="h-4 w-4 block dark:hidden" />
+      <Sun className="h-4 w-4 hidden dark:block transition-transform duration-200 hover:rotate-45" />
+      <Moon className="h-4 w-4 block dark:hidden transition-transform duration-200 hover:-rotate-12" />
     </button>
   );
 };

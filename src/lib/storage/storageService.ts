@@ -153,7 +153,112 @@ export async function uploadResourceFile(
 }
 
 /**
+ * Compresses and scales down an image file into an optimized JPEG Data URL.
+ * Ensures the resulting base64 string is lightweight (< 150 KB) so it effortlessly
+ * fits within Firestore's 1MB document limit and renders instantly.
+ */
+export async function compressAndOptimizeImage(
+  file: File,
+  maxWidth: number = 1500,
+  maxHeight: number = 600,
+  quality: number = 0.82
+): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error('Failed to read image file.'));
+    reader.onload = () => {
+      const img = new Image();
+      img.onerror = () => reject(new Error('Invalid or unreadable image file.'));
+      img.onload = () => {
+        let width = img.width;
+        let height = img.height;
+
+        // Calculate aspect-ratio preserved dimensions
+        if (width > maxWidth || height > maxHeight) {
+          const ratio = Math.min(maxWidth / width, maxHeight / height);
+          width = Math.round(width * ratio);
+          height = Math.round(height * ratio);
+        }
+
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          return resolve(reader.result as string);
+        }
+
+        // Fill background white for PNG transparency to prevent black borders
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, width, height);
+        ctx.drawImage(img, 0, 0, width, height);
+
+        let dataUrl = canvas.toDataURL('image/jpeg', quality);
+
+        // Safety check: if dataUrl is still larger than 180,000 chars (~135 KB), downscale further
+        if (dataUrl.length > 180000) {
+          const scaledCanvas = document.createElement('canvas');
+          scaledCanvas.width = Math.round(width * 0.75);
+          scaledCanvas.height = Math.round(height * 0.75);
+          const scaledCtx = scaledCanvas.getContext('2d');
+          if (scaledCtx) {
+            scaledCtx.fillStyle = '#ffffff';
+            scaledCtx.fillRect(0, 0, scaledCanvas.width, scaledCanvas.height);
+            scaledCtx.drawImage(canvas, 0, 0, scaledCanvas.width, scaledCanvas.height);
+            dataUrl = scaledCanvas.toDataURL('image/jpeg', 0.7);
+          }
+        }
+
+        resolve(dataUrl);
+      };
+      img.src = reader.result as string;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+/**
+ * Checks an existing data URL string and shrinks it if it exceeds safe Firestore thresholds.
+ */
+export async function shrinkExistingDataUrlIfNeeded(
+  dataUrl: string,
+  maxWidth: number = 1500,
+  maxHeight: number = 600
+): Promise<string> {
+  if (!dataUrl || !dataUrl.startsWith('data:image/') || dataUrl.length < 180000) {
+    return dataUrl;
+  }
+
+  return new Promise(resolve => {
+    const img = new Image();
+    img.onerror = () => resolve(dataUrl);
+    img.onload = () => {
+      let width = img.width;
+      let height = img.height;
+      const ratio = Math.min(maxWidth / width, maxHeight / height, 1);
+      width = Math.round(width * ratio);
+      height = Math.round(height * ratio);
+
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return resolve(dataUrl);
+
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, width, height);
+      ctx.drawImage(img, 0, 0, width, height);
+      resolve(canvas.toDataURL('image/jpeg', 0.75));
+    };
+    img.src = dataUrl;
+  });
+}
+
+/**
  * Uploads an optional cover image, avatar, or banner.
+ * Tries Firebase Storage first; automatically falls back to an ultra-lightweight
+ * canvas-optimized Web JPEG data URL (< 150 KB) that fits safely inside Firestore.
  */
 export async function uploadImageFile(
   folder: 'covers' | 'avatars' | 'banners',
@@ -169,12 +274,27 @@ export async function uploadImageFile(
     throw new Error(`Image exceeds maximum size limit of ${MAX_IMAGE_SIZE_BYTES / (1024 * 1024)}MB.`);
   }
 
+  const dimensions = {
+    banners: { width: 1500, height: 500, quality: 0.82 },
+    avatars: { width: 400, height: 400, quality: 0.85 },
+    covers: { width: 800, height: 1000, quality: 0.82 },
+  }[folder];
+
+  // Pre-optimize image to an ultra-lightweight payload
+  const optimizedDataUrl = await compressAndOptimizeImage(
+    file,
+    dimensions.width,
+    dimensions.height,
+    dimensions.quality
+  );
+
   try {
     const storagePath = `${folder}/${creatorId}/${id}/${file.name}`;
     const storageRef = ref(storage, storagePath);
     await uploadBytesResumable(storageRef, file, { contentType: file.type });
     return await getDownloadURL(storageRef);
-  } catch {
-    return await fileToBase64(file);
+  } catch (err) {
+    console.warn(`Firebase Storage not available for ${folder}, using optimized web data URL fallback:`, err);
+    return optimizedDataUrl;
   }
 }

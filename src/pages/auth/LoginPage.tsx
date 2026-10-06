@@ -67,8 +67,8 @@ export const LoginPage: React.FC = () => {
     <div className="min-h-[85vh] flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-sm space-y-6">
         <div className="text-center space-y-2">
-          <div className="w-10 h-10 rounded-md bg-neutral-900 text-neutral-50 dark:bg-neutral-100 dark:text-neutral-900 flex items-center justify-center mx-auto mb-3">
-            <Waves className="w-5 h-5" />
+          <div className="w-12 h-12 rounded-xl bg-neutral-900 text-neutral-50 dark:bg-neutral-100 dark:text-neutral-900 flex items-center justify-center mx-auto mb-3 shadow-clay-sm">
+            <Waves className="w-6 h-6" />
           </div>
           <h1 className="text-2xl font-bold tracking-tight text-neutral-900 dark:text-neutral-50">
             Sign In to NullWave
@@ -78,10 +78,10 @@ export const LoginPage: React.FC = () => {
           </p>
         </div>
 
-        <Card className="p-6">
+        <Card className="p-6 sm:p-8 rounded-2xl shadow-clay-card animate-clay-pop border-slate-200/80 dark:border-white/10">
           <form onSubmit={handleEmailLogin} className="space-y-4">
             {error && (
-              <div className="p-3 rounded-md bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 text-xs text-red-700 dark:text-red-300 flex items-center gap-2">
+              <div className="p-3.5 rounded-xl bg-red-50/90 dark:bg-red-950/40 border border-red-200/80 dark:border-red-800/80 text-xs text-red-700 dark:text-red-300 flex items-center gap-2 shadow-clay-sm">
                 <AlertCircle className="w-4 h-4 shrink-0" />
                 <span>{error}</span>
               </div>
@@ -89,8 +89,8 @@ export const LoginPage: React.FC = () => {
 
             <Button
               type="button"
-              variant="outline"
-              className="w-full flex items-center justify-center gap-2.5"
+              variant="secondary"
+              className="w-full flex items-center justify-center gap-2.5 rounded-xl shadow-clay-sm hover:shadow-clay-card"
               onClick={handleGoogleLogin}
               isLoading={isGoogleLoading}
             >
@@ -117,10 +117,10 @@ export const LoginPage: React.FC = () => {
 
             <div className="relative my-4">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-neutral-200 dark:border-neutral-800" />
+                <div className="w-full border-t border-slate-200/80 dark:border-white/10" />
               </div>
               <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-white dark:bg-neutral-900 px-2 text-neutral-400">
+                <span className="bg-white dark:bg-[#1a1e28] px-2.5 text-neutral-400 font-medium">
                   Or with email
                 </span>
               </div>
@@ -147,7 +147,7 @@ export const LoginPage: React.FC = () => {
             <Button
               type="submit"
               variant="primary"
-              className="w-full mt-2"
+              className="w-full mt-2 rounded-xl"
               isLoading={isLoading}
             >
               Sign In

@@ -15,15 +15,15 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
 
     const variants = {
       primary:
-        'bg-neutral-900 text-neutral-50 hover:bg-neutral-800 dark:bg-neutral-100 dark:text-neutral-900 dark:hover:bg-neutral-200 shadow-sm active:translate-y-px',
+        'bg-neutral-900 text-neutral-50 hover:bg-neutral-800 dark:bg-neutral-100 dark:text-neutral-900 dark:hover:bg-neutral-200 shadow-clay-btn hover:shadow-clay-btn-hover active:shadow-clay-btn-active hover:-translate-y-0.5 active:translate-y-0',
       secondary:
-        'bg-neutral-100 text-neutral-900 hover:bg-neutral-200 dark:bg-neutral-800 dark:text-neutral-100 dark:hover:bg-neutral-700 active:translate-y-px',
+        'bg-white/90 dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 hover:bg-white dark:hover:bg-neutral-700/80 border border-slate-200/80 dark:border-white/10 shadow-clay-sm hover:shadow-clay-card hover:-translate-y-0.5 active:translate-y-0',
       outline:
-        'border border-neutral-300 bg-transparent text-neutral-900 hover:bg-neutral-100 dark:border-neutral-700 dark:text-neutral-100 dark:hover:bg-neutral-800 active:translate-y-px',
+        'border border-slate-300/80 dark:border-white/10 bg-white/40 dark:bg-neutral-900/40 text-neutral-900 dark:text-neutral-100 hover:bg-white dark:hover:bg-neutral-800 hover:-translate-y-0.5 active:translate-y-0 shadow-clay-sm',
       subtle:
-        'bg-transparent text-neutral-700 hover:bg-neutral-100 dark:text-neutral-300 dark:hover:bg-neutral-800',
+        'bg-transparent text-neutral-700 hover:text-neutral-950 dark:text-neutral-300 dark:hover:text-white hover:bg-slate-200/50 dark:hover:bg-white/10 hover:-translate-y-0.5 active:translate-y-0',
       danger:
-        'bg-red-600 text-white hover:bg-red-700 dark:bg-red-600 dark:hover:bg-red-700 shadow-sm active:translate-y-px',
+        'bg-red-600 text-white hover:bg-red-700 dark:bg-red-600 dark:hover:bg-red-700 shadow-clay-btn hover:shadow-clay-btn-hover active:shadow-clay-btn-active hover:-translate-y-0.5 active:translate-y-0',
     };
 
     const sizes = {

@@ -12,7 +12,6 @@ import {
   doc,
   getDoc,
   setDoc,
-  updateDoc,
   runTransaction,
 } from 'firebase/firestore';
 import { auth, db } from '../firebase/config';
@@ -301,22 +300,35 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return result;
     };
 
-    const cleanData = stripUndefined({ ...data, updatedAt: now }) as Partial<UserProfile>;
+    const cleanData = stripUndefined({
+      uid: user.uid,
+      email: user.email || profile?.email || '',
+      displayName: data.displayName || profile?.displayName || user.displayName || '',
+      accountType: profile?.accountType || 'creator',
+      ...data,
+      updatedAt: now,
+    }) as Partial<UserProfile>;
 
+    // Persist reliably to Firestore using setDoc with merge: true
     try {
       const userRef = doc(db, 'users', user.uid);
-      await updateDoc(userRef, cleanData);
-    } catch {
-      // Fallback
+      await setDoc(userRef, cleanData, { merge: true });
+    } catch (err) {
+      console.error('Failed to save profile to Firestore:', err);
+      throw err;
     }
 
     setProfile(prev => {
       const merged = prev ? { ...prev, ...cleanData } : (cleanData as UserProfile);
-      localStorage.setItem(`nullwave_profile_${user.uid}`, JSON.stringify(merged));
-      localStorage.setItem(`unlockr_profile_${user.uid}`, JSON.stringify(merged));
-      if (merged.username) {
-        localStorage.setItem(`nullwave_profile_${merged.username}`, JSON.stringify(merged));
-        localStorage.setItem(`unlockr_profile_${merged.username}`, JSON.stringify(merged));
+      try {
+        localStorage.setItem(`nullwave_profile_${user.uid}`, JSON.stringify(merged));
+        localStorage.setItem(`unlockr_profile_${user.uid}`, JSON.stringify(merged));
+        if (merged.username) {
+          localStorage.setItem(`nullwave_profile_${merged.username}`, JSON.stringify(merged));
+          localStorage.setItem(`unlockr_profile_${merged.username}`, JSON.stringify(merged));
+        }
+      } catch (storageErr) {
+        console.warn('Could not cache profile to localStorage:', storageErr);
       }
       return merged;
     });

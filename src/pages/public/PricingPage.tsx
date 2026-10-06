@@ -43,7 +43,7 @@ export const PricingPage: React.FC = () => {
       {/* Pricing Cards */}
       <section className="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch">
         {/* Tier 1: Wave Free */}
-        <Card className="p-8 space-y-6 flex flex-col justify-between border-neutral-200 dark:border-neutral-800">
+        <Card variant="interactive" className="p-8 space-y-6 flex flex-col justify-between border-slate-200/80 dark:border-white/10 shadow-clay-card hover:shadow-clay-card-hover">
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-bold text-neutral-900 dark:text-neutral-100">
@@ -58,7 +58,7 @@ export const PricingPage: React.FC = () => {
             <p className="text-xs sm:text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed">
               Ideal for independent educators, solo creators, and designers launching their first profile.
             </p>
-            <div className="pt-4 border-t border-neutral-200 dark:border-neutral-800 space-y-2.5 text-xs sm:text-sm text-neutral-700 dark:text-neutral-300">
+            <div className="pt-4 border-t border-slate-200/80 dark:border-white/10 space-y-2.5 text-xs sm:text-sm text-neutral-700 dark:text-neutral-300">
               <div className="flex items-center gap-2">
                 <Check className="w-4 h-4 text-emerald-600 shrink-0" />
                 <span>Unlimited viewer access</span>
@@ -82,20 +82,20 @@ export const PricingPage: React.FC = () => {
             </div>
           </div>
           <Link to="/signup" className="pt-4">
-            <Button variant="outline" className="w-full">
+            <Button variant="outline" className="w-full rounded-xl">
               Get Started Free
             </Button>
           </Link>
         </Card>
 
         {/* Tier 2: Creator Pro (Featured) */}
-        <Card className="p-8 space-y-6 flex flex-col justify-between border-neutral-900 dark:border-neutral-100 relative shadow-md">
+        <Card variant="interactive" className="p-8 space-y-6 flex flex-col justify-between border-slate-300/90 dark:border-white/20 relative shadow-clay-card hover:shadow-clay-card-hover ring-1 ring-neutral-900/10 dark:ring-white/20">
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-bold text-neutral-900 dark:text-neutral-100">
                 Creator Pro
               </h3>
-              <Badge variant="neutral" className="bg-neutral-900 text-white dark:bg-white dark:text-neutral-900">
+              <Badge variant="neutral" className="bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 shadow-clay-sm">
                 Popular
               </Badge>
             </div>
@@ -108,7 +108,7 @@ export const PricingPage: React.FC = () => {
             <p className="text-xs sm:text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed">
               For high-volume social creators publishing regular guides, templates, and video companion files.
             </p>
-            <div className="pt-4 border-t border-neutral-200 dark:border-neutral-800 space-y-2.5 text-xs sm:text-sm text-neutral-700 dark:text-neutral-300">
+            <div className="pt-4 border-t border-slate-200/80 dark:border-white/10 space-y-2.5 text-xs sm:text-sm text-neutral-700 dark:text-neutral-300">
               <div className="flex items-center gap-2">
                 <Check className="w-4 h-4 text-emerald-600 shrink-0" />
                 <span>Everything in Community</span>
@@ -136,7 +136,7 @@ export const PricingPage: React.FC = () => {
             </div>
           </div>
           <Link to="/signup" className="pt-4">
-            <Button variant="primary" className="w-full">
+            <Button variant="primary" className="w-full rounded-xl">
               <span>Start Pro Trial</span>
               <ArrowRight className="w-4 h-4" />
             </Button>
@@ -144,7 +144,7 @@ export const PricingPage: React.FC = () => {
         </Card>
 
         {/* Tier 3: Studio / Agency */}
-        <Card className="p-8 space-y-6 flex flex-col justify-between border-neutral-200 dark:border-neutral-800">
+        <Card variant="interactive" className="p-8 space-y-6 flex flex-col justify-between border-slate-200/80 dark:border-white/10 shadow-clay-card hover:shadow-clay-card-hover">
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-bold text-neutral-900 dark:text-neutral-100">
@@ -161,7 +161,7 @@ export const PricingPage: React.FC = () => {
             <p className="text-xs sm:text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed">
               Designed for production studios, creator collectives, agencies, and brand media teams.
             </p>
-            <div className="pt-4 border-t border-neutral-200 dark:border-neutral-800 space-y-2.5 text-xs sm:text-sm text-neutral-700 dark:text-neutral-300">
+            <div className="pt-4 border-t border-slate-200/80 dark:border-white/10 space-y-2.5 text-xs sm:text-sm text-neutral-700 dark:text-neutral-300">
               <div className="flex items-center gap-2">
                 <Check className="w-4 h-4 text-emerald-600 shrink-0" />
                 <span>Everything in Pro</span>
@@ -185,7 +185,7 @@ export const PricingPage: React.FC = () => {
             </div>
           </div>
           <Link to="/signup" className="pt-4">
-            <Button variant="outline" className="w-full">
+            <Button variant="outline" className="w-full rounded-xl">
               Contact Studio Sales
             </Button>
           </Link>
@@ -207,7 +207,7 @@ export const PricingPage: React.FC = () => {
           </p>
         </div>
 
-        <Card className="p-8 space-y-8 bg-neutral-50 dark:bg-neutral-900/50">
+        <Card className="p-8 space-y-8 bg-[#e7ecf3]/60 dark:bg-[#131720]/70 border border-slate-200/70 dark:border-white/10 shadow-clay-inset">
           <div className="space-y-3 max-w-md">
             <label className="text-xs font-semibold text-neutral-700 dark:text-neutral-300">
               Estimated Monthly Social Bio Visits: {estimatedMonthlyViews.toLocaleString()}
@@ -219,7 +219,7 @@ export const PricingPage: React.FC = () => {
               step="1000"
               value={estimatedMonthlyViews}
               onChange={e => setEstimatedMonthlyViews(parseInt(e.target.value, 10))}
-              className="w-full h-2 bg-neutral-200 dark:bg-neutral-700 rounded-lg appearance-none cursor-pointer accent-neutral-900 dark:accent-neutral-100"
+              className="w-full h-2.5 bg-white dark:bg-[#1a1e28] rounded-lg appearance-none cursor-pointer accent-neutral-900 dark:accent-neutral-100 border border-slate-200/60 dark:border-white/10 shadow-clay-inset"
             />
             <div className="flex justify-between text-[11px] text-neutral-400 font-mono">
               <span>1,000</span>
@@ -229,7 +229,7 @@ export const PricingPage: React.FC = () => {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
-            <div className="p-4 rounded-md bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 space-y-1">
+            <div className="p-4 rounded-xl bg-white dark:bg-[#1a1e28] border border-slate-200/80 dark:border-white/10 shadow-clay-sm space-y-1">
               <span className="text-xs text-neutral-500">Traditional Link Trees (~8%)</span>
               <div className="text-2xl font-bold font-mono text-neutral-700 dark:text-neutral-300">
                 {traditionalDownloads.toLocaleString()}
@@ -237,7 +237,7 @@ export const PricingPage: React.FC = () => {
               <span className="text-[11px] text-neutral-400">delivered downloads</span>
             </div>
 
-            <div className="p-4 rounded-md bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 space-y-1">
+            <div className="p-4 rounded-xl bg-white dark:bg-[#1a1e28] border border-slate-200/80 dark:border-white/10 shadow-clay-sm space-y-1">
               <span className="text-xs text-neutral-500">NullWave Transmission (~44%)</span>
               <div className="text-2xl font-bold font-mono text-neutral-950 dark:text-neutral-50">
                 {nullWaveDownloads.toLocaleString()}
@@ -245,7 +245,7 @@ export const PricingPage: React.FC = () => {
               <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium">delivered downloads</span>
             </div>
 
-            <div className="p-4 rounded-md bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 space-y-1">
+            <div className="p-4 rounded-xl bg-emerald-50/80 dark:bg-emerald-950/40 border border-emerald-300/80 dark:border-emerald-800/80 shadow-clay-sm space-y-1">
               <span className="text-xs text-emerald-800 dark:text-emerald-300 font-medium">Net Audience Gained</span>
               <div className="text-2xl font-bold font-mono text-emerald-700 dark:text-emerald-400">
                 +{additionalGained.toLocaleString()}
@@ -268,7 +268,7 @@ export const PricingPage: React.FC = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <Card className="p-6 space-y-2">
+          <Card variant="interactive" className="p-6 space-y-2 border-slate-200/80 dark:border-white/10">
             <h3 className="text-base font-bold text-neutral-900 dark:text-neutral-100">
               Is the Community plan genuinely free forever?
             </h3>
@@ -277,7 +277,7 @@ export const PricingPage: React.FC = () => {
             </p>
           </Card>
 
-          <Card className="p-6 space-y-2">
+          <Card variant="interactive" className="p-6 space-y-2 border-slate-200/80 dark:border-white/10">
             <h3 className="text-base font-bold text-neutral-900 dark:text-neutral-100">
               What types of files are supported?
             </h3>
@@ -286,7 +286,7 @@ export const PricingPage: React.FC = () => {
             </p>
           </Card>
 
-          <Card className="p-6 space-y-2">
+          <Card variant="interactive" className="p-6 space-y-2 border-slate-200/80 dark:border-white/10">
             <h3 className="text-base font-bold text-neutral-900 dark:text-neutral-100">
               Can I change my profile handle later?
             </h3>
@@ -295,7 +295,7 @@ export const PricingPage: React.FC = () => {
             </p>
           </Card>
 
-          <Card className="p-6 space-y-2">
+          <Card variant="interactive" className="p-6 space-y-2 border-slate-200/80 dark:border-white/10">
             <h3 className="text-base font-bold text-neutral-900 dark:text-neutral-100">
               Do my audience members need to sign up?
             </h3>

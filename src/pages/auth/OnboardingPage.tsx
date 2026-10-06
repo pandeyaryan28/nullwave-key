@@ -72,8 +72,8 @@ export const OnboardingPage: React.FC = () => {
     <div className="min-h-[85vh] flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-md space-y-6">
         <div className="text-center space-y-2">
-          <div className="w-10 h-10 rounded-md bg-neutral-900 text-neutral-50 dark:bg-neutral-100 dark:text-neutral-900 flex items-center justify-center mx-auto mb-3">
-            <Waves className="w-5 h-5" />
+          <div className="w-12 h-12 rounded-xl bg-neutral-900 text-neutral-50 dark:bg-neutral-100 dark:text-neutral-900 flex items-center justify-center mx-auto mb-3 shadow-clay-sm">
+            <Waves className="w-6 h-6" />
           </div>
           <h1 className="text-2xl font-bold tracking-tight text-neutral-900 dark:text-neutral-50">
             Claim Your Profile Handle
@@ -83,10 +83,10 @@ export const OnboardingPage: React.FC = () => {
           </p>
         </div>
 
-        <Card className="p-6 sm:p-8">
+        <Card className="p-6 sm:p-8 rounded-2xl shadow-clay-card animate-clay-pop border-slate-200/80 dark:border-white/10">
           <form onSubmit={handleSubmit} className="space-y-5">
             {error && (
-              <div className="p-3 rounded-md bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 text-xs text-red-700 dark:text-red-300 flex items-center gap-2">
+              <div className="p-3.5 rounded-xl bg-red-50/90 dark:bg-red-950/40 border border-red-200/80 dark:border-red-800/80 text-xs text-red-700 dark:text-red-300 flex items-center gap-2 shadow-clay-sm">
                 <AlertCircle className="w-4 h-4 shrink-0" />
                 <span>{error}</span>
               </div>
@@ -112,7 +112,7 @@ export const OnboardingPage: React.FC = () => {
                   placeholder="aryan"
                   maxLength={20}
                   required
-                  className="w-full h-10 px-3 py-2 text-sm rounded-md border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100 font-mono focus:outline-none focus:ring-1 focus:ring-neutral-900 dark:focus:ring-neutral-100"
+                  className="w-full h-10 px-3.5 py-2 text-sm rounded-xl border border-slate-200/80 dark:border-white/10 bg-[#e7ecf3]/70 dark:bg-[#12151e]/80 text-neutral-900 dark:text-neutral-100 font-mono shadow-clay-inset focus:outline-none focus:bg-white dark:focus:bg-[#1a1e28] focus:shadow-clay-inset-focus transition-all duration-150"
                 />
               </div>
               <p className="text-xs text-neutral-500">
@@ -122,8 +122,8 @@ export const OnboardingPage: React.FC = () => {
 
             {/* Live Profile Link Preview */}
             {username && (
-              <div className="p-3 rounded-md bg-neutral-100 dark:bg-neutral-800/60 border border-neutral-200 dark:border-neutral-700 text-xs text-neutral-600 dark:text-neutral-300">
-                <span className="text-neutral-400">Your bio link will be: </span>
+              <div className="p-3.5 rounded-xl bg-[#e7ecf3]/80 dark:bg-[#131720]/80 border border-slate-200/70 dark:border-white/10 text-xs text-neutral-600 dark:text-neutral-300 shadow-clay-inset">
+                <span className="text-neutral-500 dark:text-neutral-400">Your bio link will be: </span>
                 <span className="font-mono font-semibold text-neutral-900 dark:text-neutral-100">
                   {window.location.origin}/{username}
                 </span>
@@ -133,7 +133,7 @@ export const OnboardingPage: React.FC = () => {
             <Button
               type="submit"
               variant="primary"
-              className="w-full"
+              className="w-full rounded-xl"
               isLoading={isLoading}
               disabled={!username || username.length < 3}
             >
@@ -143,10 +143,10 @@ export const OnboardingPage: React.FC = () => {
 
             <div className="relative my-4">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-neutral-200 dark:border-neutral-800" />
+                <div className="w-full border-t border-slate-200/80 dark:border-white/10" />
               </div>
               <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-white dark:bg-neutral-900 px-2 text-neutral-400">
+                <span className="bg-white dark:bg-[#1a1e28] px-2.5 text-neutral-400 font-medium">
                   Or
                 </span>
               </div>
@@ -154,8 +154,8 @@ export const OnboardingPage: React.FC = () => {
 
             <Button
               type="button"
-              variant="outline"
-              className="w-full"
+              variant="secondary"
+              className="w-full rounded-xl shadow-clay-sm hover:shadow-clay-card"
               isLoading={isViewerLoading}
               onClick={handleContinueAsViewer}
             >

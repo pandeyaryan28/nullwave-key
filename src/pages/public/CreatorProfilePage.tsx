@@ -655,40 +655,47 @@ export const CreatorProfilePage: React.FC = () => {
   // Gather social links
   const socials = {
     instagram: normalizeSocialUrl(
-      creator.socialLinks?.instagram ||
-        (creator.socialLink?.includes('instagram.com') ? creator.socialLink : undefined),
+      creator.socialLinks !== undefined
+        ? creator.socialLinks.instagram
+        : (creator.socialLink?.includes('instagram.com') ? creator.socialLink : undefined),
       'instagram'
     ),
     twitter: normalizeSocialUrl(
-      creator.socialLinks?.twitter ||
-        (creator.socialLink?.includes('twitter.com') || creator.socialLink?.includes('x.com')
+      creator.socialLinks !== undefined
+        ? creator.socialLinks.twitter
+        : (creator.socialLink?.includes('twitter.com') || creator.socialLink?.includes('x.com')
           ? creator.socialLink
           : undefined),
       'twitter'
     ),
     youtube: normalizeSocialUrl(
-      creator.socialLinks?.youtube ||
-        (creator.socialLink?.includes('youtube.com') ? creator.socialLink : undefined),
+      creator.socialLinks !== undefined
+        ? creator.socialLinks.youtube
+        : (creator.socialLink?.includes('youtube.com') ? creator.socialLink : undefined),
       'youtube'
     ),
     linkedin: normalizeSocialUrl(
-      creator.socialLinks?.linkedin ||
-        (creator.socialLink?.includes('linkedin.com') ? creator.socialLink : undefined),
+      creator.socialLinks !== undefined
+        ? creator.socialLinks.linkedin
+        : (creator.socialLink?.includes('linkedin.com') ? creator.socialLink : undefined),
       'linkedin'
     ),
     github: normalizeSocialUrl(
-      creator.socialLinks?.github ||
-        (creator.socialLink?.includes('github.com') ? creator.socialLink : undefined),
+      creator.socialLinks !== undefined
+        ? creator.socialLinks.github
+        : (creator.socialLink?.includes('github.com') ? creator.socialLink : undefined),
       'github'
     ),
     website: normalizeSocialUrl(
-      creator.socialLinks?.website ||
-        (!creator.socialLinks &&
-        creator.socialLink &&
-        !creator.socialLink.includes('instagram.com') &&
-        !creator.socialLink.includes('twitter.com')
-          ? creator.socialLink
-          : undefined)
+      creator.socialLinks !== undefined
+        ? creator.socialLinks.website
+        : (!creator.socialLinks &&
+          creator.socialLink &&
+          !creator.socialLink.includes('instagram.com') &&
+          !creator.socialLink.includes('twitter.com')
+            ? creator.socialLink
+            : undefined),
+      'website'
     ),
   };
 
@@ -769,10 +776,10 @@ export const CreatorProfilePage: React.FC = () => {
               <img
                 src={creator.photoURL}
                 alt={creator.displayName}
-                className="w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 rounded-lg object-cover border-4 border-white dark:border-neutral-950 shadow-sm bg-neutral-100 dark:bg-neutral-900 shrink-0"
+                className="w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 rounded-2xl object-cover border-4 border-white dark:border-[#1a1e28] shadow-clay-card bg-neutral-100 dark:bg-neutral-900 shrink-0"
               />
             ) : (
-              <div className="w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 rounded-lg bg-neutral-200 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 flex items-center justify-center font-bold text-3xl sm:text-4xl border-4 border-white dark:border-neutral-950 shadow-sm shrink-0">
+              <div className="w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 rounded-2xl bg-[#e7ecf3] dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 flex items-center justify-center font-bold text-3xl sm:text-4xl border-4 border-white dark:border-[#1a1e28] shadow-clay-card shrink-0">
                 {creator.displayName ? creator.displayName[0].toUpperCase() : 'C'}
               </div>
             )}
@@ -842,7 +849,7 @@ export const CreatorProfilePage: React.FC = () => {
                     href={socials.instagram}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 text-xs font-medium text-neutral-700 dark:text-neutral-300 hover:text-neutral-950 dark:hover:text-neutral-50 hover:border-neutral-300 dark:hover:border-neutral-700 transition-colors"
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-slate-200/80 dark:border-white/10 bg-white/70 dark:bg-neutral-900/70 text-xs font-medium text-neutral-700 dark:text-neutral-300 hover:text-neutral-950 dark:hover:text-neutral-50 shadow-clay-sm hover:shadow-clay-card hover:-translate-y-0.5 transition-all duration-150"
                   >
                     <Instagram className="w-3.5 h-3.5" />
                     <span>Instagram</span>
@@ -853,7 +860,7 @@ export const CreatorProfilePage: React.FC = () => {
                     href={socials.twitter}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 text-xs font-medium text-neutral-700 dark:text-neutral-300 hover:text-neutral-950 dark:hover:text-neutral-50 hover:border-neutral-300 dark:hover:border-neutral-700 transition-colors"
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-slate-200/80 dark:border-white/10 bg-white/70 dark:bg-neutral-900/70 text-xs font-medium text-neutral-700 dark:text-neutral-300 hover:text-neutral-950 dark:hover:text-neutral-50 shadow-clay-sm hover:shadow-clay-card hover:-translate-y-0.5 transition-all duration-150"
                   >
                     <Twitter className="w-3.5 h-3.5" />
                     <span>X</span>
@@ -864,7 +871,7 @@ export const CreatorProfilePage: React.FC = () => {
                     href={socials.youtube}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 text-xs font-medium text-neutral-700 dark:text-neutral-300 hover:text-neutral-950 dark:hover:text-neutral-50 hover:border-neutral-300 dark:hover:border-neutral-700 transition-colors"
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-slate-200/80 dark:border-white/10 bg-white/70 dark:bg-neutral-900/70 text-xs font-medium text-neutral-700 dark:text-neutral-300 hover:text-neutral-950 dark:hover:text-neutral-50 shadow-clay-sm hover:shadow-clay-card hover:-translate-y-0.5 transition-all duration-150"
                   >
                     <Youtube className="w-3.5 h-3.5" />
                     <span>YouTube</span>
@@ -875,7 +882,7 @@ export const CreatorProfilePage: React.FC = () => {
                     href={socials.linkedin}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 text-xs font-medium text-neutral-700 dark:text-neutral-300 hover:text-neutral-950 dark:hover:text-neutral-50 hover:border-neutral-300 dark:hover:border-neutral-700 transition-colors"
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-slate-200/80 dark:border-white/10 bg-white/70 dark:bg-neutral-900/70 text-xs font-medium text-neutral-700 dark:text-neutral-300 hover:text-neutral-950 dark:hover:text-neutral-50 shadow-clay-sm hover:shadow-clay-card hover:-translate-y-0.5 transition-all duration-150"
                   >
                     <Linkedin className="w-3.5 h-3.5" />
                     <span>LinkedIn</span>
@@ -886,7 +893,7 @@ export const CreatorProfilePage: React.FC = () => {
                     href={socials.github}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 text-xs font-medium text-neutral-700 dark:text-neutral-300 hover:text-neutral-950 dark:hover:text-neutral-50 hover:border-neutral-300 dark:hover:border-neutral-700 transition-colors"
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-slate-200/80 dark:border-white/10 bg-white/70 dark:bg-neutral-900/70 text-xs font-medium text-neutral-700 dark:text-neutral-300 hover:text-neutral-950 dark:hover:text-neutral-50 shadow-clay-sm hover:shadow-clay-card hover:-translate-y-0.5 transition-all duration-150"
                   >
                     <Github className="w-3.5 h-3.5" />
                     <span>GitHub</span>
@@ -897,7 +904,7 @@ export const CreatorProfilePage: React.FC = () => {
                     href={socials.website}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 text-xs font-medium text-neutral-700 dark:text-neutral-300 hover:text-neutral-950 dark:hover:text-neutral-50 hover:border-neutral-300 dark:hover:border-neutral-700 transition-colors"
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-slate-200/80 dark:border-white/10 bg-white/70 dark:bg-neutral-900/70 text-xs font-medium text-neutral-700 dark:text-neutral-300 hover:text-neutral-950 dark:hover:text-neutral-50 shadow-clay-sm hover:shadow-clay-card hover:-translate-y-0.5 transition-all duration-150"
                   >
                     <Globe className="w-3.5 h-3.5" />
                     <span>Website</span>
@@ -926,9 +933,9 @@ export const CreatorProfilePage: React.FC = () => {
 
         {/* Access Code Input Box */}
         <div ref={codeCardRef} className="scroll-mt-20 mb-8">
-          <Card className="p-6 border-neutral-300 dark:border-neutral-700 shadow-sm">
+          <Card className="p-6 border-slate-200/80 dark:border-white/10 shadow-clay-card">
             <div className="text-center mb-5">
-              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-neutral-100 dark:bg-neutral-800 text-neutral-800 dark:text-neutral-200 text-xs font-semibold mb-2 uppercase tracking-wider">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-[#e7ecf3]/80 dark:bg-[#131720]/80 shadow-clay-sm text-neutral-800 dark:text-neutral-200 text-xs font-semibold mb-2 uppercase tracking-wider">
                 <Radio className="w-3.5 h-3.5 text-neutral-600 dark:text-neutral-400" />
                 <span>Enter 4-Digit Code</span>
               </div>
@@ -1042,17 +1049,17 @@ export const CreatorProfilePage: React.FC = () => {
               <span>Pinned Featured Guide</span>
             </div>
 
-            <Card className="p-5 border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 hover:border-neutral-400 dark:hover:border-neutral-600 transition-colors">
+            <Card className="p-5 border-slate-200/80 dark:border-white/10 shadow-clay-card hover:shadow-clay-card-hover transition-all">
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div className="flex items-start gap-3.5 min-w-0 flex-1">
                   {pinnedResource.coverUrl ? (
                     <img
                       src={pinnedResource.coverUrl}
                       alt={pinnedResource.title}
-                      className="w-16 h-16 sm:w-20 sm:h-20 rounded-md object-cover border border-neutral-200 dark:border-neutral-800 shrink-0"
+                      className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl object-cover border border-slate-200/80 dark:border-white/10 shadow-clay-sm shrink-0"
                     />
                   ) : (
-                    <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-md bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 flex items-center justify-center shrink-0 border border-neutral-200 dark:border-neutral-700">
+                    <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl bg-[#e7ecf3] dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 flex items-center justify-center shrink-0 border border-slate-200/80 dark:border-white/10 shadow-clay-sm">
                       <FileText className="w-8 h-8" />
                     </div>
                   )}
@@ -1195,7 +1202,8 @@ export const CreatorProfilePage: React.FC = () => {
                   return (
                     <Card
                       key={res.id}
-                      className="overflow-hidden flex flex-col hover:border-neutral-300 dark:hover:border-neutral-700 transition-all hover:shadow-xs group cursor-pointer"
+                      variant="interactive"
+                      className="overflow-hidden flex flex-col group cursor-pointer"
                       onClick={() => handleOpenResource(res)}
                     >
                       {/* Thumbnail Cover Area */}
@@ -1308,7 +1316,8 @@ export const CreatorProfilePage: React.FC = () => {
                   return (
                     <Card
                       key={res.id}
-                      className="p-4 sm:p-5 hover:border-neutral-300 dark:hover:border-neutral-700 transition-all hover:shadow-xs group cursor-pointer"
+                      variant="interactive"
+                      className="p-4 sm:p-5 group cursor-pointer"
                       onClick={() => handleOpenResource(res)}
                     >
                       <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
@@ -1317,10 +1326,10 @@ export const CreatorProfilePage: React.FC = () => {
                             <img
                               src={res.coverUrl}
                               alt={res.title}
-                              className="w-14 h-14 sm:w-16 sm:h-16 rounded-md object-cover border border-neutral-200 dark:border-neutral-800 shrink-0"
+                              className="w-14 h-14 sm:w-16 sm:h-16 rounded-xl object-cover border border-slate-200/80 dark:border-white/10 shadow-clay-sm shrink-0"
                             />
                           ) : (
-                            <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-md bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 flex items-center justify-center shrink-0 border border-neutral-200 dark:border-neutral-700">
+                            <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-xl bg-[#e7ecf3] dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 flex items-center justify-center shrink-0 border border-slate-200/80 dark:border-white/10 shadow-clay-sm">
                               <FileText className="w-6 h-6" />
                             </div>
                           )}
@@ -1424,7 +1433,7 @@ export const CreatorProfilePage: React.FC = () => {
 
         return (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
-            <Card className="max-w-md w-full p-6 sm:p-7 relative shadow-xl border-neutral-300 dark:border-neutral-700">
+            <Card className="max-w-md w-full p-6 sm:p-7 relative shadow-clay-card border-slate-200/80 dark:border-white/15 animate-clay-pop">
               <button
                 type="button"
                 onClick={() => setPasswordModalResource(null)}
@@ -1435,7 +1444,7 @@ export const CreatorProfilePage: React.FC = () => {
               </button>
 
               <div className="text-center mb-5">
-                <div className="w-10 h-10 rounded-md bg-neutral-100 dark:bg-neutral-800 text-neutral-800 dark:text-neutral-200 flex items-center justify-center mx-auto mb-3 border border-neutral-200 dark:border-neutral-700">
+                <div className="w-10 h-10 rounded-xl bg-[#e7ecf3] dark:bg-neutral-800 text-neutral-800 dark:text-neutral-200 flex items-center justify-center mx-auto mb-3 border border-slate-200/80 dark:border-white/10 shadow-clay-sm">
                   <Key className="w-5 h-5" />
                 </div>
                 <h3 className="text-base font-bold text-neutral-900 dark:text-neutral-50">
@@ -1454,7 +1463,7 @@ export const CreatorProfilePage: React.FC = () => {
                 </p>
 
                 {passwordModalResource.allowDownload === false && (
-                  <div className="mt-2 inline-flex items-center gap-1 text-[11px] text-amber-700 dark:text-amber-400 px-2 py-0.5 rounded-md bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800">
+                  <div className="mt-2 inline-flex items-center gap-1 text-[11px] text-amber-700 dark:text-amber-400 px-2 py-0.5 rounded-md bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 shadow-clay-sm">
                     <EyeOff className="w-3 h-3" />
                     <span>Distributed in view-only reader mode</span>
                   </div>
@@ -1462,7 +1471,7 @@ export const CreatorProfilePage: React.FC = () => {
               </div>
 
               {isBlocked ? (
-                <div className="p-4 rounded-md bg-neutral-100 dark:bg-neutral-800 text-xs text-neutral-600 dark:text-neutral-400 text-center">
+                <div className="p-4 rounded-xl bg-[#e7ecf3]/70 dark:bg-[#12151e]/80 shadow-clay-inset border border-slate-200/80 dark:border-white/10 text-xs text-neutral-600 dark:text-neutral-400 text-center">
                   Access to this resource has closed. Check @{creator.username}&apos;s profile for other guides.
                 </div>
               ) : (
@@ -1478,7 +1487,7 @@ export const CreatorProfilePage: React.FC = () => {
                       }}
                       disabled={cooldownSeconds > 0 || modalPasswordVerifying}
                       autoFocus
-                      className="w-full h-11 pl-3.5 pr-10 text-sm rounded-md border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100 font-mono focus:outline-none focus:ring-2 focus:ring-neutral-900 dark:focus:ring-neutral-100"
+                      className="w-full h-11 pl-3.5 pr-10 text-sm rounded-xl border border-slate-200/80 dark:border-white/10 bg-[#e7ecf3]/70 dark:bg-[#12151e]/80 text-neutral-900 dark:text-neutral-100 font-mono shadow-clay-inset focus:outline-none focus:bg-white dark:focus:bg-[#1a1e28] focus:shadow-clay-inset-focus"
                     />
                     <button
                       type="button"
