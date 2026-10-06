@@ -2,11 +2,11 @@ import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../firebase/config.ts';
 
 /**
- * Generates a random 6-digit numeric string from 100000 to 999999
+ * Generates a random 4-digit numeric string from 1000 to 9999
  */
-export function generateSixDigitCode(): string {
-  const min = 100000;
-  const max = 999999;
+export function generateFourDigitCode(): string {
+  const min = 1000;
+  const max = 9999;
   const range = max - min + 1;
   const cryptoObj = typeof globalThis !== 'undefined' && globalThis.crypto
     ? globalThis.crypto
@@ -23,13 +23,18 @@ export function generateSixDigitCode(): string {
 }
 
 /**
- * Checks if a 6-digit code is already used by an active resource belonging to the creator.
+ * Backwards compatibility alias pointing to 4-digit code generator in v2.5.0
+ */
+export const generateSixDigitCode = generateFourDigitCode;
+
+/**
+ * Checks if a 4-digit code is already used by an active resource belonging to the creator.
  * If used, regenerates until an unused code is found (up to 10 attempts).
  */
 export async function getUniqueCodeForCreator(creatorId: string): Promise<string> {
   const maxAttempts = 10;
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
-    const candidate = generateSixDigitCode();
+    const candidate = generateFourDigitCode();
     try {
       const q = query(
         collection(db, 'resources'),
@@ -45,11 +50,11 @@ export async function getUniqueCodeForCreator(creatorId: string): Promise<string
       return candidate;
     }
   }
-  return generateSixDigitCode();
+  return generateFourDigitCode();
 }
 
 /**
- * Checks if a specific 6-digit code is already assigned to an active resource of the creator.
+ * Checks if a specific 4-digit (or legacy 6-digit) code is already assigned to an active resource of the creator.
  */
 export async function isCodeInUseByCreator(
   creatorId: string,

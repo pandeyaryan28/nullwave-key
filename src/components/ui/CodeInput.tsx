@@ -12,7 +12,7 @@ interface CodeInputProps {
 }
 
 export const CodeInput: React.FC<CodeInputProps> = ({
-  length = 6,
+  length = 4,
   onComplete,
   onChange,
   isLoading = false,
@@ -22,6 +22,10 @@ export const CodeInput: React.FC<CodeInputProps> = ({
 }) => {
   const [digits, setDigits] = useState<string[]>(Array(length).fill(''));
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
+
+  useEffect(() => {
+    setDigits(Array(length).fill(''));
+  }, [length]);
 
   useEffect(() => {
     if (autoFocus && inputRefs.current[0]) {

@@ -73,7 +73,7 @@ export const PricingPage: React.FC = () => {
               </div>
               <div className="flex items-center gap-2">
                 <Check className="w-4 h-4 text-emerald-600 shrink-0" />
-                <span>Standard 6-digit wave codes</span>
+                <span>Standard 4-digit wave codes</span>
               </div>
               <div className="flex items-center gap-2">
                 <Check className="w-4 h-4 text-emerald-600 shrink-0" />
@@ -273,7 +273,7 @@ export const PricingPage: React.FC = () => {
               Is the Community plan genuinely free forever?
             </h3>
             <p className="text-xs sm:text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed">
-              Yes. You can create a profile, upload up to 10 active guides, and share 6-digit access codes with unlimited audience downloads without ever entering payment information.
+              Yes. You can create a profile, upload up to 10 active guides, and share 4-digit access codes with unlimited audience downloads without ever entering payment information.
             </p>
           </Card>
 
@@ -300,7 +300,7 @@ export const PricingPage: React.FC = () => {
               Do my audience members need to sign up?
             </h3>
             <p className="text-xs sm:text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed">
-              Never. Viewers simply enter the 6-digit code or tap the document directly on your profile. No login, no password, and no cookies.
+              Never. Viewers simply enter the 4-digit code or tap the document directly on your profile. No login or signup walls, and no tracking cookies.
             </p>
           </Card>
         </div>

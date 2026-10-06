@@ -38,7 +38,7 @@ export const FeaturesPage: React.FC = () => {
           Engineered for zero friction and high-fidelity delivery
         </h1>
         <p className="text-base sm:text-lg text-neutral-600 dark:text-neutral-300 leading-relaxed">
-          Traditional link trees and digital download gates force viewers through complex signup walls, slow email verification flows, and intrusive cookies. NullWave replaces this with a direct 6-digit transmission channel.
+          Traditional link trees and digital download gates force viewers through complex signup walls, slow email verification flows, and intrusive cookies. NullWave replaces this with a direct 4-digit transmission channel.
         </p>
       </header>
 
@@ -50,10 +50,10 @@ export const FeaturesPage: React.FC = () => {
           </div>
           <div className="space-y-2">
             <h3 className="text-lg font-bold text-neutral-900 dark:text-neutral-100">
-              6-Digit Wave Code Protocol
+              4-Digit Wave Code Protocol
             </h3>
             <p className="text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed">
-              Every resource receives an isolated 6-digit numeric code within a creator-scoped namespace. Viewers enter 6 digits to resolve the file instantly from local memory or sub-millisecond document queries.
+              Every resource receives an isolated 4-digit numeric code within a creator-scoped namespace. Viewers enter 4 digits to resolve the file instantly from local memory or sub-millisecond document queries.
             </p>
           </div>
         </Card>
@@ -186,7 +186,7 @@ export const FeaturesPage: React.FC = () => {
                   Direct Code-to-File Binding
                 </td>
                 <td className="px-6 py-4 text-emerald-700 dark:text-emerald-400 font-semibold flex items-center gap-1.5">
-                  <Check className="w-4 h-4 shrink-0" /> 6-digit wave codes
+                  <Check className="w-4 h-4 shrink-0" /> 4-digit wave codes
                 </td>
                 <td className="px-6 py-4 text-neutral-500 dark:text-neutral-400">
                   None (cluttered button stack)
@@ -234,7 +234,7 @@ export const FeaturesPage: React.FC = () => {
           Ready to distribute without barriers?
         </h2>
         <p className="text-sm text-neutral-600 dark:text-neutral-400 max-w-xl mx-auto">
-          Claim your handle and share your first 6-digit access code in less than two minutes.
+          Claim your handle and share your first 4-digit access code in less than two minutes.
         </p>
         <div className="pt-2">
           <Link to="/signup">

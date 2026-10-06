@@ -36,12 +36,13 @@ import {
   LayoutGrid,
   List as ListIcon,
   Pin,
-  Lock,
   EyeOff,
   X,
   Edit,
   Clock,
   Users,
+  Key,
+  Eye,
 } from 'lucide-react';
 
 export const CreatorProfilePage: React.FC = () => {
@@ -72,10 +73,12 @@ export const CreatorProfilePage: React.FC = () => {
   const [hintMessage, setHintMessage] = useState<string | null>(null);
   const [unlockedResourceIds, setUnlockedResourceIds] = useState<Set<string>>(new Set());
 
-  // Focused Card-Click Unlock Modal state
-  const [modalResource, setModalResource] = useState<Resource | null>(null);
-  const [modalVerifying, setModalVerifying] = useState<boolean>(false);
-  const [modalCodeError, setModalCodeError] = useState<string | null>(null);
+  // Password Unlock Modal state (for password-protected documents)
+  const [passwordModalResource, setPasswordModalResource] = useState<Resource | null>(null);
+  const [modalPassword, setModalPassword] = useState<string>('');
+  const [showModalPassword, setShowModalPassword] = useState<boolean>(false);
+  const [modalPasswordVerifying, setModalPasswordVerifying] = useState<boolean>(false);
+  const [modalPasswordError, setModalPasswordError] = useState<string | null>(null);
 
   // Persistent abuse protection (rate limiting via sessionStorage)
   const [cooldownSeconds, setCooldownSeconds] = useState<number>(0);
@@ -413,7 +416,7 @@ export const CreatorProfilePage: React.FC = () => {
         if (isLockedOut) {
           setCodeError('Incorrect code. Too many failed attempts, please wait 30 seconds.');
         } else {
-          setCodeError('Incorrect code. Check the 6-digit access code shared by the creator.');
+          setCodeError('Incorrect code. Check the 4-digit access code shared by the creator.');
         }
         setIsVerifying(false);
         return;
@@ -434,41 +437,65 @@ export const CreatorProfilePage: React.FC = () => {
     }
   };
 
-  const handleModalCodeSubmit = async (code: string) => {
-    if (!modalResource || !creator) return;
+  const handleOpenResource = (targetResource: Resource) => {
+    if (!creator) return;
+
+    // 1. Check expiration and capacity limits
+    const access = checkResourceAccess(targetResource);
+    if (!access.allowed) {
+      setCodeError(access.error || 'Access to this drop is closed.');
+      return;
+    }
+
+    // 2. Check password protection
+    const isOwner = Boolean(user && creator && user.uid === creator.uid);
+    const isPwdUnlocked =
+      sessionStorage.getItem(`nullwave_pwd_unlocked_${targetResource.id}`) === 'true' ||
+      sessionStorage.getItem(`unlockr_pwd_unlocked_${targetResource.id}`) === 'true';
+
+    if (targetResource.password && !isOwner && !isPwdUnlocked) {
+      setPasswordModalResource(targetResource);
+      setModalPassword('');
+      setModalPasswordError(null);
+      return;
+    }
+
+    // 3. Directly open document (no code needed)
+    unlockAndNavigate(targetResource);
+  };
+
+  const handleModalPasswordSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!passwordModalResource || !creator) return;
 
     if (cooldownSeconds > 0) {
-      setModalCodeError(`Cooldown active. Wait ${cooldownSeconds}s.`);
+      setModalPasswordError(`Cooldown active. Wait ${cooldownSeconds}s.`);
       return;
     }
 
-    setModalCodeError(null);
-    setModalVerifying(true);
+    setModalPasswordError(null);
+    setModalPasswordVerifying(true);
 
-    const access = checkResourceAccess(modalResource);
-    if (!access.allowed) {
-      setModalCodeError(access.error || 'Access to this drop is closed.');
-      setModalVerifying(false);
-      return;
-    }
-
-    const trimmedCode = code.trim();
-
-    if (modalResource.code === trimmedCode) {
-      setModalVerifying(false);
-      setModalResource(null);
-      unlockAndNavigate(modalResource);
+    if (modalPassword === passwordModalResource.password) {
+      try {
+        sessionStorage.setItem(`nullwave_pwd_unlocked_${passwordModalResource.id}`, 'true');
+        sessionStorage.setItem(`unlockr_pwd_unlocked_${passwordModalResource.id}`, 'true');
+      } catch {}
+      setModalPasswordVerifying(false);
+      const res = passwordModalResource;
+      setPasswordModalResource(null);
+      unlockAndNavigate(res);
       return;
     }
 
     // Record failure
     const isLockedOut = recordFailedAttempt();
     if (isLockedOut) {
-      setModalCodeError('Too many failed attempts. Cooldown started for 30 seconds.');
+      setModalPasswordError('Too many failed attempts. Cooldown started for 30 seconds.');
     } else {
-      setModalCodeError('Incorrect 6-digit code for this resource.');
+      setModalPasswordError('Incorrect password. Please try again.');
     }
-    setModalVerifying(false);
+    setModalPasswordVerifying(false);
   };
 
   const normalizeSocialUrl = (url?: string, platform?: string): string => {
@@ -561,9 +588,36 @@ export const CreatorProfilePage: React.FC = () => {
 
   const isOwner = Boolean(user && creator && user.uid === creator.uid);
 
+  const isResourceUnlocked = (res: Resource): boolean => {
+    if (isOwner) return true;
+    if (unlockedResourceIds.has(res.id)) return true;
+    try {
+      return (
+        sessionStorage.getItem(`nullwave_unlocked_${res.id}`) === 'true' ||
+        sessionStorage.getItem(`unlockr_unlocked_${res.id}`) === 'true'
+      );
+    } catch {
+      return false;
+    }
+  };
+
+  const isResourcePasswordUnlocked = (res: Resource): boolean => {
+    if (!res.password) return true;
+    if (isOwner) return true;
+    try {
+      return (
+        sessionStorage.getItem(`nullwave_pwd_unlocked_${res.id}`) === 'true' ||
+        sessionStorage.getItem(`unlockr_pwd_unlocked_${res.id}`) === 'true' ||
+        unlockedResourceIds.has(res.id)
+      );
+    } catch {
+      return unlockedResourceIds.has(res.id);
+    }
+  };
+
   // Filtered resources
   const visibleResources = resources.filter(res => {
-    const isUnlocked = isOwner || unlockedResourceIds.has(res.id);
+    const isUnlocked = isResourceUnlocked(res);
     if (res.isPublicListing === false && !isUnlocked && !isOwner) {
       return false;
     }
@@ -876,13 +930,13 @@ export const CreatorProfilePage: React.FC = () => {
             <div className="text-center mb-5">
               <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-neutral-100 dark:bg-neutral-800 text-neutral-800 dark:text-neutral-200 text-xs font-semibold mb-2 uppercase tracking-wider">
                 <Radio className="w-3.5 h-3.5 text-neutral-600 dark:text-neutral-400" />
-                <span>Enter 6-Digit Code</span>
+                <span>Enter 4-Digit Code</span>
               </div>
               <h2 className="text-base font-semibold text-neutral-900 dark:text-neutral-100">
                 Unlock Document with Code
               </h2>
               <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">
-                Have an access code shared on Instagram or social media? Enter it here to unlock immediately.
+                Have a specific wave code from a social post or video caption? Enter the 4-digit code to jump directly to that guide.
               </p>
 
               {hintMessage && (
@@ -899,7 +953,7 @@ export const CreatorProfilePage: React.FC = () => {
             </div>
 
             <CodeInput
-              length={6}
+              length={4}
               onComplete={handleInlineCodeSubmit}
               onChange={() => {
                 if (codeError) setCodeError(null);
@@ -1012,14 +1066,9 @@ export const CreatorProfilePage: React.FC = () => {
                         <Pin className="w-2.5 h-2.5" />
                         <span>Pinned</span>
                       </Badge>
-                      {isOwner || unlockedResourceIds.has(pinnedResource.id) ? (
+                      {(isOwner || isResourceUnlocked(pinnedResource)) && (
                         <Badge variant="success" className="text-[10px] py-0 px-1.5">
                           Unlocked
-                        </Badge>
-                      ) : (
-                        <Badge variant="neutral" className="text-[10px] py-0 px-1.5 flex items-center gap-1">
-                          <Lock className="w-2.5 h-2.5" />
-                          <span>Requires Code</span>
                         </Badge>
                       )}
                       {pinnedResource.allowDownload === false && (
@@ -1045,6 +1094,12 @@ export const CreatorProfilePage: React.FC = () => {
                             <span>Expires {new Date(pinnedResource.expiresAt).toLocaleDateString()}</span>
                           </Badge>
                         )
+                      )}
+                      {pinnedResource.password && (
+                        <Badge variant="neutral" className="text-[10px] py-0 px-1.5 flex items-center gap-1">
+                          <Key className="w-2.5 h-2.5" />
+                          <span>Password Protected</span>
+                        </Badge>
                       )}
                       {pinnedResource.maxUnlocks && (
                         (pinnedResource.uniqueViews || 0) >= pinnedResource.maxUnlocks ? (
@@ -1074,19 +1129,12 @@ export const CreatorProfilePage: React.FC = () => {
                 </div>
 
                 <div className="w-full sm:w-auto shrink-0">
-                  {isOwner || unlockedResourceIds.has(pinnedResource.id) ? (
-                    <Link to={`/${creator.username}/${pinnedResource.code}`}>
-                      <Button variant="primary" size="sm" className="w-full sm:w-auto">
-                        <span>Open Document</span>
-                        <ArrowRight className="w-3.5 h-3.5" />
-                      </Button>
-                    </Link>
-                  ) : pinnedResource.expiresAt && Date.now() > pinnedResource.expiresAt ? (
+                  {pinnedResource.expiresAt && Date.now() > pinnedResource.expiresAt && !isOwner ? (
                     <Button variant="outline" size="sm" disabled className="w-full sm:w-auto opacity-60 cursor-not-allowed">
                       <Clock className="w-3.5 h-3.5 text-red-500" />
                       <span>Drop Expired</span>
                     </Button>
-                  ) : pinnedResource.maxUnlocks && (pinnedResource.uniqueViews || 0) >= pinnedResource.maxUnlocks ? (
+                  ) : pinnedResource.maxUnlocks && (pinnedResource.uniqueViews || 0) >= pinnedResource.maxUnlocks && !isOwner ? (
                     <Button variant="outline" size="sm" disabled className="w-full sm:w-auto opacity-60 cursor-not-allowed">
                       <Users className="w-3.5 h-3.5 text-amber-500" />
                       <span>Capacity Reached</span>
@@ -1095,11 +1143,21 @@ export const CreatorProfilePage: React.FC = () => {
                     <Button
                       variant="primary"
                       size="sm"
-                      onClick={() => setModalResource(pinnedResource)}
+                      onClick={() => handleOpenResource(pinnedResource)}
                       className="w-full sm:w-auto"
                     >
-                      <Lock className="w-3.5 h-3.5" />
-                      <span>Unlock with Code</span>
+                      {pinnedResource.password && !isOwner && !isResourcePasswordUnlocked(pinnedResource) ? (
+                        <>
+                          <Key className="w-3.5 h-3.5" />
+                          <span>Enter Password</span>
+                        </>
+                      ) : (
+                        <>
+                          <FileText className="w-3.5 h-3.5" />
+                          <span>Open Document</span>
+                        </>
+                      )}
+                      <ArrowRight className="w-3.5 h-3.5" />
                     </Button>
                   )}
                 </div>
@@ -1129,7 +1187,8 @@ export const CreatorProfilePage: React.FC = () => {
               /* Instagram-style Cards Grid */
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                 {regularResources.map(res => {
-                  const isUnlocked = isOwner || unlockedResourceIds.has(res.id);
+                  const isUnlocked = isResourceUnlocked(res);
+                  const isPwdUnlocked = isResourcePasswordUnlocked(res);
                   const isResExpired = Boolean(res.expiresAt && Date.now() > res.expiresAt);
                   const isResCapped = Boolean(res.maxUnlocks && (res.uniqueViews || 0) >= res.maxUnlocks);
 
@@ -1137,13 +1196,7 @@ export const CreatorProfilePage: React.FC = () => {
                     <Card
                       key={res.id}
                       className="overflow-hidden flex flex-col hover:border-neutral-300 dark:hover:border-neutral-700 transition-all hover:shadow-xs group cursor-pointer"
-                      onClick={() => {
-                        if (isUnlocked) {
-                          navigate(`/${creator.username}/${res.code}`);
-                        } else {
-                          setModalResource(res);
-                        }
-                      }}
+                      onClick={() => handleOpenResource(res)}
                     >
                       {/* Thumbnail Cover Area */}
                       <div className="relative aspect-video w-full bg-neutral-100 dark:bg-neutral-900 overflow-hidden border-b border-neutral-200 dark:border-neutral-800">
@@ -1164,14 +1217,15 @@ export const CreatorProfilePage: React.FC = () => {
 
                         {/* Status Badges Overlay */}
                         <div className="absolute top-2 left-2 flex flex-wrap gap-1">
-                          {isUnlocked ? (
+                          {res.password && (
+                            <Badge variant="neutral" className="text-[10px] py-0 px-1.5 flex items-center gap-1">
+                              <Key className="w-2.5 h-2.5" />
+                              <span>Password Protected</span>
+                            </Badge>
+                          )}
+                          {isUnlocked && (
                             <Badge variant="success" className="text-[10px] py-0 px-1.5">
                               Unlocked
-                            </Badge>
-                          ) : (
-                            <Badge variant="neutral" className="text-[10px] py-0 px-1.5 flex items-center gap-1">
-                              <Lock className="w-2.5 h-2.5" />
-                              <span>Protected</span>
                             </Badge>
                           )}
                           {res.allowDownload === false && (
@@ -1226,14 +1280,14 @@ export const CreatorProfilePage: React.FC = () => {
                         <div className="pt-2 border-t border-neutral-100 dark:border-neutral-800 flex items-center justify-between text-[11px] text-neutral-500">
                           <span>{(res.fileSizeBytes / (1024 * 1024)).toFixed(1)} MB</span>
                           <span className="font-medium text-neutral-800 dark:text-neutral-200 group-hover:underline flex items-center gap-1">
-                            {isUnlocked ? (
-                              'Open Document →'
-                            ) : isResExpired && !isOwner ? (
+                            {isResExpired && !isOwner ? (
                               <span className="text-red-500">Expired</span>
                             ) : isResCapped && !isOwner ? (
                               <span className="text-amber-500">Cap Reached</span>
+                            ) : res.password && !isOwner && !isPwdUnlocked ? (
+                              'Enter Password →'
                             ) : (
-                              'Enter Code →'
+                              'Open Document →'
                             )}
                           </span>
                         </div>
@@ -1246,7 +1300,8 @@ export const CreatorProfilePage: React.FC = () => {
               /* X / Twitter Timeline Feed View */
               <div className="space-y-3">
                 {regularResources.map(res => {
-                  const isUnlocked = isOwner || unlockedResourceIds.has(res.id);
+                  const isUnlocked = isResourceUnlocked(res);
+                  const isPwdUnlocked = isResourcePasswordUnlocked(res);
                   const isResExpired = Boolean(res.expiresAt && Date.now() > res.expiresAt);
                   const isResCapped = Boolean(res.maxUnlocks && (res.uniqueViews || 0) >= res.maxUnlocks);
 
@@ -1254,13 +1309,7 @@ export const CreatorProfilePage: React.FC = () => {
                     <Card
                       key={res.id}
                       className="p-4 sm:p-5 hover:border-neutral-300 dark:hover:border-neutral-700 transition-all hover:shadow-xs group cursor-pointer"
-                      onClick={() => {
-                        if (isUnlocked) {
-                          navigate(`/${creator.username}/${res.code}`);
-                        } else {
-                          setModalResource(res);
-                        }
-                      }}
+                      onClick={() => handleOpenResource(res)}
                     >
                       <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
                         <div className="flex items-start gap-3.5 min-w-0 flex-1">
@@ -1281,14 +1330,15 @@ export const CreatorProfilePage: React.FC = () => {
                               <h4 className="text-sm sm:text-base font-bold text-neutral-900 dark:text-neutral-100">
                                 {res.title}
                               </h4>
-                              {isUnlocked ? (
+                              {res.password && (
+                                <Badge variant="neutral" className="text-[10px] py-0 px-1.5 flex items-center gap-1">
+                                  <Key className="w-2.5 h-2.5" />
+                                  <span>Password Protected</span>
+                                </Badge>
+                              )}
+                              {isUnlocked && (
                                 <Badge variant="success" className="text-[10px] py-0 px-1.5">
                                   Unlocked
-                                </Badge>
-                              ) : (
-                                <Badge variant="neutral" className="text-[10px] py-0 px-1.5 flex items-center gap-1">
-                                  <Lock className="w-2.5 h-2.5" />
-                                  <span>Requires Code</span>
                                 </Badge>
                               )}
                               {res.allowDownload === false && (
@@ -1344,14 +1394,14 @@ export const CreatorProfilePage: React.FC = () => {
 
                         <div className="self-end sm:self-center shrink-0">
                           <span className="text-xs font-semibold text-neutral-900 dark:text-neutral-100 group-hover:underline flex items-center gap-1">
-                            {isUnlocked ? (
-                              'View Document'
-                            ) : isResExpired && !isOwner ? (
+                            {isResExpired && !isOwner ? (
                               <span className="text-red-500">Expired</span>
                             ) : isResCapped && !isOwner ? (
                               <span className="text-amber-500">Cap Reached</span>
+                            ) : res.password && !isOwner && !isPwdUnlocked ? (
+                              'Enter Password'
                             ) : (
-                              'Unlock Code'
+                              'Open Document'
                             )}
                             <ArrowRight className="w-3.5 h-3.5" />
                           </span>
@@ -1366,10 +1416,10 @@ export const CreatorProfilePage: React.FC = () => {
         )}
       </main>
 
-      {/* Focused Card-Click Unlock Modal */}
-      {modalResource && (() => {
-        const isModalExpired = Boolean(modalResource.expiresAt && Date.now() > modalResource.expiresAt);
-        const isModalCapped = Boolean(modalResource.maxUnlocks && (modalResource.uniqueViews || 0) >= modalResource.maxUnlocks);
+      {/* Password Unlock Modal for Password-Protected Documents */}
+      {passwordModalResource && (() => {
+        const isModalExpired = Boolean(passwordModalResource.expiresAt && Date.now() > passwordModalResource.expiresAt);
+        const isModalCapped = Boolean(passwordModalResource.maxUnlocks && (passwordModalResource.uniqueViews || 0) >= passwordModalResource.maxUnlocks);
         const isBlocked = (isModalExpired || isModalCapped) && !isOwner;
 
         return (
@@ -1377,7 +1427,7 @@ export const CreatorProfilePage: React.FC = () => {
             <Card className="max-w-md w-full p-6 sm:p-7 relative shadow-xl border-neutral-300 dark:border-neutral-700">
               <button
                 type="button"
-                onClick={() => setModalResource(null)}
+                onClick={() => setPasswordModalResource(null)}
                 className="absolute top-4 right-4 p-1.5 text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 rounded-md transition-colors"
                 aria-label="Close"
               >
@@ -1386,24 +1436,24 @@ export const CreatorProfilePage: React.FC = () => {
 
               <div className="text-center mb-5">
                 <div className="w-10 h-10 rounded-md bg-neutral-100 dark:bg-neutral-800 text-neutral-800 dark:text-neutral-200 flex items-center justify-center mx-auto mb-3 border border-neutral-200 dark:border-neutral-700">
-                  {isBlocked ? <Lock className="w-5 h-5 text-red-500" /> : <Lock className="w-5 h-5" />}
+                  <Key className="w-5 h-5" />
                 </div>
                 <h3 className="text-base font-bold text-neutral-900 dark:text-neutral-50">
                   {isModalExpired && !isOwner
-                    ? `Drop Expired: ${modalResource.title}`
+                    ? `Drop Expired: ${passwordModalResource.title}`
                     : isModalCapped && !isOwner
-                    ? `Capacity Reached: ${modalResource.title}`
-                    : `Unlock ${modalResource.title}`}
+                    ? `Capacity Reached: ${passwordModalResource.title}`
+                    : `Password Protected: ${passwordModalResource.title}`}
                 </h3>
                 <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
                   {isModalExpired && !isOwner
-                    ? `This time-limited drop expired on ${new Date(modalResource.expiresAt!).toLocaleDateString()}. Access is no longer open.`
+                    ? `This time-limited drop expired on ${new Date(passwordModalResource.expiresAt!).toLocaleDateString()}. Access is no longer open.`
                     : isModalCapped && !isOwner
-                    ? `All ${modalResource.maxUnlocks} access slots have been redeemed. Capacity limit has been reached.`
-                    : `Enter the 6-digit access code shared by ${creator.displayName || creator.username}.`}
+                    ? `All ${passwordModalResource.maxUnlocks} access slots have been redeemed. Capacity limit has been reached.`
+                    : `This document is protected with a password. Enter the password set by ${creator.displayName || creator.username} to open.`}
                 </p>
 
-                {modalResource.allowDownload === false && (
+                {passwordModalResource.allowDownload === false && (
                   <div className="mt-2 inline-flex items-center gap-1 text-[11px] text-amber-700 dark:text-amber-400 px-2 py-0.5 rounded-md bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800">
                     <EyeOff className="w-3 h-3" />
                     <span>Distributed in view-only reader mode</span>
@@ -1416,28 +1466,64 @@ export const CreatorProfilePage: React.FC = () => {
                   Access to this resource has closed. Check @{creator.username}&apos;s profile for other guides.
                 </div>
               ) : (
-                <CodeInput
-                  length={6}
-                  onComplete={handleModalCodeSubmit}
-                  onChange={() => {
-                    if (modalCodeError) setModalCodeError(null);
-                  }}
-                  isLoading={modalVerifying}
-                  error={modalCodeError}
-                  disabled={cooldownSeconds > 0}
-                  autoFocus={true}
-                />
-              )}
+                <form onSubmit={handleModalPasswordSubmit} className="space-y-4">
+                  <div className="relative">
+                    <input
+                      type={showModalPassword ? 'text' : 'password'}
+                      placeholder="Enter document password"
+                      value={modalPassword}
+                      onChange={e => {
+                        setModalPassword(e.target.value);
+                        if (modalPasswordError) setModalPasswordError(null);
+                      }}
+                      disabled={cooldownSeconds > 0 || modalPasswordVerifying}
+                      autoFocus
+                      className="w-full h-11 pl-3.5 pr-10 text-sm rounded-md border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100 font-mono focus:outline-none focus:ring-2 focus:ring-neutral-900 dark:focus:ring-neutral-100"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowModalPassword(!showModalPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200"
+                      title={showModalPassword ? 'Hide password' : 'Show password'}
+                    >
+                      {showModalPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
 
-              <div className="mt-6 flex justify-end">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setModalResource(null)}
-                >
-                  Close
-                </Button>
-              </div>
+                  {modalPasswordError && (
+                    <p className="text-xs font-medium text-red-600 dark:text-red-400">
+                      {modalPasswordError}
+                    </p>
+                  )}
+
+                  {cooldownSeconds > 0 && (
+                    <p className="text-xs text-amber-700 dark:text-amber-400">
+                      Rate limit cooldown active. Please wait {cooldownSeconds}s.
+                    </p>
+                  )}
+
+                  <div className="flex items-center justify-end gap-2 pt-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setPasswordModalResource(null)}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      type="submit"
+                      variant="primary"
+                      size="sm"
+                      isLoading={modalPasswordVerifying}
+                      disabled={!modalPassword.trim() || cooldownSeconds > 0}
+                    >
+                      <Key className="w-3.5 h-3.5" />
+                      <span>Unlock & Open</span>
+                    </Button>
+                  </div>
+                </form>
+              )}
             </Card>
           </div>
         );

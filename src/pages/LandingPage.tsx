@@ -43,7 +43,7 @@ export const LandingPage: React.FC = () => {
 
   const handleSampleUnlock = (e: React.FormEvent) => {
     e.preventDefault();
-    if (sampleCode.trim() === '482731') {
+    if (sampleCode.trim() === '4827') {
       setSimulatedUnlock(true);
     } else {
       setSimulatedUnlock(false);
@@ -64,7 +64,7 @@ export const LandingPage: React.FC = () => {
         </h1>
 
         <p className="text-base sm:text-lg text-neutral-600 dark:text-neutral-300 max-w-2xl mx-auto leading-relaxed">
-          Upload PDF guides, cheatsheets, and slides. Generate an instant 6-digit access code. Share your profile link and code across social video captions without sign-up walls for your audience.
+          Upload PDF guides, cheatsheets, and slides. Generate an instant 4-digit access code. Share your profile link and code across social video captions without sign-up walls for your audience.
         </p>
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
@@ -98,7 +98,7 @@ export const LandingPage: React.FC = () => {
         </div>
       </section>
 
-      {/* Interactive 6-Digit Code Demo Box */}
+      {/* Interactive 4-Digit Code Demo Box */}
       <section className="max-w-4xl mx-auto px-4">
         <Card className="p-6 sm:p-8 border-neutral-300 dark:border-neutral-800 bg-white dark:bg-neutral-900/90 shadow-sm space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-neutral-200 dark:border-neutral-800 gap-2">
@@ -111,7 +111,7 @@ export const LandingPage: React.FC = () => {
                   Interactive Code Demo
                 </span>
                 <span className="text-xs text-neutral-500 font-mono">
-                  nullwave.com/demo • 6-Digit Code
+                  nullwave.com/demo • 4-Digit Code
                 </span>
               </div>
             </div>
@@ -128,19 +128,19 @@ export const LandingPage: React.FC = () => {
             <div className="space-y-4">
               <div className="space-y-1">
                 <h3 className="text-sm font-bold text-neutral-900 dark:text-neutral-100">
-                  Try the 6-Digit Unlock Experience
+                  Try the 4-Digit Unlock Experience
                 </h3>
                 <p className="text-xs text-neutral-600 dark:text-neutral-400">
-                  Enter sample code <code className="font-mono font-bold bg-neutral-100 dark:bg-neutral-800 px-1 py-0.5 rounded text-neutral-900 dark:text-neutral-100">482731</code> to simulate instant audience access.
+                  Enter sample code <code className="font-mono font-bold bg-neutral-100 dark:bg-neutral-800 px-1 py-0.5 rounded text-neutral-900 dark:text-neutral-100">4827</code> to simulate instant audience access.
                 </p>
               </div>
 
               <form onSubmit={handleSampleUnlock} className="flex gap-2">
                 <Input
-                  maxLength={6}
+                  maxLength={4}
                   value={sampleCode}
                   onChange={e => setSampleCode(e.target.value.replace(/[^0-9]/g, ''))}
-                  placeholder="482731"
+                  placeholder="4827"
                   className="font-mono text-center tracking-widest text-base font-bold"
                 />
                 <Button type="submit" variant="primary" size="md">
@@ -238,7 +238,7 @@ export const LandingPage: React.FC = () => {
                 1. Upload PDF Guide
               </h3>
               <p className="text-xs sm:text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed">
-                Upload your document (up to 25 MB). NullWave instantly generates an isolated 6-digit numeric access code.
+                Upload your document (up to 25 MB). NullWave instantly generates an isolated 4-digit numeric access code.
               </p>
             </div>
           </Card>
@@ -252,7 +252,7 @@ export const LandingPage: React.FC = () => {
                 2. Share Code in Socials
               </h3>
               <p className="text-xs sm:text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed">
-                Direct followers to your permanent profile link <span className="font-mono text-neutral-900 dark:text-neutral-100">nullwave.com/yourhandle</span> and speak or write the 6-digit code in the video caption.
+                Direct followers to your permanent profile link <span className="font-mono text-neutral-900 dark:text-neutral-100">nullwave.com/yourhandle</span> and speak or write the 4-digit code in the video caption.
               </p>
             </div>
           </Card>
@@ -266,7 +266,7 @@ export const LandingPage: React.FC = () => {
                 3. Zero-Wall Audience Access
               </h3>
               <p className="text-xs sm:text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed">
-                Followers tap your link, type the 6 digits on their phone, and immediately read or download the PDF without signing up.
+                Followers tap your link, type the 4 digits or open directly on their phone, and immediately read or download the PDF without signing up.
               </p>
             </div>
           </Card>

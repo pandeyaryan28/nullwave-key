@@ -62,7 +62,7 @@ export const HowItWorksPage: React.FC = () => {
                 1. Upload Document
               </h3>
               <p className="text-xs sm:text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed">
-                Drop your PDF handbook, guide, or cheatsheet (up to 25 MB) into your creator dashboard. NullWave automatically generates a cryptographically secure 6-digit wave code.
+                Drop your PDF handbook, guide, or cheatsheet (up to 25 MB) into your creator dashboard. NullWave automatically generates a cryptographically secure 4-digit wave code.
               </p>
             </div>
           </Card>
@@ -76,7 +76,7 @@ export const HowItWorksPage: React.FC = () => {
                 2. Share in Video
               </h3>
               <p className="text-xs sm:text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed">
-                Add your profile link in your bio (<span className="font-mono text-neutral-900 dark:text-neutral-100">nullwave.com/yourhandle</span>) and state your 6-digit code in the Reel, Story, or caption.
+                Add your profile link in your bio (<span className="font-mono text-neutral-900 dark:text-neutral-100">nullwave.com/yourhandle</span>) and state your 4-digit code in the Reel, Story, or caption.
               </p>
             </div>
           </Card>
@@ -90,7 +90,7 @@ export const HowItWorksPage: React.FC = () => {
                 3. One Link, Infinite Guides
               </h3>
               <p className="text-xs sm:text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed">
-                Never change your bio link again. Each new guide gets a unique 6-digit code under your single permanent profile link.
+                Never change your bio link again. Each new guide gets a unique 4-digit code under your single permanent profile link.
               </p>
             </div>
           </Card>
@@ -136,7 +136,7 @@ export const HowItWorksPage: React.FC = () => {
               </h3>
             </div>
             <p className="text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed">
-              The viewer enters the 6 digits (e.g. <span className="font-mono font-bold text-neutral-900 dark:text-neutral-100">482731</span>). The platform verifies the code in session memory and opens the PDF immediately for online reading or local file download.
+              The viewer enters the 4 digits (e.g. <span className="font-mono font-bold text-neutral-900 dark:text-neutral-100">4827</span>) or opens the document directly from your profile. The platform verifies access and opens the PDF immediately for online reading or local file download.
             </p>
             <div className="flex items-center gap-2 text-xs text-emerald-700 dark:text-emerald-400 font-medium">
               <FileCheck className="w-4 h-4 shrink-0" />
@@ -166,7 +166,7 @@ export const HowItWorksPage: React.FC = () => {
               </h3>
             </div>
             <p className="text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed">
-              To prevent automated scrapers from guessing 6-digit codes, the client activates an automatic 30-second cooldown timer if 5 invalid codes are submitted consecutively.
+              To prevent automated scrapers from guessing access codes, the client activates an automatic 30-second cooldown timer if 5 invalid codes are submitted consecutively.
             </p>
             <div className="space-y-1.5 text-xs text-neutral-600 dark:text-neutral-400">
               <div className="flex items-center gap-2">

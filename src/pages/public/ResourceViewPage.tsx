@@ -39,6 +39,8 @@ import {
   Check,
   Shield,
   X,
+  Key,
+  Eye,
 } from 'lucide-react';
 
 export const ResourceViewPage: React.FC = () => {
@@ -71,6 +73,13 @@ export const ResourceViewPage: React.FC = () => {
   const [codeError, setCodeError] = useState<string | null>(null);
   const [cooldownSeconds, setCooldownSeconds] = useState<number>(0);
 
+  // Password protection state
+  const [isPasswordUnlocked, setIsPasswordUnlocked] = useState<boolean>(false);
+  const [passwordInput, setPasswordInput] = useState<string>('');
+  const [showPassword, setShowPassword] = useState<boolean>(false);
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [isVerifyingPassword, setIsVerifyingPassword] = useState<boolean>(false);
+
   // Viewer library save state
   const [isSaved, setIsSaved] = useState<boolean>(false);
   const [isSaving, setIsSaving] = useState<boolean>(false);
@@ -86,7 +95,8 @@ export const ResourceViewPage: React.FC = () => {
 
   // Create clean Blob URL for base64 data URLs, Firestore chunks, or Storage URLs
   useEffect(() => {
-    if (!resource?.fileUrl || !isUnlocked) return;
+    const isOwnerUser = Boolean(user && resource && user.uid === resource.creatorId);
+    if (!resource?.fileUrl || !isUnlocked || (resource.password && !isPasswordUnlocked && !isOwnerUser)) return;
 
     let active = true;
     let createdUrl: string | null = null;
@@ -304,7 +314,17 @@ export const ResourceViewPage: React.FC = () => {
 
         setResource(resData);
 
-        // Evaluation: when accessed via the direct 6-digit code URL (/:username/:code),
+        // Password gate evaluation
+        const isOwnerUser = Boolean(user && user.uid === resData.creatorId);
+        const isPwdUnlockedInSession =
+          sessionStorage.getItem(`nullwave_pwd_unlocked_${resData.id}`) === 'true' ||
+          sessionStorage.getItem(`unlockr_pwd_unlocked_${resData.id}`) === 'true';
+
+        if (!resData.password || isPwdUnlockedInSession || isOwnerUser) {
+          setIsPasswordUnlocked(true);
+        }
+
+        // Evaluation: when accessed via direct code URL (/:username/:code),
         // the visitor already possesses the valid access code! Automatically unlock!
         const isDirectCodeAccess = Boolean(code && code.trim() === resData.code);
         const alreadyUnlockedInSession =
@@ -337,7 +357,8 @@ export const ResourceViewPage: React.FC = () => {
 
   // Track page view once unlocked
   useEffect(() => {
-    if (!resource || !isUnlocked) return;
+    const isOwnerUser = Boolean(user && resource && user.uid === resource.creatorId);
+    if (!resource || !isUnlocked || (resource.password && !isPasswordUnlocked && !isOwnerUser)) return;
 
     if (!hasTrackedView.current) {
       hasTrackedView.current = true;
@@ -429,9 +450,64 @@ export const ResourceViewPage: React.FC = () => {
           sessionStorage.setItem(nullwaveAttemptsKey, attempts.toString());
           sessionStorage.setItem(unlockrAttemptsKey, attempts.toString());
         } catch {}
-        setCodeError('Incorrect 6-digit access code. Please check the code shared by the creator.');
+        setCodeError('Incorrect 4-digit access code. Please check the code shared by the creator.');
       }
       setIsVerifying(false);
+    }
+  };
+
+  const handlePasswordSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!resource) return;
+
+    if (cooldownSeconds > 0) {
+      setPasswordError(`Too many failed attempts. Please wait ${cooldownSeconds}s before trying again.`);
+      return;
+    }
+
+    setPasswordError(null);
+    setIsVerifyingPassword(true);
+
+    if (passwordInput === resource.password) {
+      try {
+        sessionStorage.setItem(`nullwave_pwd_unlocked_${resource.id}`, 'true');
+        sessionStorage.setItem(`unlockr_pwd_unlocked_${resource.id}`, 'true');
+      } catch {}
+      setIsPasswordUnlocked(true);
+      setIsVerifyingPassword(false);
+    } else {
+      const identifier = code || publicSlug || resource.code;
+      const nullwaveAttemptsKey = `nullwave_attempts_${cleanUsername}_${identifier}`;
+      const unlockrAttemptsKey = `unlockr_attempts_${cleanUsername}_${identifier}`;
+      const nullwaveCooldownKey = `nullwave_cooldown_${cleanUsername}_${identifier}`;
+      const unlockrCooldownKey = `unlockr_cooldown_${cleanUsername}_${identifier}`;
+
+      let attempts = 0;
+      try {
+        const stored = sessionStorage.getItem(nullwaveAttemptsKey) || sessionStorage.getItem(unlockrAttemptsKey);
+        attempts = stored ? parseInt(stored, 10) : 0;
+      } catch {}
+      attempts += 1;
+
+      if (attempts >= 5) {
+        const cooldownDurationMs = 30000;
+        const expiresAt = Date.now() + cooldownDurationMs;
+        try {
+          sessionStorage.setItem(nullwaveCooldownKey, expiresAt.toString());
+          sessionStorage.setItem(unlockrCooldownKey, expiresAt.toString());
+          sessionStorage.removeItem(nullwaveAttemptsKey);
+          sessionStorage.removeItem(unlockrAttemptsKey);
+        } catch {}
+        setCooldownSeconds(30);
+        setPasswordError('Incorrect password. Too many failed attempts, please wait 30 seconds.');
+      } else {
+        try {
+          sessionStorage.setItem(nullwaveAttemptsKey, attempts.toString());
+          sessionStorage.setItem(unlockrAttemptsKey, attempts.toString());
+        } catch {}
+        setPasswordError('Incorrect password. Please verify with the creator.');
+      }
+      setIsVerifyingPassword(false);
     }
   };
 
@@ -598,7 +674,7 @@ export const ResourceViewPage: React.FC = () => {
             </Button>
 
             {/* Save to Library Button (for viewers when creator allows saving) */}
-            {isUnlocked && allowSave && (
+            {isUnlocked && (!resource.password || isPasswordUnlocked || isOwner) && allowSave && (
               <Button
                 size="sm"
                 variant={isSaved ? 'secondary' : 'outline'}
@@ -613,7 +689,7 @@ export const ResourceViewPage: React.FC = () => {
             )}
 
             {/* Download Button */}
-            {isUnlocked ? (
+            {isUnlocked && (!resource.password || isPasswordUnlocked || isOwner) ? (
               allowDownload ? (
                 <Button
                   size="sm"
@@ -631,6 +707,11 @@ export const ResourceViewPage: React.FC = () => {
                   <span>View Only</span>
                 </Badge>
               )
+            ) : resource.password && !isPasswordUnlocked && !isOwner ? (
+              <div className="text-xs text-neutral-500 flex items-center gap-1.5 font-medium">
+                <Key className="w-3.5 h-3.5" />
+                <span>Password Protected</span>
+              </div>
             ) : (
               <div className="text-xs text-neutral-500 flex items-center gap-1.5 font-medium">
                 <Shield className="w-3.5 h-3.5" />
@@ -668,6 +749,12 @@ export const ResourceViewPage: React.FC = () => {
                 <Badge variant="error" className="flex items-center gap-1">
                   <Users className="w-3 h-3" />
                   <span>Capacity Cap Reached</span>
+                </Badge>
+              )}
+              {resource.password && (
+                <Badge variant="neutral" className="flex items-center gap-1">
+                  <Key className="w-3 h-3" />
+                  <span>Password Protected</span>
                 </Badge>
               )}
               <span className="text-xs text-neutral-500 dark:text-neutral-400 flex items-center gap-1">
@@ -762,7 +849,7 @@ export const ResourceViewPage: React.FC = () => {
           </div>
         )}
 
-        {/* Gated Access: 6-Digit Code Input OR Native PDF Document Reader */}
+        {/* Gated Access: 4-Digit Code Input OR Password Gate OR Native PDF Document Reader */}
         {!isUnlocked ? (
           <Card className="p-8 text-center border-neutral-300 dark:border-neutral-700 shadow-sm max-w-lg mx-auto">
             <div className="w-12 h-12 rounded-md bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 flex items-center justify-center mx-auto mb-4 border border-neutral-200 dark:border-neutral-700">
@@ -778,7 +865,7 @@ export const ResourceViewPage: React.FC = () => {
                 ? 'Document Expired'
                 : isCapacityReached && !isOwner
                 ? 'Capacity Reached'
-                : 'Enter 6-Digit Code'}
+                : 'Enter 4-Digit Code'}
             </h2>
 
             <p className="text-xs text-neutral-500 dark:text-neutral-400 mb-6 max-w-sm mx-auto">
@@ -786,7 +873,7 @@ export const ResourceViewPage: React.FC = () => {
                 ? 'This guide was time-limited and is no longer open for access.'
                 : isCapacityReached && !isOwner
                 ? 'This document has reached maximum viewer capacity.'
-                : `This document is protected. Enter the 6-digit access code shared by ${
+                : `This document is protected. Enter the 4-digit access code shared by ${
                     creator.displayName || creator.username
                   } to view.`}
             </p>
@@ -807,7 +894,7 @@ export const ResourceViewPage: React.FC = () => {
               </div>
             ) : (
               <CodeInput
-                length={6}
+                length={4}
                 onComplete={handleInlineCodeSubmit}
                 onChange={() => {
                   if (codeError) setCodeError(null);
@@ -818,6 +905,78 @@ export const ResourceViewPage: React.FC = () => {
                 autoFocus={true}
               />
             )}
+
+            <div className="mt-6 pt-4 border-t border-neutral-100 dark:border-neutral-800">
+              <Link
+                to={`/${creator.username}`}
+                className="text-xs text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors"
+              >
+                View all documents by {creator.displayName || creator.username} →
+              </Link>
+            </div>
+          </Card>
+        ) : resource.password && !isPasswordUnlocked && !isOwner ? (
+          /* Password Protection Gate */
+          <Card className="p-8 text-center border-neutral-300 dark:border-neutral-700 shadow-sm max-w-lg mx-auto">
+            <div className="w-12 h-12 rounded-md bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 flex items-center justify-center mx-auto mb-4 border border-neutral-200 dark:border-neutral-700">
+              <Key className="w-6 h-6" />
+            </div>
+
+            <h2 className="text-lg font-bold text-neutral-900 dark:text-neutral-100 mb-1">
+              Password Protected Document
+            </h2>
+
+            <p className="text-xs text-neutral-500 dark:text-neutral-400 mb-6 max-w-sm mx-auto">
+              This document requires an access password set by {creator.displayName || creator.username}. Enter the password to view and download.
+            </p>
+
+            {cooldownSeconds > 0 && (
+              <div className="mb-4 p-2.5 rounded-md bg-amber-50 dark:bg-amber-950/40 text-xs text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
+                Rate limit cooldown active. Please wait {cooldownSeconds}s before trying again.
+              </div>
+            )}
+
+            <form onSubmit={handlePasswordSubmit} className="space-y-4 max-w-sm mx-auto">
+              <div className="relative">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  value={passwordInput}
+                  onChange={e => {
+                    setPasswordInput(e.target.value);
+                    if (passwordError) setPasswordError(null);
+                  }}
+                  placeholder="Enter document password"
+                  autoFocus
+                  disabled={cooldownSeconds > 0}
+                  className="w-full h-10 px-3 pr-10 text-xs rounded-md border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100 placeholder-neutral-400 focus:outline-none focus:ring-1 focus:ring-neutral-400"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200"
+                  title={showPassword ? 'Hide password' : 'Show password'}
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+
+              {passwordError && (
+                <p className="text-xs font-medium text-red-600 dark:text-red-400 text-left">
+                  {passwordError}
+                </p>
+              )}
+
+              <Button
+                type="submit"
+                variant="primary"
+                className="w-full"
+                isLoading={isVerifyingPassword}
+                disabled={!passwordInput.trim() || cooldownSeconds > 0}
+              >
+                <Key className="w-4 h-4" />
+                <span>Unlock Document</span>
+              </Button>
+            </form>
 
             <div className="mt-6 pt-4 border-t border-neutral-100 dark:border-neutral-800">
               <Link

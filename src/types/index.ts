@@ -36,7 +36,7 @@ export interface Resource {
   creatorId: string; // creator uid
   creatorUsername: string; // for query convenience
   publicSlug: string; // safe public URL slug (e.g. "startup-gtm-guide-8k2p")
-  code: string; // 6-digit numeric string, e.g. "482731"
+  code: string; // 4-digit numeric string (e.g. "4827"), also supports legacy 6-digit codes
   title: string;
   description: string;
   category?: string;
@@ -60,6 +60,7 @@ export interface Resource {
   isPinned?: boolean; // defaults to false; featured at top of profile
   expiresAt?: number | null; // optional expiration timestamp ms
   maxUnlocks?: number | null; // optional cap on total unlocks
+  password?: string | null; // optional password protection for sensitive or exclusive documents
 }
 
 export interface SavedResource {

@@ -85,7 +85,7 @@ export const SignupPage: React.FC = () => {
             Create Your Account
           </h1>
           <p className="text-xs text-neutral-500 dark:text-neutral-400">
-            Start sharing and accessing documents with simple 6-digit access codes.
+            Start sharing and accessing documents with simple 4-digit access codes.
           </p>
         </div>
 

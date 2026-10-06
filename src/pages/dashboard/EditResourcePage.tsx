@@ -13,7 +13,9 @@ import {
   Check,
   AlertCircle,
   SlidersHorizontal,
+  Eye,
   EyeOff,
+  Key,
   Pin,
   Clock,
   Users,
@@ -21,7 +23,7 @@ import {
   Radio,
   ChevronDown,
 } from 'lucide-react';
-import { generateSixDigitCode, isCodeInUseByCreator } from '../../lib/utils/codeGenerator';
+import { generateFourDigitCode, isCodeInUseByCreator } from '../../lib/utils/codeGenerator';
 
 export const EditResourcePage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -49,6 +51,9 @@ export const EditResourcePage: React.FC = () => {
   const [expirationDate, setExpirationDate] = useState<string>('');
   const [hasCapacityCap, setHasCapacityCap] = useState<boolean>(false);
   const [maxUnlocks, setMaxUnlocks] = useState<string>('');
+  const [hasPassword, setHasPassword] = useState<boolean>(false);
+  const [password, setPassword] = useState<string>('');
+  const [showPassword, setShowPassword] = useState<boolean>(false);
 
   useEffect(() => {
     if (!id || !user) return;
@@ -95,6 +100,11 @@ export const EditResourcePage: React.FC = () => {
         setIsPublicListing(data.isPublicListing !== false);
         setIsPinned(Boolean(data.isPinned));
 
+        if (data.password) {
+          setHasPassword(true);
+          setPassword(data.password);
+        }
+
         if (data.expiresAt) {
           setHasExpiration(true);
           const d = new Date(data.expiresAt);
@@ -120,7 +130,7 @@ export const EditResourcePage: React.FC = () => {
   }, [id, user]);
 
   const handleGenerateRandomCode = () => {
-    setCode(generateSixDigitCode());
+    setCode(generateFourDigitCode());
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -128,19 +138,21 @@ export const EditResourcePage: React.FC = () => {
     if (!id || !resource || !user) return;
 
     const cleanCode = code.trim();
-    if (!/^\d{6}$/.test(cleanCode)) {
-      setError('Access code must be exactly 6 numeric digits (e.g. 582910).');
-      return;
-    }
-    const numCode = parseInt(cleanCode, 10);
-    if (numCode < 100000 || numCode > 999999) {
-      setError('Access code must be between 100000 and 999999.');
+    const isFourDigit = /^\d{4}$/.test(cleanCode) && parseInt(cleanCode, 10) >= 1000 && parseInt(cleanCode, 10) <= 9999;
+    const isLegacySixDigit = /^\d{6}$/.test(cleanCode) && parseInt(cleanCode, 10) >= 100000 && parseInt(cleanCode, 10) <= 999999;
+    if (!isFourDigit && !isLegacySixDigit) {
+      setError('Access code must be 4 numeric digits (1000–9999) or legacy 6 numeric digits (100000–999999).');
       return;
     }
 
     const isCodeTaken = await isCodeInUseByCreator(user.uid, cleanCode, id);
     if (isCodeTaken) {
-      setError('This 6-digit access code is already assigned to another active resource. Please choose a different code.');
+      setError('This access code is already assigned to another active resource. Please choose a different code.');
+      return;
+    }
+
+    if (hasPassword && !password.trim()) {
+      setError('Please enter a password for this document, or uncheck password protection.');
       return;
     }
 
@@ -184,6 +196,7 @@ export const EditResourcePage: React.FC = () => {
         isPinned,
         expiresAt: expiresAtTimestamp,
         maxUnlocks: maxUnlocksCount,
+        password: hasPassword && password.trim() ? password.trim() : null,
         updatedAt: Date.now(),
       };
 
@@ -299,7 +312,7 @@ export const EditResourcePage: React.FC = () => {
                   onChange={() => setStatus('active')}
                   className="rounded text-neutral-900 dark:text-neutral-100"
                 />
-                <span>Active (accessible via 6-digit code)</span>
+                <span>Active (accessible via 4-digit code)</span>
               </label>
 
               <label className="flex items-center gap-2 text-sm text-neutral-800 dark:text-neutral-200 cursor-pointer">
@@ -397,7 +410,7 @@ export const EditResourcePage: React.FC = () => {
                         )}
                       </span>
                       <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">
-                        When unchecked, this resource is unlisted and hidden from your public profile feed. Only visitors with the direct link or 6-digit code can access it.
+                        When unchecked, this resource is unlisted and hidden from your public profile feed. Only visitors with the direct link or access code can access it.
                       </p>
                     </div>
                   </label>
@@ -490,16 +503,59 @@ export const EditResourcePage: React.FC = () => {
                   )}
                 </div>
 
-                {/* 7. Custom 6-Digit Code */}
+                {/* 7. Password Protection */}
+                <div className="space-y-2 pt-2 border-t border-neutral-200/60 dark:border-neutral-800/60">
+                  <label className="flex items-start gap-2.5 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={hasPassword}
+                      onChange={e => setHasPassword(e.target.checked)}
+                      className="mt-0.5 rounded border-neutral-300 dark:border-neutral-700 text-neutral-900 dark:text-neutral-100 focus:ring-neutral-500"
+                    />
+                    <div>
+                      <span className="text-sm font-medium text-neutral-900 dark:text-neutral-100 flex items-center gap-1.5">
+                        <Key className="w-3.5 h-3.5 text-neutral-500" />
+                        <span>Protect document with a password</span>
+                      </span>
+                      <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">
+                        Requires visitors to enter this password before they can view or download the document.
+                      </p>
+                    </div>
+                  </label>
+
+                  {hasPassword && (
+                    <div className="pl-6 pt-1 max-w-xs">
+                      <div className="relative">
+                        <input
+                          type={showPassword ? 'text' : 'password'}
+                          placeholder="Enter document password"
+                          value={password}
+                          onChange={e => setPassword(e.target.value)}
+                          className="w-full h-10 pl-3 pr-10 py-2 text-xs rounded-md border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100 font-mono"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="absolute right-2.5 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200"
+                          title={showPassword ? 'Hide password' : 'Show password'}
+                        >
+                          {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* 8. Access Code */}
                 <div className="space-y-2 pt-2 border-t border-neutral-200/60 dark:border-neutral-800/60">
                   <div className="flex items-start gap-2.5">
                     <Radio className="w-4 h-4 text-neutral-500 mt-0.5 shrink-0" />
                     <div className="flex-1">
                       <span className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
-                        6-Digit Access Code
+                        4-Digit Access Code
                       </span>
                       <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">
-                        The numeric access code viewers enter on your profile to unlock this document.
+                        The numeric access code (4-digit, or legacy 6-digit) viewers enter to quickly jump to this document.
                       </p>
                     </div>
                   </div>
@@ -508,20 +564,20 @@ export const EditResourcePage: React.FC = () => {
                     <input
                       type="text"
                       maxLength={6}
-                      placeholder="e.g. 582910"
+                      placeholder="e.g. 4827"
                       value={code}
                       onChange={e => {
                         const val = e.target.value.replace(/\D/g, '').slice(0, 6);
                         setCode(val);
                       }}
-                      className="w-36 h-10 px-3 py-2 text-base font-mono font-bold tracking-widest text-center rounded-md border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100"
+                      className="w-32 h-10 px-3 py-2 text-base font-mono font-bold tracking-widest text-center rounded-md border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100"
                     />
                     <Button
                       type="button"
                       size="sm"
                       variant="outline"
                       onClick={handleGenerateRandomCode}
-                      title="Generate new random code"
+                      title="Generate new 4-digit random code"
                     >
                       <RefreshCw className="w-3.5 h-3.5" />
                       <span>Random</span>

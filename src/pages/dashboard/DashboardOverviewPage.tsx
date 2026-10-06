@@ -29,6 +29,7 @@ import {
   ArrowRight,
   Bookmark,
   Edit,
+  Key,
 } from 'lucide-react';
 
 export const DashboardOverviewPage: React.FC = () => {
@@ -304,7 +305,7 @@ export const DashboardOverviewPage: React.FC = () => {
           {activeTab === 'uploads' && resources.length > 0 && (
             <div className="relative w-full sm:w-64">
               <Input
-                placeholder="Search by title or 6-digit code..."
+                placeholder="Search by title or access code..."
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
                 className="pl-8 text-xs h-9"
@@ -326,7 +327,7 @@ export const DashboardOverviewPage: React.FC = () => {
                   No documents uploaded yet
                 </h2>
                 <p className="text-sm text-neutral-600 dark:text-neutral-400 max-w-md mx-auto mb-6">
-                  Upload your first PDF document to generate an isolated 6-digit access code and canonical link to share with your audience.
+                  Upload your first PDF document to generate an isolated 4-digit access code and canonical link to share with your audience.
                 </p>
                 <Button
                   size="md"
@@ -373,6 +374,12 @@ export const DashboardOverviewPage: React.FC = () => {
                               Pinned
                             </Badge>
                           )}
+                          {res.password && (
+                            <Badge variant="neutral" className="text-[10px] flex items-center gap-1">
+                              <Key className="w-2.5 h-2.5" />
+                              <span>Password Protected</span>
+                            </Badge>
+                          )}
                         </div>
 
                         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-neutral-500 dark:text-neutral-400">
@@ -389,11 +396,11 @@ export const DashboardOverviewPage: React.FC = () => {
 
                     {/* Actions: Code Badge, 1-Click Link Copy, Edit, View */}
                     <div className="flex items-center gap-2.5 shrink-0 self-end sm:self-center">
-                      {/* Click-to-copy 6-digit access code */}
+                      {/* Click-to-copy access code */}
                       <button
                         type="button"
                         onClick={() => copyCode(res.id, res.code)}
-                        title="Click to copy 6-digit code"
+                        title="Click to copy access code"
                         className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md border border-neutral-300 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors text-xs font-mono font-bold text-neutral-900 dark:text-neutral-100 cursor-pointer"
                       >
                         <span className="tracking-wider">{res.code}</span>

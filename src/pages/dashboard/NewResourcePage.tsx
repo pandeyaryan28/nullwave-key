@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { collection, doc, setDoc } from 'firebase/firestore';
 import { db } from '../../lib/firebase/config';
 import { useAuth } from '../../lib/auth/authContext';
-import { getUniqueCodeForCreator, generateSixDigitCode, isCodeInUseByCreator } from '../../lib/utils/codeGenerator';
+import { getUniqueCodeForCreator, generateFourDigitCode, isCodeInUseByCreator } from '../../lib/utils/codeGenerator';
 import { generatePublicSlug } from '../../lib/utils/slugify';
 import { uploadResourceFile, uploadImageFile, MAX_PDF_SIZE_BYTES } from '../../lib/storage/storageService';
 import { Resource } from '../../types';
@@ -22,7 +22,9 @@ import {
   AlertCircle,
   SlidersHorizontal,
   RefreshCw,
+  Eye,
   EyeOff,
+  Key,
   Pin,
   Clock,
   Users,
@@ -52,6 +54,9 @@ export const NewResourcePage: React.FC = () => {
   const [maxUnlocks, setMaxUnlocks] = useState<string>('');
   const [useCustomCode, setUseCustomCode] = useState<boolean>(false);
   const [customCode, setCustomCode] = useState<string>('');
+  const [hasPassword, setHasPassword] = useState<boolean>(false);
+  const [password, setPassword] = useState<string>('');
+  const [showPassword, setShowPassword] = useState<boolean>(false);
 
   // Processing state
   const [isUploading, setIsUploading] = useState<boolean>(false);
@@ -97,7 +102,7 @@ export const NewResourcePage: React.FC = () => {
   };
 
   const handleGenerateRandomCode = () => {
-    setCustomCode(generateSixDigitCode());
+    setCustomCode(generateFourDigitCode());
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -117,15 +122,20 @@ export const NewResourcePage: React.FC = () => {
 
     if (useCustomCode) {
       const clean = customCode.trim();
-      if (!/^\d{6}$/.test(clean)) {
-        setError('Custom access code must be exactly 6 numeric digits (e.g. 582910).');
+      if (!/^\d{4}$/.test(clean)) {
+        setError('Custom access code must be exactly 4 numeric digits (e.g. 4827).');
         return;
       }
       const num = parseInt(clean, 10);
-      if (num < 100000 || num > 999999) {
-        setError('Custom code must be between 100000 and 999999.');
+      if (num < 1000 || num > 9999) {
+        setError('Custom code must be between 1000 and 9999.');
         return;
       }
+    }
+
+    if (hasPassword && !password.trim()) {
+      setError('Please enter a password for this document, or uncheck password protection.');
+      return;
     }
 
     let expiresAtTimestamp: number | null = null;
@@ -157,13 +167,13 @@ export const NewResourcePage: React.FC = () => {
     setUploadProgress(10);
 
     try {
-      // 1. Determine 6-digit access code
+      // 1. Determine 4-digit access code
       let code = '';
       if (useCustomCode) {
         code = customCode.trim();
         const codeTaken = await isCodeInUseByCreator(user.uid, code);
         if (codeTaken) {
-          setError('This 6-digit access code is already assigned to one of your active resources. Please choose a different code.');
+          setError('This 4-digit access code is already assigned to one of your active resources. Please choose a different code.');
           setIsUploading(false);
           return;
         }
@@ -219,6 +229,7 @@ export const NewResourcePage: React.FC = () => {
         isPinned,
         expiresAt: expiresAtTimestamp,
         maxUnlocks: maxUnlocksCount,
+        password: hasPassword && password.trim() ? password.trim() : null,
       };
 
       if (category.trim()) {
@@ -285,10 +296,10 @@ export const NewResourcePage: React.FC = () => {
             Your document is live and ready to share with your audience.
           </p>
 
-          {/* Prominent 6-Digit Code Box */}
+          {/* Prominent 4-Digit Code Box */}
           <div className="p-6 rounded-lg bg-neutral-100 dark:bg-neutral-800/80 border border-neutral-300 dark:border-neutral-700 mb-6">
             <p className="text-xs font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400 mb-2">
-              6-Digit Access Code
+              4-Digit Access Code
             </p>
             <div className="text-4xl sm:text-5xl font-mono font-bold tracking-widest text-neutral-950 dark:text-neutral-50 my-2">
               {createdResource.code}
@@ -308,6 +319,12 @@ export const NewResourcePage: React.FC = () => {
 
           {/* Distribution Badges Summary */}
           <div className="flex flex-wrap items-center justify-center gap-2 mb-6">
+            {createdResource.password && (
+              <span className="px-2.5 py-1 text-xs font-medium rounded-md bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 border border-neutral-200 dark:border-neutral-700 flex items-center gap-1">
+                <Key className="w-3 h-3" />
+                <span>Password Protected</span>
+              </span>
+            )}
             {!createdResource.allowDownload && (
               <span className="px-2.5 py-1 text-xs font-medium rounded-md bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
                 View Only (Downloads Disabled)
@@ -573,7 +590,7 @@ export const NewResourcePage: React.FC = () => {
                         )}
                       </span>
                       <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">
-                        When unchecked, this resource is hidden from your public profile feed. Only visitors given the direct link or 6-digit code can unlock it.
+                        When unchecked, this resource is hidden from your public profile feed. Only visitors given the direct link or access code can unlock it.
                       </p>
                     </div>
                   </label>
@@ -666,7 +683,50 @@ export const NewResourcePage: React.FC = () => {
                   )}
                 </div>
 
-                {/* 7. Custom 6-Digit Code */}
+                {/* 7. Password Protection */}
+                <div className="space-y-2 pt-2 border-t border-neutral-200/60 dark:border-neutral-800/60">
+                  <label className="flex items-start gap-2.5 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={hasPassword}
+                      onChange={e => setHasPassword(e.target.checked)}
+                      className="mt-0.5 rounded border-neutral-300 dark:border-neutral-700 text-neutral-900 dark:text-neutral-100 focus:ring-neutral-500"
+                    />
+                    <div>
+                      <span className="text-sm font-medium text-neutral-900 dark:text-neutral-100 flex items-center gap-1.5">
+                        <Key className="w-3.5 h-3.5 text-neutral-500" />
+                        <span>Protect document with a password</span>
+                      </span>
+                      <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">
+                        Requires visitors to enter this password before they can view or download the document.
+                      </p>
+                    </div>
+                  </label>
+
+                  {hasPassword && (
+                    <div className="pl-6 pt-1 max-w-xs">
+                      <div className="relative">
+                        <input
+                          type={showPassword ? 'text' : 'password'}
+                          placeholder="Enter document password"
+                          value={password}
+                          onChange={e => setPassword(e.target.value)}
+                          className="w-full h-10 pl-3 pr-10 py-2 text-xs rounded-md border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100 font-mono"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="absolute right-2.5 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200"
+                          title={showPassword ? 'Hide password' : 'Show password'}
+                        >
+                          {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* 8. Custom 4-Digit Code */}
                 <div className="space-y-2 pt-2 border-t border-neutral-200/60 dark:border-neutral-800/60">
                   <label className="flex items-start gap-2.5 cursor-pointer">
                     <input
@@ -675,17 +735,17 @@ export const NewResourcePage: React.FC = () => {
                       onChange={e => {
                         setUseCustomCode(e.target.checked);
                         if (e.target.checked && !customCode) {
-                          setCustomCode(generateSixDigitCode());
+                          setCustomCode(generateFourDigitCode());
                         }
                       }}
                       className="mt-0.5 rounded border-neutral-300 dark:border-neutral-700 text-neutral-900 dark:text-neutral-100 focus:ring-neutral-500"
                     />
                     <div>
                       <span className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
-                        Set custom 6-digit access code
+                        Set custom 4-digit access code
                       </span>
                       <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">
-                        Pick a memorable 6-digit numeric access code for your audience (defaults to auto-generated).
+                        Pick a memorable 4-digit numeric access code for your audience (range 1000–9999).
                       </p>
                     </div>
                   </label>
@@ -694,14 +754,14 @@ export const NewResourcePage: React.FC = () => {
                     <div className="pl-6 pt-1 flex items-center gap-2 max-w-xs">
                       <input
                         type="text"
-                        maxLength={6}
-                        placeholder="e.g. 582910"
+                        maxLength={4}
+                        placeholder="e.g. 4827"
                         value={customCode}
                         onChange={e => {
-                          const val = e.target.value.replace(/\D/g, '').slice(0, 6);
+                          const val = e.target.value.replace(/\D/g, '').slice(0, 4);
                           setCustomCode(val);
                         }}
-                        className="w-36 h-10 px-3 py-2 text-base font-mono font-bold tracking-widest text-center rounded-md border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100"
+                        className="w-32 h-10 px-3 py-2 text-base font-mono font-bold tracking-widest text-center rounded-md border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100"
                       />
                       <Button
                         type="button"

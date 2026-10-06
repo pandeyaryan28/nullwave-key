@@ -29,6 +29,7 @@ import {
   EyeOff,
   Clock,
   Users,
+  Key,
 } from 'lucide-react';
 
 export const ResourcesListPage: React.FC = () => {
@@ -150,7 +151,7 @@ export const ResourcesListPage: React.FC = () => {
             No resources yet
           </h2>
           <p className="text-sm text-neutral-600 dark:text-neutral-400 max-w-sm mx-auto mb-6">
-            Upload your first guide or document to generate its 6-digit access code.
+            Upload your first guide or document to generate its 4-digit access code.
           </p>
           <Button
             size="md"
@@ -191,6 +192,12 @@ export const ResourcesListPage: React.FC = () => {
                       <Badge variant={res.status === 'active' ? 'success' : 'neutral'}>
                         {res.status}
                       </Badge>
+                      {res.password && (
+                        <Badge variant="neutral" className="text-[10px] py-0 px-1.5 flex items-center gap-1">
+                          <Key className="w-2.5 h-2.5" />
+                          <span>Password Protected</span>
+                        </Badge>
+                      )}
                       {res.isPinned && (
                         <Badge variant="success" className="text-[10px] py-0 px-1.5 flex items-center gap-1">
                           <Pin className="w-2.5 h-2.5" />

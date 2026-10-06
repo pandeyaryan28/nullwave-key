@@ -3,24 +3,29 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { generateSixDigitCode } from '../lib/utils/codeGenerator.ts';
+import { generateFourDigitCode, generateSixDigitCode } from '../lib/utils/codeGenerator.ts';
 import { generatePublicSlug } from '../lib/utils/slugify.ts';
 import { evaluateUniquenessWindow, type StorageLike } from '../lib/analytics/tracker.ts';
 import { MAX_PDF_SIZE_BYTES, MAX_IMAGE_SIZE_BYTES } from '../lib/storage/storageService.ts';
 
-// Test 1: Real Production 6-Digit Code Generator
-test('generateSixDigitCode produces valid 6-digit numeric strings in range 100000-999999', () => {
+// Test 1: Real Production 4-Digit Code Generator and Backwards Compatibility Alias
+test('generateFourDigitCode produces valid 4-digit numeric strings in range 1000-9999 and generateSixDigitCode aliases it', () => {
   const codes = new Set<string>();
   for (let i = 0; i < 100; i++) {
-    const code = generateSixDigitCode();
-    assert.equal(code.length, 6, 'Code must be exactly 6 digits');
-    assert.match(code, /^\d{6}$/, 'Code must contain only numeric digits');
+    const code = generateFourDigitCode();
+    assert.equal(code.length, 4, 'Code must be exactly 4 digits');
+    assert.match(code, /^\d{4}$/, 'Code must contain only numeric digits');
     const num = parseInt(code, 10);
-    assert.ok(num >= 100000 && num <= 999999, 'Code must be >= 100000 and <= 999999');
+    assert.ok(num >= 1000 && num <= 9999, 'Code must be >= 1000 and <= 9999');
     codes.add(code);
   }
-  // Across 100 generations, we should have high entropy (at least 90 distinct codes)
-  assert.ok(codes.size >= 90, 'Codes should exhibit high cryptographic entropy');
+  // Across 100 generations, we should have high entropy (at least 85 distinct codes)
+  assert.ok(codes.size >= 85, 'Codes should exhibit high cryptographic entropy');
+
+  // Verify backwards-compatible alias generateSixDigitCode produces 4-digit codes
+  const legacyAliasCode = generateSixDigitCode();
+  assert.equal(legacyAliasCode.length, 4, 'Legacy alias must generate 4 digits in v2.5.0');
+  assert.match(legacyAliasCode, /^\d{4}$/, 'Legacy alias must match 4 digits');
 });
 
 // Test 2: Real Production Slug Generator
@@ -156,26 +161,28 @@ test('username sanitization strips @ prefix and normalizes to clean public URL p
   );
 });
 
-// Test 7: Public 6-Digit Code Verification & Session Storage Gating
-test('public document 6-digit code verification unlocks document in sessionStorage without sign-in', () => {
+// Test 7: Public 4-Digit Code Verification & Session Storage Gating
+test('public document 4-digit code verification unlocks document in sessionStorage without sign-in', () => {
   const mockStore = new Map<string, string>();
   const resourceId = 'res_cv_9918';
-  const secretCode = '209797';
+  const secretCode = '2097';
 
-  const isUnlocked = () => mockStore.get(`unlockr_unlocked_${resourceId}`) === 'true';
+  const isUnlocked = () =>
+    mockStore.get(`nullwave_unlocked_${resourceId}`) === 'true' ||
+    mockStore.get(`unlockr_unlocked_${resourceId}`) === 'true';
 
   // Initially locked
   assert.equal(isUnlocked(), false, 'Document must be locked initially');
 
   // Verify with incorrect code
   const verifyAttempt1 = (entered: string) => entered.trim() === secretCode;
-  assert.equal(verifyAttempt1('123456'), false, 'Wrong code must fail');
+  assert.equal(verifyAttempt1('1234'), false, 'Wrong code must fail');
   assert.equal(isUnlocked(), false, 'Document must remain locked on wrong code');
 
   // Verify with correct code
   const result = verifyAttempt1(secretCode);
   assert.equal(result, true, 'Correct code must pass');
-  mockStore.set(`unlockr_unlocked_${resourceId}`, 'true');
+  mockStore.set(`nullwave_unlocked_${resourceId}`, 'true');
 
   assert.equal(isUnlocked(), true, 'Document must be unlocked in session without user login');
 });
@@ -469,33 +476,51 @@ test('isPublicListing hides unlisted resources from public profile feed unless u
   assert.equal(feed2.length, 3, 'Feed should now include unlocked r2');
 });
 
-// Test 17: Custom 6-Digit Access Code Validation
-test('custom 6-digit access code validator enforces exactly 6 numeric digits', () => {
+// Test 17: Custom Access Code Validation (4-digit in v2.5.0, with legacy 6-digit support in edit)
+test('custom access code validator enforces exactly 4 numeric digits (1000-9999) and supports legacy 6-digit in edit', () => {
   const validateCustomCode = (raw: string): { valid: boolean; code?: string; error?: string } => {
     const trimmed = raw.trim();
-    if (!/^\d{6}$/.test(trimmed)) {
-      return { valid: false, error: 'Code must be exactly 6 numeric digits' };
+    if (!/^\d{4}$/.test(trimmed)) {
+      return { valid: false, error: 'Code must be exactly 4 numeric digits' };
     }
     const num = parseInt(trimmed, 10);
-    if (num < 100000 || num > 999999) {
-      return { valid: false, error: 'Code must be in range 100000-999999' };
+    if (num < 1000 || num > 9999) {
+      return { valid: false, error: 'Code must be in range 1000-9999' };
     }
     return { valid: true, code: trimmed };
   };
 
-  // Valid codes
-  assert.equal(validateCustomCode('100000').valid, true);
-  assert.equal(validateCustomCode('582910').valid, true);
-  assert.equal(validateCustomCode('999999').valid, true);
-  assert.equal(validateCustomCode(' 482910 ').valid, true);
+  // Valid 4-digit codes
+  assert.equal(validateCustomCode('1000').valid, true);
+  assert.equal(validateCustomCode('5829').valid, true);
+  assert.equal(validateCustomCode('9999').valid, true);
+  assert.equal(validateCustomCode(' 4829 ').valid, true);
 
   // Invalid codes
   assert.equal(validateCustomCode('').valid, false);
+  assert.equal(validateCustomCode('123').valid, false); // 3 digits
   assert.equal(validateCustomCode('12345').valid, false); // 5 digits
-  assert.equal(validateCustomCode('1234567').valid, false); // 7 digits
-  assert.equal(validateCustomCode('099999').valid, false); // < 100000
-  assert.equal(validateCustomCode('12a456').valid, false); // non-numeric
-  assert.equal(validateCustomCode('abcdef').valid, false); // letters
+  assert.equal(validateCustomCode('0999').valid, false); // < 1000
+  assert.equal(validateCustomCode('12a4').valid, false); // non-numeric
+  assert.equal(validateCustomCode('abcd').valid, false); // letters
+
+  // Edit validator accepting 4-digit or legacy 6-digit codes
+  const validateEditCode = (raw: string): { valid: boolean } => {
+    const trimmed = raw.trim();
+    if (/^\d{4}$/.test(trimmed)) {
+      const num = parseInt(trimmed, 10);
+      return { valid: num >= 1000 && num <= 9999 };
+    }
+    if (/^\d{6}$/.test(trimmed)) {
+      const num = parseInt(trimmed, 10);
+      return { valid: num >= 100000 && num <= 999999 };
+    }
+    return { valid: false };
+  };
+  assert.equal(validateEditCode('4827').valid, true);
+  assert.equal(validateEditCode('482731').valid, true);
+  assert.equal(validateEditCode('123').valid, false);
+  assert.equal(validateEditCode('12345').valid, false);
 });
 
 // Test 18: Multi-Social Links Normalization and Legacy Compatibility
@@ -762,48 +787,51 @@ test('stripUndefined recursively purges undefined keys to prevent Firestore runt
   assert.deepEqual(cleaned.tags, ['tag1', 'tag2']);
 });
 
-// Test 23: Canonical Document URLs formatted as url/username/six-digit-code (v2.2.0 Requirement 5)
-test('canonical document URL generator formats as url/username/six-digit-code and rejects legacy extensions', () => {
+// Test 23: Canonical Document URLs formatted as url/username/code (v2.5.0)
+test('canonical document URL generator formats as url/username/code and rejects legacy extensions', () => {
   const buildCanonicalDocumentUrl = (origin: string, username: string, code: string) => {
     const cleanUser = username.replace(/^(?:@|%40)+/, '').toLowerCase().trim();
     const cleanCode = code.trim();
-    if (!/^\d{6}$/.test(cleanCode)) {
-      throw new Error('Code must be a 6-digit numeric string');
+    if (!/^\d{4}$/.test(cleanCode) && !/^\d{6}$/.test(cleanCode)) {
+      throw new Error('Code must be a 4-digit or legacy 6-digit numeric string');
     }
     return `${origin.replace(/\/+$/, '')}/${cleanUser}/${cleanCode}`;
   };
 
   const origin = 'https://unlockr.com';
-  const url = buildCanonicalDocumentUrl(origin, 'aryan', '482731');
-  assert.equal(url, 'https://unlockr.com/aryan/482731', 'Canonical URL must be origin/username/6-digit-code');
+  const url4 = buildCanonicalDocumentUrl(origin, 'aryan', '4827');
+  assert.equal(url4, 'https://unlockr.com/aryan/4827', 'Canonical URL must be origin/username/4-digit-code');
+
+  const url6 = buildCanonicalDocumentUrl(origin, 'aryan', '482731');
+  assert.equal(url6, 'https://unlockr.com/aryan/482731', 'Canonical URL supports legacy 6-digit codes');
 
   // Must handle @ and %40 prefix cleanly
   assert.equal(
-    buildCanonicalDocumentUrl(origin, '@aryan', '482731'),
-    'https://unlockr.com/aryan/482731'
+    buildCanonicalDocumentUrl(origin, '@aryan', '4827'),
+    'https://unlockr.com/aryan/4827'
   );
   assert.equal(
-    buildCanonicalDocumentUrl(origin, '%40aryan', '482731'),
-    'https://unlockr.com/aryan/482731'
+    buildCanonicalDocumentUrl(origin, '%40aryan', '4827'),
+    'https://unlockr.com/aryan/4827'
   );
 
   // Must reject invalid codes (e.g. non-numeric, random extensions, wrong lengths)
   assert.throws(
-    () => buildCanonicalDocumentUrl(origin, 'aryan', '48273'),
-    /6-digit numeric string/
+    () => buildCanonicalDocumentUrl(origin, 'aryan', '482'),
+    /numeric string/
   );
   assert.throws(
     () => buildCanonicalDocumentUrl(origin, 'aryan', 'guide.pdf'),
-    /6-digit numeric string/
+    /numeric string/
   );
   assert.throws(
-    () => buildCanonicalDocumentUrl(origin, 'aryan', '482731a'),
-    /6-digit numeric string/
+    () => buildCanonicalDocumentUrl(origin, 'aryan', '4827a'),
+    /numeric string/
   );
 });
 
-// Test 24: Direct 6-Digit Access Code Route Resolution & Auto-Unlock (v2.2.0 Requirement 5)
-test('direct 6-digit access code route resolution automatically unlocks document for visitors', () => {
+// Test 24: Direct Access Code Route Resolution & Auto-Unlock (v2.5.0)
+test('direct access code route resolution automatically unlocks document for visitors', () => {
   const evaluateAccess = (params: {
     urlCode?: string;
     resourceCode: string;
@@ -833,20 +861,20 @@ test('direct 6-digit access code route resolution automatically unlocks document
     return { unlocked: false, reason: 'locked' };
   };
 
-  // Visitor accessing canonical url/username/482731 with valid code matching resource
+  // Visitor accessing canonical url/username/4827 with valid 4-digit code matching resource
   const resValid = evaluateAccess({
-    urlCode: '482731',
-    resourceCode: '482731',
+    urlCode: '4827',
+    resourceCode: '4827',
     views: 12,
     sessionUnlocked: false,
     isOwner: false,
   });
-  assert.equal(resValid.unlocked, true, 'Direct code URL must automatically unlock for visitor');
+  assert.equal(resValid.unlocked, true, 'Direct 4-digit code URL must automatically unlock for visitor');
 
   // Visitor accessing with mismatched code
   const resMismatch = evaluateAccess({
-    urlCode: '999999',
-    resourceCode: '482731',
+    urlCode: '9999',
+    resourceCode: '4827',
     views: 12,
     sessionUnlocked: false,
     isOwner: false,
@@ -1037,8 +1065,8 @@ test('tactile button scaling and smooth scroll class configurations', () => {
   );
 });
 
-// Test 29: Canonical Document URL Redirect and Auto-Unlock Contract (v2.2.0 Requirement 5)
-test('legacy slug URL auto-redirects to canonical /:username/:code and auto-unlocks', () => {
+// Test 29: Canonical Document URL Redirect and Auto-Unlock Contract (v2.5.0)
+test('legacy slug URL auto-redirects to canonical /:username/:code and auto-unlocks 4-digit code', () => {
   const resolveTargetRoute = (
     pathname: string,
     resource: { code: string; publicSlug: string } | null
@@ -1053,7 +1081,7 @@ test('legacy slug URL auto-redirects to canonical /:username/:code and auto-unlo
   };
 
   const resource = {
-    code: '749102',
+    code: '7491',
     publicSlug: 'founder-gtm-playbook-a1b2',
   };
 
@@ -1063,14 +1091,14 @@ test('legacy slug URL auto-redirects to canonical /:username/:code and auto-unlo
   );
   assert.equal(
     redirectTarget,
-    '/aryan/749102',
+    '/aryan/7491',
     'Legacy resource slug route must resolve to canonical /:username/:code'
   );
 
-  // Direct code match unlocks immediately
-  const directPath = '/aryan/749102';
-  const directMatch = directPath.match(/^\/([^/]+)\/(\d{6})$/);
-  assert.ok(directMatch, 'Canonical path must match 6-digit pattern');
+  // Direct code match unlocks immediately (supports 4-digit or legacy 6-digit)
+  const directPath = '/aryan/7491';
+  const directMatch = directPath.match(/^\/([^/]+)\/(\d{4}|\d{6})$/);
+  assert.ok(directMatch, 'Canonical path must match 4-digit or 6-digit pattern');
   assert.equal(directMatch[2], resource.code, 'Extracted code must match resource code');
 });
 
@@ -1219,3 +1247,189 @@ test('ads are disabled globally via ADS_ENABLED kill-switch, service workers unr
   const swContent = fs.readFileSync(swJsPath, 'utf8');
   assert.ok(swContent.includes('self.registration.unregister()'), 'sw.js must self-unregister when active in visitor browsers');
 });
+
+// Test 36: Document Password Protection Gating and Session Persistence (v2.5.0 Requirement 3)
+test('document password protection requires credentials for visitors, bypasses for owner, and persists in sessionStorage', () => {
+  const resource = {
+    id: 'res_pwd_123',
+    creatorId: 'user_alice',
+    code: '4827',
+    password: 'supersecretpassword',
+    status: 'active',
+  };
+
+  const evaluatePasswordAccess = (params: {
+    userId?: string;
+    sessionStore: Map<string, string>;
+    enteredPassword?: string;
+  }) => {
+    // 1. Owner bypasses password unconditionally
+    if (params.userId === resource.creatorId) {
+      return { unlocked: true, reason: 'owner_bypass' };
+    }
+
+    // 2. Check if already unlocked in session
+    if (
+      params.sessionStore.get(`nullwave_pwd_unlocked_${resource.id}`) === 'true' ||
+      params.sessionStore.get(`unlockr_pwd_unlocked_${resource.id}`) === 'true'
+    ) {
+      return { unlocked: true, reason: 'session_persisted' };
+    }
+
+    // 3. Check entered password
+    if (params.enteredPassword === resource.password) {
+      params.sessionStore.set(`nullwave_pwd_unlocked_${resource.id}`, 'true');
+      params.sessionStore.set(`unlockr_pwd_unlocked_${resource.id}`, 'true');
+      return { unlocked: true, reason: 'password_authenticated' };
+    }
+
+    return { unlocked: false, reason: 'invalid_password' };
+  };
+
+  const sessionStore = new Map<string, string>();
+
+  // Case 1: Owner visits -> bypasses password without entering password
+  const ownerResult = evaluatePasswordAccess({
+    userId: 'user_alice',
+    sessionStore,
+  });
+  assert.equal(ownerResult.unlocked, true);
+  assert.equal(ownerResult.reason, 'owner_bypass');
+
+  // Case 2: Visitor visits without entering password -> locked
+  const visitorNoPass = evaluatePasswordAccess({
+    userId: 'user_bob',
+    sessionStore,
+  });
+  assert.equal(visitorNoPass.unlocked, false);
+  assert.equal(visitorNoPass.reason, 'invalid_password');
+
+  // Case 3: Visitor enters wrong password -> fails
+  const visitorWrongPass = evaluatePasswordAccess({
+    userId: 'user_bob',
+    sessionStore,
+    enteredPassword: 'wrongpassword',
+  });
+  assert.equal(visitorWrongPass.unlocked, false);
+  assert.equal(visitorWrongPass.reason, 'invalid_password');
+
+  // Case 4: Visitor enters correct password -> unlocks & saves session
+  const visitorCorrectPass = evaluatePasswordAccess({
+    userId: 'user_bob',
+    sessionStore,
+    enteredPassword: 'supersecretpassword',
+  });
+  assert.equal(visitorCorrectPass.unlocked, true);
+  assert.equal(visitorCorrectPass.reason, 'password_authenticated');
+  assert.equal(sessionStore.get(`nullwave_pwd_unlocked_${resource.id}`), 'true');
+  assert.equal(sessionStore.get(`unlockr_pwd_unlocked_${resource.id}`), 'true');
+
+  // Case 5: Visitor refreshes page / revisits without entering password again -> session persisted!
+  const visitorRevisit = evaluatePasswordAccess({
+    userId: 'user_bob',
+    sessionStore,
+  });
+  assert.equal(visitorRevisit.unlocked, true);
+  assert.equal(visitorRevisit.reason, 'session_persisted');
+});
+
+// Test 37: Creator Profile Direct Document Open & Fast-Jump 4-Digit Code Box (v2.5.0 Requirement 2)
+test('creator profile opens documents directly without code prompt and top box acts as fast-jump shortcut', () => {
+  const creator = {
+    username: 'aryan',
+    uid: 'user_123',
+  };
+
+  const resources = [
+    { id: 'res_1', title: 'React Cheatsheet', code: '1024', status: 'active' },
+    { id: 'res_2', title: 'Node Playbook', code: '4827', status: 'active', isPinned: true },
+    { id: 'res_3', title: 'Secret Doc', code: '9999', status: 'active', password: 'pass' },
+  ];
+
+  // 1. Direct opening on card click: returns direct URL path without prompt modal
+  const getDirectOpenUrl = (res: typeof resources[0]) => `/${creator.username}/${res.code}`;
+  assert.equal(getDirectOpenUrl(resources[0]), '/aryan/1024');
+  assert.equal(getDirectOpenUrl(resources[1]), '/aryan/4827');
+
+  // 2. Fast-jump 4-digit code shortcut: matches target document directly
+  const resolveFastJump = (enteredCode: string) => {
+    const trimmed = enteredCode.trim();
+    const match = resources.find(r => r.code === trimmed && r.status === 'active');
+    if (match) {
+      return { found: true, url: `/${creator.username}/${match.code}`, resource: match };
+    }
+    return { found: false, error: 'Incorrect code. Check the 4-digit access code shared by the creator.' };
+  };
+
+  const jump1 = resolveFastJump('4827');
+  assert.equal(jump1.found, true);
+  assert.equal(jump1.url, '/aryan/4827');
+
+  const jumpUnknown = resolveFastJump('5555');
+  assert.equal(jumpUnknown.found, false);
+  assert.match(jumpUnknown.error!, /4-digit access code/);
+});
+
+// Test 38: CodeInput Component default length is 4 and package.json version is 2.5.0
+test('CodeInput default length is 4 and package.json declares version 2.5.0', () => {
+  const currentDir = path.dirname(fileURLToPath(import.meta.url));
+  const codeInputPath = path.resolve(currentDir, '../components/ui/CodeInput.tsx');
+  const pkgJsonPath = path.resolve(currentDir, '../../package.json');
+
+  const codeInputContent = fs.readFileSync(codeInputPath, 'utf8');
+  assert.ok(codeInputContent.includes('length = 4'), 'CodeInput default length prop must be 4');
+
+  const pkgContent = JSON.parse(fs.readFileSync(pkgJsonPath, 'utf8'));
+  assert.equal(pkgContent.version, '2.5.0', 'package.json version must be 2.5.0');
+});
+
+// Test 39: Creator Profile document cards & pinned resource badge contract (v2.5.0 Anti-Slop & Direct Open)
+test('creator profile documents render direct-open states, password protected badges, and no legacy Requires Code tags', () => {
+  const currentDir = path.dirname(fileURLToPath(import.meta.url));
+  const profilePagePath = path.resolve(currentDir, '../pages/public/CreatorProfilePage.tsx');
+  const profileContent = fs.readFileSync(profilePagePath, 'utf8');
+
+  // Must not have legacy "Requires Code" badge anywhere on public profile
+  assert.ok(!profileContent.includes('Requires Code'), 'Creator profile must never display "Requires Code" on documents in v2.5.0');
+
+  // Must have "Password Protected" badge
+  assert.ok(profileContent.includes('<span>Password Protected</span>'), 'Creator profile must display "Password Protected" badge');
+
+  // Must have direct "Open Document" button
+  assert.ok(profileContent.includes('<span>Open Document</span>'), 'Creator profile must feature direct "Open Document" action');
+});
+
+// Test 40: Resource Form Password Validation and Serialization Rules (v2.5.0 Requirement 3)
+test('resource forms enforce non-empty password when enabled and serialize null when disabled', () => {
+  const validatePasswordConfig = (hasPassword: boolean, password: string) => {
+    if (hasPassword && !password.trim()) {
+      return { valid: false, error: 'Please enter a password for this document, or uncheck password protection.' };
+    }
+    return {
+      valid: true,
+      serializedPassword: hasPassword && password.trim() ? password.trim() : null,
+    };
+  };
+
+  // Case 1: Toggle enabled, but password is empty -> invalid
+  const emptyCheck = validatePasswordConfig(true, '   ');
+  assert.equal(emptyCheck.valid, false);
+  assert.match(emptyCheck.error!, /Please enter a password/);
+
+  // Case 2: Toggle enabled with valid password -> valid and trimmed
+  const validCheck = validatePasswordConfig(true, '  mySecretPass123  ');
+  assert.equal(validCheck.valid, true);
+  assert.equal(validCheck.serializedPassword, 'mySecretPass123');
+
+  // Case 3: Toggle disabled -> serializes to null (clearing any existing password in Firestore)
+  const disabledCheck = validatePasswordConfig(false, 'existingOldPassword');
+  assert.equal(disabledCheck.valid, true);
+  assert.equal(disabledCheck.serializedPassword, null);
+
+  // Case 4: Strict equality / case sensitivity
+  const storedPassword = 'MySecretPassword';
+  const verifyAttempt = (input: string) => input === storedPassword;
+  assert.equal(verifyAttempt('mysecretpassword'), false, 'Password check must be strictly case sensitive');
+  assert.equal(verifyAttempt('MySecretPassword'), true, 'Correct case must match');
+});
+
