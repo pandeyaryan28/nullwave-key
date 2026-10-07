@@ -12,6 +12,7 @@ import {
 import { db } from '../../lib/firebase/config';
 import { UserProfile, Resource } from '../../types';
 import { useAuth } from '../../lib/auth/authContext';
+import { verifyPassword } from '../../lib/utils/cryptoHash';
 import { Card } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
 import { Button } from '../../components/ui/Button';
@@ -93,12 +94,20 @@ export const CreatorProfilePage: React.FC = () => {
     const checkCooldown = () => {
       try {
         const stored =
+          localStorage.getItem(`nullwave_cooldown_${cleanUsername}`) ||
+          localStorage.getItem(`unlockr_cooldown_${cleanUsername}`) ||
           sessionStorage.getItem(`nullwave_cooldown_${cleanUsername}`) ||
           sessionStorage.getItem(`unlockr_cooldown_${cleanUsername}`);
         if (stored) {
           const expiresAt = parseInt(stored, 10);
           const remaining = Math.max(0, Math.ceil((expiresAt - Date.now()) / 1000));
           setCooldownSeconds(remaining);
+          if (remaining === 0) {
+            localStorage.removeItem(`nullwave_cooldown_${cleanUsername}`);
+            localStorage.removeItem(`unlockr_cooldown_${cleanUsername}`);
+            sessionStorage.removeItem(`nullwave_cooldown_${cleanUsername}`);
+            sessionStorage.removeItem(`unlockr_cooldown_${cleanUsername}`);
+          }
         }
       } catch {}
     };
@@ -215,15 +224,23 @@ export const CreatorProfilePage: React.FC = () => {
     };
 
     fetchCreatorAndResources();
-  }, [cleanUsername]);
+  }, [cleanUsername, user?.uid]);
 
   const fetchCreatorResources = async (creatorId: string) => {
     try {
-      const resQuery = query(
-        collection(db, 'resources'),
-        where('creatorId', '==', creatorId),
-        where('status', '==', 'active')
-      );
+      const isOwner = Boolean(user && user.uid === creatorId);
+      const resQuery = isOwner
+        ? query(
+            collection(db, 'resources'),
+            where('creatorId', '==', creatorId),
+            where('status', '==', 'active')
+          )
+        : query(
+            collection(db, 'resources'),
+            where('creatorId', '==', creatorId),
+            where('status', '==', 'active'),
+            where('isPublicListing', '==', true)
+          );
       const resSnap = await getDocs(resQuery);
       let resList: Resource[] = resSnap.docs
         .map(d => ({ id: d.id, ...d.data() } as Resource))
@@ -237,7 +254,9 @@ export const CreatorProfilePage: React.FC = () => {
             localStorage.getItem(`unlockr_resources_${creatorId}`);
           if (localListStr) {
             const localList = JSON.parse(localListStr) as Resource[];
-            resList = localList.filter(r => r.status === 'active');
+            resList = localList
+              .filter(r => r.status === 'active')
+              .filter(r => isOwner || r.isPublicListing !== false);
           }
         } catch {}
       }
@@ -251,12 +270,15 @@ export const CreatorProfilePage: React.FC = () => {
     } catch (err) {
       console.warn('Error fetching creator resources:', err);
       try {
+        const isOwner = Boolean(user && user.uid === creatorId);
         const localListStr =
           localStorage.getItem(`nullwave_resources_${creatorId}`) ||
           localStorage.getItem(`unlockr_resources_${creatorId}`);
         if (localListStr) {
           const localList = JSON.parse(localListStr) as Resource[];
-          const filtered = localList.filter(r => r.status === 'active');
+          const filtered = localList
+            .filter(r => r.status === 'active')
+            .filter(r => isOwner || r.isPublicListing !== false);
           filtered.sort((a, b) => {
             if (a.isPinned && !b.isPinned) return -1;
             if (!a.isPinned && b.isPinned) return 1;
@@ -289,6 +311,8 @@ export const CreatorProfilePage: React.FC = () => {
     let attempts = 0;
     try {
       const stored =
+        localStorage.getItem(`nullwave_attempts_${cleanUsername}`) ||
+        localStorage.getItem(`unlockr_attempts_${cleanUsername}`) ||
         sessionStorage.getItem(`nullwave_attempts_${cleanUsername}`) ||
         sessionStorage.getItem(`unlockr_attempts_${cleanUsername}`);
       attempts = stored ? parseInt(stored, 10) : 0;
@@ -301,8 +325,12 @@ export const CreatorProfilePage: React.FC = () => {
       try {
         sessionStorage.setItem(`nullwave_cooldown_${cleanUsername}`, expiresAt.toString());
         sessionStorage.setItem(`unlockr_cooldown_${cleanUsername}`, expiresAt.toString());
+        localStorage.setItem(`nullwave_cooldown_${cleanUsername}`, expiresAt.toString());
+        localStorage.setItem(`unlockr_cooldown_${cleanUsername}`, expiresAt.toString());
         sessionStorage.removeItem(`nullwave_attempts_${cleanUsername}`);
         sessionStorage.removeItem(`unlockr_attempts_${cleanUsername}`);
+        localStorage.removeItem(`nullwave_attempts_${cleanUsername}`);
+        localStorage.removeItem(`unlockr_attempts_${cleanUsername}`);
       } catch {}
       setCooldownSeconds(30);
       return true;
@@ -311,6 +339,8 @@ export const CreatorProfilePage: React.FC = () => {
     try {
       sessionStorage.setItem(`nullwave_attempts_${cleanUsername}`, attempts.toString());
       sessionStorage.setItem(`unlockr_attempts_${cleanUsername}`, attempts.toString());
+      localStorage.setItem(`nullwave_attempts_${cleanUsername}`, attempts.toString());
+      localStorage.setItem(`unlockr_attempts_${cleanUsername}`, attempts.toString());
     } catch {}
     return false;
   };
@@ -321,6 +351,12 @@ export const CreatorProfilePage: React.FC = () => {
       sessionStorage.setItem(`unlockr_unlocked_${targetResource.id}`, 'true');
       sessionStorage.removeItem(`nullwave_attempts_${cleanUsername}`);
       sessionStorage.removeItem(`unlockr_attempts_${cleanUsername}`);
+      localStorage.removeItem(`nullwave_attempts_${cleanUsername}`);
+      localStorage.removeItem(`unlockr_attempts_${cleanUsername}`);
+      sessionStorage.removeItem(`nullwave_cooldown_${cleanUsername}`);
+      sessionStorage.removeItem(`unlockr_cooldown_${cleanUsername}`);
+      localStorage.removeItem(`nullwave_cooldown_${cleanUsername}`);
+      localStorage.removeItem(`unlockr_cooldown_${cleanUsername}`);
     } catch {}
     setUnlockedResourceIds(prev => new Set(prev).add(targetResource.id));
     navigate(`/${creator?.username}/${targetResource.code}`);
@@ -464,7 +500,7 @@ export const CreatorProfilePage: React.FC = () => {
     unlockAndNavigate(targetResource);
   };
 
-  const handleModalPasswordSubmit = (e: React.FormEvent) => {
+  const handleModalPasswordSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!passwordModalResource || !creator) return;
 
@@ -476,10 +512,20 @@ export const CreatorProfilePage: React.FC = () => {
     setModalPasswordError(null);
     setModalPasswordVerifying(true);
 
-    if (modalPassword === passwordModalResource.password) {
+    const isMatch = await verifyPassword(modalPassword, passwordModalResource.password);
+
+    if (isMatch) {
       try {
         sessionStorage.setItem(`nullwave_pwd_unlocked_${passwordModalResource.id}`, 'true');
         sessionStorage.setItem(`unlockr_pwd_unlocked_${passwordModalResource.id}`, 'true');
+        sessionStorage.removeItem(`nullwave_attempts_${cleanUsername}`);
+        sessionStorage.removeItem(`unlockr_attempts_${cleanUsername}`);
+        localStorage.removeItem(`nullwave_attempts_${cleanUsername}`);
+        localStorage.removeItem(`unlockr_attempts_${cleanUsername}`);
+        sessionStorage.removeItem(`nullwave_cooldown_${cleanUsername}`);
+        sessionStorage.removeItem(`unlockr_cooldown_${cleanUsername}`);
+        localStorage.removeItem(`nullwave_cooldown_${cleanUsername}`);
+        localStorage.removeItem(`unlockr_cooldown_${cleanUsername}`);
       } catch {}
       setModalPasswordVerifying(false);
       const res = passwordModalResource;

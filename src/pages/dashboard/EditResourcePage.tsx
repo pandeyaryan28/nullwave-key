@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { db } from '../../lib/firebase/config';
 import { useAuth } from '../../lib/auth/authContext';
+import { hashPasswordSHA256 } from '../../lib/utils/cryptoHash';
 import { Resource } from '../../types';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
@@ -53,6 +54,7 @@ export const EditResourcePage: React.FC = () => {
   const [maxUnlocks, setMaxUnlocks] = useState<string>('');
   const [hasPassword, setHasPassword] = useState<boolean>(false);
   const [password, setPassword] = useState<string>('');
+  const [initialPassword, setInitialPassword] = useState<string>('');
   const [showPassword, setShowPassword] = useState<boolean>(false);
 
   useEffect(() => {
@@ -103,6 +105,7 @@ export const EditResourcePage: React.FC = () => {
         if (data.password) {
           setHasPassword(true);
           setPassword(data.password);
+          setInitialPassword(data.password);
         }
 
         if (data.expiresAt) {
@@ -184,6 +187,16 @@ export const EditResourcePage: React.FC = () => {
     setError(null);
 
     try {
+      let finalPassword: string | null = null;
+      if (hasPassword && password.trim()) {
+        const trimmed = password.trim();
+        if (trimmed === initialPassword && /^[0-9a-f]{64}$/i.test(trimmed)) {
+          finalPassword = trimmed;
+        } else {
+          finalPassword = await hashPasswordSHA256(trimmed);
+        }
+      }
+
       const updatedFields = {
         title: title.trim(),
         description: description.trim(),
@@ -196,7 +209,7 @@ export const EditResourcePage: React.FC = () => {
         isPinned,
         expiresAt: expiresAtTimestamp,
         maxUnlocks: maxUnlocksCount,
-        password: hasPassword && password.trim() ? password.trim() : null,
+        password: finalPassword,
         updatedAt: Date.now(),
       };
 

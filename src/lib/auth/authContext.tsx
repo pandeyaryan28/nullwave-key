@@ -43,13 +43,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState<boolean>(true);
 
   // Load user profile from Firestore or local fallback
-  const fetchProfile = async (uid: string) => {
+  const fetchProfile = async (uid: string, fallbackEmail?: string) => {
+    const creatorEmail = fallbackEmail || auth.currentUser?.email || user?.email || '';
     try {
       const userDocRef = doc(db, 'users', uid);
       const userSnap = await getDoc(userDocRef);
       if (userSnap.exists()) {
         const data = userSnap.data() as UserProfile;
-        setProfile({ ...data, uid: userSnap.id });
+        setProfile({ ...data, uid: userSnap.id, email: creatorEmail || data.email || '' });
         return;
       }
     } catch (err) {
@@ -62,7 +63,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         localStorage.getItem(`nullwave_profile_${uid}`) ||
         localStorage.getItem(`unlockr_profile_${uid}`);
       if (local) {
-        setProfile(JSON.parse(local));
+        const parsed = JSON.parse(local);
+        setProfile({ ...parsed, email: creatorEmail || parsed.email || '' });
       }
     } catch {}
   };
@@ -76,7 +78,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       try {
         const parsed = JSON.parse(storedLocalUser);
         setUser(parsed as unknown as User);
-        fetchProfile(parsed.uid).finally(() => setLoading(false));
+        fetchProfile(parsed.uid, parsed.email).finally(() => setLoading(false));
       } catch {
         // Continue to Firebase Auth
       }
@@ -85,7 +87,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const unsubscribe = onAuthStateChanged(auth, async currentUser => {
       if (currentUser) {
         setUser(currentUser);
-        await fetchProfile(currentUser.uid);
+        await fetchProfile(currentUser.uid, currentUser.email || undefined);
       } else if (!storedLocalUser) {
         setUser(null);
         setProfile(null);
@@ -100,7 +102,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const provider = new GoogleAuthProvider();
       const cred = await signInWithPopup(auth, provider);
-      await fetchProfile(cred.user.uid);
+      await fetchProfile(cred.user.uid, cred.user.email || undefined);
     } catch (error: unknown) {
       const authErr = error as { code?: string; message?: string };
       console.warn('Google sign-in failed via Firebase Auth:', authErr);
@@ -115,7 +117,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         };
         localStorage.setItem(LOCAL_USER_KEY, JSON.stringify(mockUser));
         setUser(mockUser as unknown as User);
-        await fetchProfile(mockUid);
+        await fetchProfile(mockUid, mockUser.email);
         return;
       }
       throw error;
@@ -125,7 +127,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signInWithEmail = async (email: string, pass: string) => {
     try {
       const cred = await signInWithEmailAndPassword(auth, email, pass);
-      await fetchProfile(cred.user.uid);
+      await fetchProfile(cred.user.uid, cred.user.email || undefined);
     } catch (error: unknown) {
       const authErr = error as { code?: string; message?: string };
       console.warn('Email sign-in failed via Firebase Auth:', authErr);
@@ -138,7 +140,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         };
         localStorage.setItem(LOCAL_USER_KEY, JSON.stringify(mockUser));
         setUser(mockUser as unknown as User);
-        await fetchProfile(mockUid);
+        await fetchProfile(mockUid, email);
         return;
       }
       throw error;
@@ -162,7 +164,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         createdAt: Date.now(),
         updatedAt: Date.now(),
       };
-      await setDoc(doc(db, 'users', cred.user.uid), newProfile);
+      // Do not write private email field to the public users Firestore document
+      const { email: _privateEmail, ...firestoreProfile } = newProfile;
+      await setDoc(doc(db, 'users', cred.user.uid), firestoreProfile);
       setProfile(newProfile);
     } catch (error: unknown) {
       const authErr = error as { code?: string; message?: string };
@@ -186,8 +190,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           createdAt: Date.now(),
           updatedAt: Date.now(),
         };
+        const { email: _privateEmail, ...firestoreProfile } = newProfile;
         try {
-          await setDoc(doc(db, 'users', mockUid), newProfile);
+          await setDoc(doc(db, 'users', mockUid), firestoreProfile);
         } catch {}
         localStorage.setItem(`nullwave_profile_${mockUid}`, JSON.stringify(newProfile));
         localStorage.setItem(`unlockr_profile_${mockUid}`, JSON.stringify(newProfile));
@@ -302,12 +307,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const cleanData = stripUndefined({
       uid: user.uid,
-      email: user.email || profile?.email || '',
       displayName: data.displayName || profile?.displayName || user.displayName || '',
       accountType: profile?.accountType || 'creator',
       ...data,
       updatedAt: now,
     }) as Partial<UserProfile>;
+
+    // Omit private email from Firestore user document to protect creator privacy
+    delete (cleanData as Record<string, unknown>).email;
 
     // Persist reliably to Firestore using setDoc with merge: true
     try {
@@ -320,6 +327,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     setProfile(prev => {
       const merged = prev ? { ...prev, ...cleanData } : (cleanData as UserProfile);
+      // Ensure the authenticated creator still receives email directly from Firebase Auth
+      merged.email = user.email || prev?.email || '';
       try {
         localStorage.setItem(`nullwave_profile_${user.uid}`, JSON.stringify(merged));
         localStorage.setItem(`unlockr_profile_${user.uid}`, JSON.stringify(merged));
@@ -336,7 +345,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const refreshProfile = async () => {
     if (user) {
-      await fetchProfile(user.uid);
+      await fetchProfile(user.uid, user.email || undefined);
     }
   };
 

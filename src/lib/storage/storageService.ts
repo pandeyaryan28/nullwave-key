@@ -29,7 +29,8 @@ export function fileToBase64(file: File): Promise<string> {
 export async function saveFileToFirestoreChunks(
   resourceId: string,
   file: File,
-  onProgress?: UploadProgressCallback
+  onProgress?: UploadProgressCallback,
+  creatorId?: string
 ): Promise<string> {
   if (onProgress) onProgress(30);
   const base64Data = await fileToBase64(file);
@@ -50,6 +51,7 @@ export async function saveFileToFirestoreChunks(
       index: i,
       data: chunkData,
       totalChunks,
+      creatorId: creatorId || null,
       createdAt: Date.now(),
     });
 
@@ -148,7 +150,7 @@ export async function uploadResourceFile(
   } catch {
     // Zero-failure fallback: save to Firestore chunks
     console.info('Saving file to resilient Firestore chunked storage...');
-    return await saveFileToFirestoreChunks(resourceId, file, onProgress);
+    return await saveFileToFirestoreChunks(resourceId, file, onProgress, creatorId);
   }
 }
 

@@ -34,9 +34,9 @@ service cloud.firestore {
                       resource.data.status == 'active' &&
                       request.resource.data.diff(resource.data).affectedKeys()
                         .hasOnly(['totalViews', 'uniqueViews', 'totalDownloads', 'lastAccessedAt']) &&
-                      request.resource.data.totalViews >= resource.data.totalViews &&
-                      request.resource.data.uniqueViews >= resource.data.uniqueViews &&
-                      request.resource.data.totalDownloads >= resource.data.totalDownloads
+                      (request.resource.data.totalViews == resource.data.totalViews || request.resource.data.totalViews == resource.data.totalViews + 1) &&
+                      (request.resource.data.uniqueViews == resource.data.uniqueViews || request.resource.data.uniqueViews == resource.data.uniqueViews + 1) &&
+                      (request.resource.data.totalDownloads == resource.data.totalDownloads || request.resource.data.totalDownloads == resource.data.totalDownloads + 1)
                     );
 
       allow delete: if request.auth != null && resource.data.creatorId == request.auth.uid;
@@ -44,7 +44,8 @@ service cloud.firestore {
       // Subcollection for chunked storage fallback
       match /chunks/{chunkId} {
         allow read: if true;
-        allow create, update, delete: if request.auth != null;
+        allow create: if request.auth != null && request.resource.data.creatorId == request.auth.uid;
+        allow update, delete: if request.auth != null && resource.data.creatorId == request.auth.uid;
       }
     }
 
@@ -55,6 +56,8 @@ service cloud.firestore {
                     && request.resource.data.creatorId is string
                     && request.resource.data.visitorId is string
                     && request.resource.data.viewedAt is number
+                    && request.resource.data.viewedAt >= request.time.toMillis() - 120000
+                    && request.resource.data.viewedAt <= request.time.toMillis() + 120000
                     && request.resource.data.isUnique is bool;
       allow read: if request.auth != null && resource.data.creatorId == request.auth.uid;
       allow update, delete: if false;
@@ -66,7 +69,9 @@ service cloud.firestore {
                     && request.resource.data.resourceId is string
                     && request.resource.data.creatorId is string
                     && request.resource.data.visitorId is string
-                    && request.resource.data.downloadedAt is number;
+                    && request.resource.data.downloadedAt is number
+                    && request.resource.data.downloadedAt >= request.time.toMillis() - 120000
+                    && request.resource.data.downloadedAt <= request.time.toMillis() + 120000;
       allow read: if request.auth != null && resource.data.creatorId == request.auth.uid;
       allow update, delete: if false;
     }

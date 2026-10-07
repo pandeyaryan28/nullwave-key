@@ -6,6 +6,7 @@ import { useAuth } from '../../lib/auth/authContext';
 import { getUniqueCodeForCreator, generateFourDigitCode, isCodeInUseByCreator } from '../../lib/utils/codeGenerator';
 import { generatePublicSlug } from '../../lib/utils/slugify';
 import { uploadResourceFile, uploadImageFile, MAX_PDF_SIZE_BYTES } from '../../lib/storage/storageService';
+import { hashPasswordSHA256 } from '../../lib/utils/cryptoHash';
 import { Resource } from '../../types';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
@@ -229,7 +230,7 @@ export const NewResourcePage: React.FC = () => {
         isPinned,
         expiresAt: expiresAtTimestamp,
         maxUnlocks: maxUnlocksCount,
-        password: hasPassword && password.trim() ? password.trim() : null,
+        password: hasPassword && password.trim() ? await hashPasswordSHA256(password.trim()) : null,
       };
 
       if (category.trim()) {

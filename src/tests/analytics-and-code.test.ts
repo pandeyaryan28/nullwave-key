@@ -7,6 +7,7 @@ import { generateFourDigitCode, generateSixDigitCode } from '../lib/utils/codeGe
 import { generatePublicSlug } from '../lib/utils/slugify.ts';
 import { evaluateUniquenessWindow, type StorageLike } from '../lib/analytics/tracker.ts';
 import { MAX_PDF_SIZE_BYTES, MAX_IMAGE_SIZE_BYTES } from '../lib/storage/storageService.ts';
+import { hashPasswordSHA256, verifyPassword } from '../lib/utils/cryptoHash.ts';
 
 // Test 1: Real Production 4-Digit Code Generator and Backwards Compatibility Alias
 test('generateFourDigitCode produces valid 4-digit numeric strings in range 1000-9999 and generateSixDigitCode aliases it', () => {
@@ -1370,8 +1371,8 @@ test('creator profile opens documents directly without code prompt and top box a
   assert.match(jumpUnknown.error!, /4-digit access code/);
 });
 
-// Test 38: CodeInput Component default length is 4 and package.json version is 2.5.1
-test('CodeInput default length is 4 and package.json declares version 2.5.1', () => {
+// Test 38: CodeInput Component default length is 4 and package.json version is 2.6.0
+test('CodeInput default length is 4 and package.json declares version 2.6.0', () => {
   const currentDir = path.dirname(fileURLToPath(import.meta.url));
   const codeInputPath = path.resolve(currentDir, '../components/ui/CodeInput.tsx');
   const pkgJsonPath = path.resolve(currentDir, '../../package.json');
@@ -1380,7 +1381,7 @@ test('CodeInput default length is 4 and package.json declares version 2.5.1', ()
   assert.ok(codeInputContent.includes('length = 4'), 'CodeInput default length prop must be 4');
 
   const pkgContent = JSON.parse(fs.readFileSync(pkgJsonPath, 'utf8'));
-  assert.equal(pkgContent.version, '2.5.1', 'package.json version must be 2.5.1');
+  assert.equal(pkgContent.version, '2.6.0', 'package.json version must be 2.6.0');
 });
 
 // Test 39: Creator Profile document cards & pinned resource badge contract (v2.5.0 Anti-Slop & Direct Open)
@@ -1454,4 +1455,236 @@ test('profile settings updates preserve all fields, clears empty links, and uses
   assert.ok(storageContent.includes('compressAndOptimizeImage'), 'storageService must provide client-side image optimization');
   assert.ok(storageContent.includes('shrinkExistingDataUrlIfNeeded'), 'storageService must provide safe data URL downscaling');
 });
+
+// Test 42: Security Hardening & Zero Secret Leak Regression Suite (v2.5.2)
+test('repository configs, storage rules, and firestore rules enforce security best practices and leak zero secrets', () => {
+  const currentDir = path.dirname(fileURLToPath(import.meta.url));
+  const envExamplePath = path.resolve(currentDir, '../../.env.example');
+  const firebaseConfigPath = path.resolve(currentDir, '../lib/firebase/config.ts');
+  const storageRulesPath = path.resolve(currentDir, '../../storage.rules');
+  const firestoreRulesPath = path.resolve(currentDir, '../../firestore.rules');
+
+  const envExampleContent = fs.readFileSync(envExamplePath, 'utf8');
+  const firebaseConfigContent = fs.readFileSync(firebaseConfigPath, 'utf8');
+  const storageRulesContent = fs.readFileSync(storageRulesPath, 'utf8');
+  const firestoreRulesContent = fs.readFileSync(firestoreRulesPath, 'utf8');
+
+  // 1. Verify no live AIzaSy keys exist in .env.example or config.ts
+  assert.equal(
+    /AIza[0-9A-Za-z-_]{35}/.test(envExampleContent),
+    false,
+    '.env.example must not contain live Google/Firebase API keys'
+  );
+  assert.equal(
+    /AIza[0-9A-Za-z-_]{35}/.test(firebaseConfigContent),
+    false,
+    'config.ts must not contain hardcoded Google/Firebase API key fallback'
+  );
+  assert.ok(
+    envExampleContent.includes('VITE_FIREBASE_API_KEY=your_firebase_api_key_here'),
+    '.env.example must use safe placeholder values'
+  );
+
+  // 2. Verify storage.rules enforces authentication and creatorId on writes and deletes
+  assert.ok(
+    storageRulesContent.includes('request.auth != null && request.auth.uid == creatorId'),
+    'storage.rules must enforce authentication and creatorId matching on writes and deletes'
+  );
+  assert.equal(
+    /allow write: if request\.resource\.size/.test(storageRulesContent),
+    false,
+    'storage.rules must not allow unauthenticated resource uploads'
+  );
+  assert.equal(
+    /allow delete: if request\.auth != null;/.test(storageRulesContent),
+    false,
+    'storage.rules must not allow any authenticated user to delete other creators files'
+  );
+
+  // 3. Verify firestore.rules enforces creatorId on chunks subcollection
+  assert.ok(
+    firestoreRulesContent.includes('request.resource.data.creatorId == request.auth.uid'),
+    'firestore.rules must enforce creatorId matching on chunk creation'
+  );
+  assert.ok(
+    firestoreRulesContent.includes('resource.data.creatorId == request.auth.uid'),
+    'firestore.rules must enforce creatorId matching on chunk update and deletion'
+  );
+});
+
+// Test 43: SHA-256 Password Hashing & Backward Compatible Verification (v2.6.0 Requirement 1)
+test('SHA-256 password hashing generates deterministic 64-char hex and verifyPassword handles hashes and legacy plaintext', async () => {
+  const password = 'SuperSecretPassword123!';
+  const hash = await hashPasswordSHA256(password);
+
+  // 1. Validate hash format: 64 hexadecimal characters, lowercase
+  assert.equal(typeof hash, 'string');
+  assert.equal(hash.length, 64, 'SHA-256 hash must be exactly 64 characters');
+  assert.match(hash, /^[0-9a-f]{64}$/, 'SHA-256 hash must be valid hexadecimal characters');
+
+  // 2. Deterministic hashing: same input yields identical hash
+  const secondHash = await hashPasswordSHA256(password);
+  assert.equal(hash, secondHash, 'SHA-256 must be deterministic');
+
+  // 3. Different inputs yield distinct hashes
+  const otherHash = await hashPasswordSHA256('DifferentPassword456!');
+  assert.notEqual(hash, otherHash);
+
+  // 4. Verification with SHA-256 hash: valid password succeeds
+  const matchResult = await verifyPassword(password, hash);
+  assert.equal(matchResult, true, 'verifyPassword must return true for correct password against SHA-256 hash');
+
+  // 5. Verification with SHA-256 hash: invalid password fails
+  const wrongResult = await verifyPassword('WrongPassword', hash);
+  assert.equal(wrongResult, false, 'verifyPassword must return false for incorrect password');
+
+  // 6. Case sensitivity: different casing fails
+  const wrongCaseResult = await verifyPassword(password.toLowerCase(), hash);
+  assert.equal(wrongCaseResult, false, 'verifyPassword must be strictly case sensitive');
+
+  // 7. Legacy plaintext backward compatibility
+  const legacyPlain = 'LegacyPlaintextPass123';
+  const legacyMatch = await verifyPassword(legacyPlain, legacyPlain);
+  assert.equal(legacyMatch, true, 'verifyPassword must succeed for legacy plaintext password');
+
+  const legacyFail = await verifyPassword('IncorrectInput', legacyPlain);
+  assert.equal(legacyFail, false, 'verifyPassword must fail for mismatched legacy plaintext');
+
+  // 8. Graceful handling of empty or missing stored values
+  assert.equal(await verifyPassword('any', null), false, 'verifyPassword returns false for null stored password');
+  assert.equal(await verifyPassword('any', undefined), false, 'verifyPassword returns false for undefined stored password');
+  assert.equal(await verifyPassword('any', ''), false, 'verifyPassword returns false for empty string stored password');
+
+  // 9. Rejection of empty or whitespace-only candidate input
+  assert.equal(await verifyPassword('', hash), false, 'verifyPassword returns false for empty input');
+  assert.equal(await verifyPassword('   ', hash), false, 'verifyPassword returns false for whitespace-only input');
+
+  // 10. Mobile keyboard trailing/leading whitespace resilience
+  assert.equal(await verifyPassword(password + ' ', hash), true, 'verifyPassword supports trailing whitespace from mobile keyboards');
+  assert.equal(await verifyPassword(' ' + password, hash), true, 'verifyPassword supports leading whitespace');
+});
+
+// Test 44: Strict Firestore Counter Increment Rules and Audit Timestamp Bounds (v2.6.0 Requirement 6)
+test('firestore.rules restricts counter increments to at most +1 and enforces 2-minute timestamp bounds', () => {
+  const currentDir = path.dirname(fileURLToPath(import.meta.url));
+  const firestoreRulesPath = path.resolve(currentDir, '../../firestore.rules');
+  const firestoreRulesContent = fs.readFileSync(firestoreRulesPath, 'utf8');
+
+  // 1. Verify resources counter increment condition (at most +1 per update)
+  assert.ok(
+    firestoreRulesContent.includes('request.resource.data.totalViews == resource.data.totalViews || request.resource.data.totalViews == resource.data.totalViews + 1'),
+    'firestore.rules must restrict totalViews increment to at most 1'
+  );
+  assert.ok(
+    firestoreRulesContent.includes('request.resource.data.uniqueViews == resource.data.uniqueViews || request.resource.data.uniqueViews == resource.data.uniqueViews + 1'),
+    'firestore.rules must restrict uniqueViews increment to at most 1'
+  );
+  assert.ok(
+    firestoreRulesContent.includes('request.resource.data.totalDownloads == resource.data.totalDownloads || request.resource.data.totalDownloads == resource.data.totalDownloads + 1'),
+    'firestore.rules must restrict totalDownloads increment to at most 1'
+  );
+
+  // 2. Verify timestamp tolerance (within 2 minutes = 120000ms) for resource_views
+  assert.ok(
+    firestoreRulesContent.includes('request.resource.data.viewedAt >= request.time.toMillis() - 120000'),
+    'resource_views must enforce lower bound of request.time - 2 minutes'
+  );
+  assert.ok(
+    firestoreRulesContent.includes('request.resource.data.viewedAt <= request.time.toMillis() + 120000'),
+    'resource_views must enforce upper bound of request.time + 2 minutes'
+  );
+
+  // 3. Verify timestamp tolerance for resource_downloads
+  assert.ok(
+    firestoreRulesContent.includes('request.resource.data.downloadedAt >= request.time.toMillis() - 120000'),
+    'resource_downloads must enforce lower bound of request.time - 2 minutes'
+  );
+  assert.ok(
+    firestoreRulesContent.includes('request.resource.data.downloadedAt <= request.time.toMillis() + 120000'),
+    'resource_downloads must enforce upper bound of request.time + 2 minutes'
+  );
+
+  // 4. Logical counter model test
+  const evaluateCounterUpdate = (
+    current: { totalViews: number; uniqueViews: number; totalDownloads: number },
+    updated: { totalViews: number; uniqueViews: number; totalDownloads: number }
+  ): boolean => {
+    const validViews = updated.totalViews === current.totalViews || updated.totalViews === current.totalViews + 1;
+    const validUnique = updated.uniqueViews === current.uniqueViews || updated.uniqueViews === current.uniqueViews + 1;
+    const validDownloads = updated.totalDownloads === current.totalDownloads || updated.totalDownloads === current.totalDownloads + 1;
+    return validViews && validUnique && validDownloads;
+  };
+
+  const initial = { totalViews: 10, uniqueViews: 5, totalDownloads: 2 };
+  // Legitimate +1 increments
+  assert.equal(evaluateCounterUpdate(initial, { totalViews: 11, uniqueViews: 6, totalDownloads: 2 }), true);
+  assert.equal(evaluateCounterUpdate(initial, { totalViews: 11, uniqueViews: 5, totalDownloads: 2 }), true);
+  assert.equal(evaluateCounterUpdate(initial, { totalViews: 10, uniqueViews: 5, totalDownloads: 3 }), true);
+
+  // Illegitimate jump (+2 or higher) rejected
+  assert.equal(evaluateCounterUpdate(initial, { totalViews: 12, uniqueViews: 5, totalDownloads: 2 }), false);
+  assert.equal(evaluateCounterUpdate(initial, { totalViews: 10, uniqueViews: 7, totalDownloads: 2 }), false);
+  assert.equal(evaluateCounterUpdate(initial, { totalViews: 10, uniqueViews: 5, totalDownloads: 5 }), false);
+  // Decrement rejected
+  assert.equal(evaluateCounterUpdate(initial, { totalViews: 9, uniqueViews: 5, totalDownloads: 2 }), false);
+});
+
+// Test 45: Profile Email Privacy & Public Listing Filtering Rules (v2.6.0 Requirement 4 & 5)
+test('profile email is omitted from Firestore public documents and public queries filter unlisted resources', () => {
+  const currentDir = path.dirname(fileURLToPath(import.meta.url));
+  const authContextPath = path.resolve(currentDir, '../lib/auth/authContext.tsx');
+  const profilePagePath = path.resolve(currentDir, '../pages/public/CreatorProfilePage.tsx');
+
+  const authContent = fs.readFileSync(authContextPath, 'utf8');
+  const profileContent = fs.readFileSync(profilePagePath, 'utf8');
+
+  // 1. Verify authContext omits email from Firestore documents
+  assert.ok(
+    authContent.includes('const { email: _privateEmail, ...firestoreProfile } = newProfile'),
+    'authContext must omit email when creating public user profile in Firestore'
+  );
+  assert.ok(
+    authContent.includes('delete (cleanData as Record<string, unknown>).email'),
+    'authContext must delete email before writing profile update to Firestore'
+  );
+
+  // 2. Verify creator profile page queries where('isPublicListing', '==', true) for visitors
+  assert.ok(
+    profileContent.includes("where('isPublicListing', '==', true)"),
+    "CreatorProfilePage must query where('isPublicListing', '==', true) for non-owner public visitors"
+  );
+
+  // 3. Verify creator retains email directly from Auth (user.email)
+  assert.ok(
+    authContent.includes("merged.email = user.email || prev?.email || ''"),
+    "authContext must supply user.email directly to authenticated creator profile"
+  );
+  assert.ok(
+    authContent.includes("email: creatorEmail || data.email || ''"),
+    "fetchProfile must populate email directly from creator's authenticated session"
+  );
+
+  // 4. Simulated payload sanitization test
+  const fullProfile = {
+    uid: 'user_123',
+    email: 'creator@example.com',
+    displayName: 'Creator One',
+    username: 'creator1',
+    bio: 'Creator bio',
+    createdAt: 1700000000000,
+    updatedAt: 1700000000000,
+  };
+
+  const sanitizeForFirestore = (profile: typeof fullProfile) => {
+    const { email: _unused, ...publicData } = profile;
+    return publicData;
+  };
+
+  const sanitized = sanitizeForFirestore(fullProfile);
+  assert.equal('email' in sanitized, false, 'Sanitized Firestore payload must NOT have email property');
+  assert.equal(sanitized.uid, 'user_123');
+  assert.equal(sanitized.displayName, 'Creator One');
+});
+
+
 

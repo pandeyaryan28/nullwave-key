@@ -3,44 +3,50 @@ service firebase.storage {
   match /b/{bucket}/o {
     match /resources/{creatorId}/{resourceId}/{fileName} {
       allow read: if true;
-      allow write: if request.resource.size <= 25 * 1024 * 1024
+      allow write: if request.auth != null && request.auth.uid == creatorId
+                   && request.resource.size <= 25 * 1024 * 1024
                    && request.resource.contentType == 'application/pdf';
-      allow delete: if request.auth != null;
+      allow delete: if request.auth != null && request.auth.uid == creatorId;
     }
 
     match /covers/{creatorId}/{resourceId}/{fileName} {
       allow read: if true;
-      allow write: if request.resource.size <= 5 * 1024 * 1024
+      allow write: if request.auth != null && request.auth.uid == creatorId
+                   && request.resource.size <= 5 * 1024 * 1024
                    && request.resource.contentType.matches('image/.*');
-      allow delete: if request.auth != null;
+      allow delete: if request.auth != null && request.auth.uid == creatorId;
     }
 
     match /avatars/{creatorId}/{fileName} {
       allow read: if true;
-      allow write: if request.resource.size <= 5 * 1024 * 1024
+      allow write: if request.auth != null && request.auth.uid == creatorId
+                   && request.resource.size <= 5 * 1024 * 1024
                    && request.resource.contentType.matches('image/.*');
-      allow delete: if request.auth != null;
+      allow delete: if request.auth != null && request.auth.uid == creatorId;
     }
 
     match /avatars/{creatorId}/{id}/{fileName} {
       allow read: if true;
-      allow write: if request.resource.size <= 5 * 1024 * 1024
+      allow write: if request.auth != null && request.auth.uid == creatorId
+                   && request.resource.size <= 5 * 1024 * 1024
                    && request.resource.contentType.matches('image/.*');
-      allow delete: if request.auth != null;
+      allow delete: if request.auth != null && request.auth.uid == creatorId;
     }
 
     match /banners/{creatorId}/{fileName} {
       allow read: if true;
-      allow write: if request.resource.size <= 5 * 1024 * 1024
+      allow write: if request.auth != null && request.auth.uid == creatorId
+                   && request.resource.size <= 5 * 1024 * 1024
                    && request.resource.contentType.matches('image/.*');
-      allow delete: if request.auth != null;
+      allow delete: if request.auth != null && request.auth.uid == creatorId;
     }
 
     match /banners/{creatorId}/{id}/{fileName} {
       allow read: if true;
-      allow write: if request.resource.size <= 5 * 1024 * 1024
+      allow write: if request.auth != null && request.auth.uid == creatorId
+                   && request.resource.size <= 5 * 1024 * 1024
                    && request.resource.contentType.matches('image/.*');
-      allow delete: if request.auth != null;
+      allow delete: if request.auth != null && request.auth.uid == creatorId;
     }
   }
 }
