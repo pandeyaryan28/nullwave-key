@@ -144,14 +144,17 @@ export const ResourceViewPage: React.FC = () => {
   useEffect(() => {
     if (!cleanUsername) return;
     const identifier = code || publicSlug || 'default';
+    const passdigitKey = `passdigit_cooldown_${cleanUsername}_${identifier}`;
     const nullwaveKey = `nullwave_cooldown_${cleanUsername}_${identifier}`;
     const unlockrKey = `unlockr_cooldown_${cleanUsername}_${identifier}`;
 
     const checkCooldown = () => {
       try {
         const stored =
+          localStorage.getItem(passdigitKey) ||
           localStorage.getItem(nullwaveKey) ||
           localStorage.getItem(unlockrKey) ||
+          sessionStorage.getItem(passdigitKey) ||
           sessionStorage.getItem(nullwaveKey) ||
           sessionStorage.getItem(unlockrKey);
         if (stored) {
@@ -159,8 +162,10 @@ export const ResourceViewPage: React.FC = () => {
           const remaining = Math.max(0, Math.ceil((expiresAt - Date.now()) / 1000));
           setCooldownSeconds(remaining);
           if (remaining === 0) {
+            localStorage.removeItem(passdigitKey);
             localStorage.removeItem(nullwaveKey);
             localStorage.removeItem(unlockrKey);
+            sessionStorage.removeItem(passdigitKey);
             sessionStorage.removeItem(nullwaveKey);
             sessionStorage.removeItem(unlockrKey);
           }
@@ -231,6 +236,7 @@ export const ResourceViewPage: React.FC = () => {
         if (!creatorData) {
           try {
             const localProfile =
+              localStorage.getItem(`passdigit_profile_${cleanUsername}`) ||
               localStorage.getItem(`nullwave_profile_${cleanUsername}`) ||
               localStorage.getItem(`unlockr_profile_${cleanUsername}`);
             if (localProfile) {
@@ -238,7 +244,7 @@ export const ResourceViewPage: React.FC = () => {
             } else {
               for (let i = 0; i < localStorage.length; i++) {
                 const k = localStorage.key(i);
-                if (k?.startsWith('nullwave_profile_') || k?.startsWith('unlockr_profile_')) {
+                if (k?.startsWith('passdigit_profile_') || k?.startsWith('nullwave_profile_') || k?.startsWith('unlockr_profile_')) {
                   const val = localStorage.getItem(k);
                   if (val) {
                     const parsed = JSON.parse(val);
@@ -296,6 +302,7 @@ export const ResourceViewPage: React.FC = () => {
         if (!resData) {
           try {
             const localListStr =
+              localStorage.getItem(`passdigit_resources_${creatorData.uid}`) ||
               localStorage.getItem(`nullwave_resources_${creatorData.uid}`) ||
               localStorage.getItem(`unlockr_resources_${creatorData.uid}`);
             if (localListStr) {
@@ -328,6 +335,7 @@ export const ResourceViewPage: React.FC = () => {
         // Password gate evaluation
         const isOwnerUser = Boolean(user && user.uid === resData.creatorId);
         const isPwdUnlockedInSession =
+          sessionStorage.getItem(`passdigit_pwd_unlocked_${resData.id}`) === 'true' ||
           sessionStorage.getItem(`nullwave_pwd_unlocked_${resData.id}`) === 'true' ||
           sessionStorage.getItem(`unlockr_pwd_unlocked_${resData.id}`) === 'true';
 
@@ -339,6 +347,7 @@ export const ResourceViewPage: React.FC = () => {
         // the visitor already possesses the valid access code! Automatically unlock!
         const isDirectCodeAccess = Boolean(code && code.trim() === resData.code);
         const alreadyUnlockedInSession =
+          sessionStorage.getItem(`passdigit_unlocked_${resData.id}`) === 'true' ||
           sessionStorage.getItem(`nullwave_unlocked_${resData.id}`) === 'true' ||
           sessionStorage.getItem(`unlockr_unlocked_${resData.id}`) === 'true' ||
           user?.uid === resData.creatorId;
@@ -351,6 +360,7 @@ export const ResourceViewPage: React.FC = () => {
         if ((isDirectCodeAccess || alreadyUnlockedInSession) && ((!isExpiredCheck && !isCapacityCheck) || isOwner)) {
           setIsUnlocked(true);
           try {
+            sessionStorage.setItem(`passdigit_unlocked_${resData.id}`, 'true');
             sessionStorage.setItem(`nullwave_unlocked_${resData.id}`, 'true');
             sessionStorage.setItem(`unlockr_unlocked_${resData.id}`, 'true');
           } catch {}
@@ -415,8 +425,10 @@ export const ResourceViewPage: React.FC = () => {
     }
 
     const identifier = code || publicSlug || resource.code;
+    const passdigitCooldownKey = `passdigit_cooldown_${cleanUsername}_${identifier}`;
     const nullwaveCooldownKey = `nullwave_cooldown_${cleanUsername}_${identifier}`;
     const unlockrCooldownKey = `unlockr_cooldown_${cleanUsername}_${identifier}`;
+    const passdigitAttemptsKey = `passdigit_attempts_${cleanUsername}_${identifier}`;
     const nullwaveAttemptsKey = `nullwave_attempts_${cleanUsername}_${identifier}`;
     const unlockrAttemptsKey = `unlockr_attempts_${cleanUsername}_${identifier}`;
 
@@ -430,14 +442,19 @@ export const ResourceViewPage: React.FC = () => {
 
     if (enteredCode.trim() === resource.code) {
       try {
+        sessionStorage.setItem(`passdigit_unlocked_${resource.id}`, 'true');
         sessionStorage.setItem(`nullwave_unlocked_${resource.id}`, 'true');
         sessionStorage.setItem(`unlockr_unlocked_${resource.id}`, 'true');
+        sessionStorage.removeItem(passdigitAttemptsKey);
         sessionStorage.removeItem(nullwaveAttemptsKey);
         sessionStorage.removeItem(unlockrAttemptsKey);
+        localStorage.removeItem(passdigitAttemptsKey);
         localStorage.removeItem(nullwaveAttemptsKey);
         localStorage.removeItem(unlockrAttemptsKey);
+        sessionStorage.removeItem(passdigitCooldownKey);
         sessionStorage.removeItem(nullwaveCooldownKey);
         sessionStorage.removeItem(unlockrCooldownKey);
+        localStorage.removeItem(passdigitCooldownKey);
         localStorage.removeItem(nullwaveCooldownKey);
         localStorage.removeItem(unlockrCooldownKey);
       } catch {}
@@ -447,8 +464,10 @@ export const ResourceViewPage: React.FC = () => {
       let attempts = 0;
       try {
         const stored =
+          localStorage.getItem(passdigitAttemptsKey) ||
           localStorage.getItem(nullwaveAttemptsKey) ||
           localStorage.getItem(unlockrAttemptsKey) ||
+          sessionStorage.getItem(passdigitAttemptsKey) ||
           sessionStorage.getItem(nullwaveAttemptsKey) ||
           sessionStorage.getItem(unlockrAttemptsKey);
         attempts = stored ? parseInt(stored, 10) : 0;
@@ -459,12 +478,16 @@ export const ResourceViewPage: React.FC = () => {
         const cooldownDurationMs = 30000;
         const expiresAt = Date.now() + cooldownDurationMs;
         try {
+          sessionStorage.setItem(passdigitCooldownKey, expiresAt.toString());
           sessionStorage.setItem(nullwaveCooldownKey, expiresAt.toString());
           sessionStorage.setItem(unlockrCooldownKey, expiresAt.toString());
+          localStorage.setItem(passdigitCooldownKey, expiresAt.toString());
           localStorage.setItem(nullwaveCooldownKey, expiresAt.toString());
           localStorage.setItem(unlockrCooldownKey, expiresAt.toString());
+          sessionStorage.removeItem(passdigitAttemptsKey);
           sessionStorage.removeItem(nullwaveAttemptsKey);
           sessionStorage.removeItem(unlockrAttemptsKey);
+          localStorage.removeItem(passdigitAttemptsKey);
           localStorage.removeItem(nullwaveAttemptsKey);
           localStorage.removeItem(unlockrAttemptsKey);
         } catch {}
@@ -472,8 +495,10 @@ export const ResourceViewPage: React.FC = () => {
         setCodeError('Incorrect code. Too many failed attempts, please wait 30 seconds.');
       } else {
         try {
+          sessionStorage.setItem(passdigitAttemptsKey, attempts.toString());
           sessionStorage.setItem(nullwaveAttemptsKey, attempts.toString());
           sessionStorage.setItem(unlockrAttemptsKey, attempts.toString());
+          localStorage.setItem(passdigitAttemptsKey, attempts.toString());
           localStorage.setItem(nullwaveAttemptsKey, attempts.toString());
           localStorage.setItem(unlockrAttemptsKey, attempts.toString());
         } catch {}
@@ -496,8 +521,10 @@ export const ResourceViewPage: React.FC = () => {
     setIsVerifyingPassword(true);
 
     const identifier = code || publicSlug || resource.code;
+    const passdigitAttemptsKey = `passdigit_attempts_${cleanUsername}_${identifier}`;
     const nullwaveAttemptsKey = `nullwave_attempts_${cleanUsername}_${identifier}`;
     const unlockrAttemptsKey = `unlockr_attempts_${cleanUsername}_${identifier}`;
+    const passdigitCooldownKey = `passdigit_cooldown_${cleanUsername}_${identifier}`;
     const nullwaveCooldownKey = `nullwave_cooldown_${cleanUsername}_${identifier}`;
     const unlockrCooldownKey = `unlockr_cooldown_${cleanUsername}_${identifier}`;
 
@@ -505,14 +532,19 @@ export const ResourceViewPage: React.FC = () => {
 
     if (isMatch) {
       try {
+        sessionStorage.setItem(`passdigit_pwd_unlocked_${resource.id}`, 'true');
         sessionStorage.setItem(`nullwave_pwd_unlocked_${resource.id}`, 'true');
         sessionStorage.setItem(`unlockr_pwd_unlocked_${resource.id}`, 'true');
+        sessionStorage.removeItem(passdigitAttemptsKey);
         sessionStorage.removeItem(nullwaveAttemptsKey);
         sessionStorage.removeItem(unlockrAttemptsKey);
+        localStorage.removeItem(passdigitAttemptsKey);
         localStorage.removeItem(nullwaveAttemptsKey);
         localStorage.removeItem(unlockrAttemptsKey);
+        sessionStorage.removeItem(passdigitCooldownKey);
         sessionStorage.removeItem(nullwaveCooldownKey);
         sessionStorage.removeItem(unlockrCooldownKey);
+        localStorage.removeItem(passdigitCooldownKey);
         localStorage.removeItem(nullwaveCooldownKey);
         localStorage.removeItem(unlockrCooldownKey);
       } catch {}
@@ -522,8 +554,10 @@ export const ResourceViewPage: React.FC = () => {
       let attempts = 0;
       try {
         const stored =
+          localStorage.getItem(passdigitAttemptsKey) ||
           localStorage.getItem(nullwaveAttemptsKey) ||
           localStorage.getItem(unlockrAttemptsKey) ||
+          sessionStorage.getItem(passdigitAttemptsKey) ||
           sessionStorage.getItem(nullwaveAttemptsKey) ||
           sessionStorage.getItem(unlockrAttemptsKey);
         attempts = stored ? parseInt(stored, 10) : 0;
@@ -534,12 +568,16 @@ export const ResourceViewPage: React.FC = () => {
         const cooldownDurationMs = 30000;
         const expiresAt = Date.now() + cooldownDurationMs;
         try {
+          sessionStorage.setItem(passdigitCooldownKey, expiresAt.toString());
           sessionStorage.setItem(nullwaveCooldownKey, expiresAt.toString());
           sessionStorage.setItem(unlockrCooldownKey, expiresAt.toString());
+          localStorage.setItem(passdigitCooldownKey, expiresAt.toString());
           localStorage.setItem(nullwaveCooldownKey, expiresAt.toString());
           localStorage.setItem(unlockrCooldownKey, expiresAt.toString());
+          sessionStorage.removeItem(passdigitAttemptsKey);
           sessionStorage.removeItem(nullwaveAttemptsKey);
           sessionStorage.removeItem(unlockrAttemptsKey);
+          localStorage.removeItem(passdigitAttemptsKey);
           localStorage.removeItem(nullwaveAttemptsKey);
           localStorage.removeItem(unlockrAttemptsKey);
         } catch {}
@@ -547,8 +585,10 @@ export const ResourceViewPage: React.FC = () => {
         setPasswordError('Incorrect password. Too many failed attempts, please wait 30 seconds.');
       } else {
         try {
+          sessionStorage.setItem(passdigitAttemptsKey, attempts.toString());
           sessionStorage.setItem(nullwaveAttemptsKey, attempts.toString());
           sessionStorage.setItem(unlockrAttemptsKey, attempts.toString());
+          localStorage.setItem(passdigitAttemptsKey, attempts.toString());
           localStorage.setItem(nullwaveAttemptsKey, attempts.toString());
           localStorage.setItem(unlockrAttemptsKey, attempts.toString());
         } catch {}

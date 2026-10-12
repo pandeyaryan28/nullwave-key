@@ -119,6 +119,7 @@ export const DashboardOverviewPage: React.FC = () => {
         if (list.length === 0) {
           try {
             const local = JSON.parse(
+              localStorage.getItem(`passdigit_resources_${user.uid}`) ||
               localStorage.getItem(`nullwave_resources_${user.uid}`) ||
               localStorage.getItem(`unlockr_resources_${user.uid}`) ||
               '[]'

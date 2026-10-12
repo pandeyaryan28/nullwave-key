@@ -19,7 +19,7 @@ import { Button } from '../../components/ui/Button';
 import { CodeInput } from '../../components/ui/CodeInput';
 import { ThemeToggle } from '../../components/ui/ThemeToggle';
 import {
-  Waves,
+  KeyRound,
   Radio,
   FileText,
   ArrowRight,
@@ -94,8 +94,10 @@ export const CreatorProfilePage: React.FC = () => {
     const checkCooldown = () => {
       try {
         const stored =
+          localStorage.getItem(`passdigit_cooldown_${cleanUsername}`) ||
           localStorage.getItem(`nullwave_cooldown_${cleanUsername}`) ||
           localStorage.getItem(`unlockr_cooldown_${cleanUsername}`) ||
+          sessionStorage.getItem(`passdigit_cooldown_${cleanUsername}`) ||
           sessionStorage.getItem(`nullwave_cooldown_${cleanUsername}`) ||
           sessionStorage.getItem(`unlockr_cooldown_${cleanUsername}`);
         if (stored) {
@@ -103,8 +105,10 @@ export const CreatorProfilePage: React.FC = () => {
           const remaining = Math.max(0, Math.ceil((expiresAt - Date.now()) / 1000));
           setCooldownSeconds(remaining);
           if (remaining === 0) {
+            localStorage.removeItem(`passdigit_cooldown_${cleanUsername}`);
             localStorage.removeItem(`nullwave_cooldown_${cleanUsername}`);
             localStorage.removeItem(`unlockr_cooldown_${cleanUsername}`);
+            sessionStorage.removeItem(`passdigit_cooldown_${cleanUsername}`);
             sessionStorage.removeItem(`nullwave_cooldown_${cleanUsername}`);
             sessionStorage.removeItem(`unlockr_cooldown_${cleanUsername}`);
           }
@@ -123,7 +127,9 @@ export const CreatorProfilePage: React.FC = () => {
       const unlocked = new Set<string>();
       for (let i = 0; i < sessionStorage.length; i++) {
         const key = sessionStorage.key(i);
-        if (key?.startsWith('nullwave_unlocked_')) {
+        if (key?.startsWith('passdigit_unlocked_')) {
+          unlocked.add(key.replace('passdigit_unlocked_', ''));
+        } else if (key?.startsWith('nullwave_unlocked_')) {
           unlocked.add(key.replace('nullwave_unlocked_', ''));
         } else if (key?.startsWith('unlockr_unlocked_')) {
           unlocked.add(key.replace('unlockr_unlocked_', ''));
@@ -183,7 +189,9 @@ export const CreatorProfilePage: React.FC = () => {
         // 3. Check local storage fallback if not found in Firestore
         if (!creatorData) {
           try {
-            const localKey = localStorage.getItem(`nullwave_profile_${cleanUsername}`)
+            const localKey = localStorage.getItem(`passdigit_profile_${cleanUsername}`)
+              ? `passdigit_profile_${cleanUsername}`
+              : localStorage.getItem(`nullwave_profile_${cleanUsername}`)
               ? `nullwave_profile_${cleanUsername}`
               : `unlockr_profile_${cleanUsername}`;
             const localData = localStorage.getItem(localKey);
@@ -192,7 +200,11 @@ export const CreatorProfilePage: React.FC = () => {
             } else {
               for (let i = 0; i < localStorage.length; i++) {
                 const k = localStorage.key(i);
-                if (k?.startsWith('nullwave_profile_') || k?.startsWith('unlockr_profile_')) {
+                if (
+                  k?.startsWith('passdigit_profile_') ||
+                  k?.startsWith('nullwave_profile_') ||
+                  k?.startsWith('unlockr_profile_')
+                ) {
                   const val = localStorage.getItem(k);
                   if (val) {
                     const parsed = JSON.parse(val);
@@ -250,6 +262,7 @@ export const CreatorProfilePage: React.FC = () => {
       if (resList.length === 0) {
         try {
           const localListStr =
+            localStorage.getItem(`passdigit_resources_${creatorId}`) ||
             localStorage.getItem(`nullwave_resources_${creatorId}`) ||
             localStorage.getItem(`unlockr_resources_${creatorId}`);
           if (localListStr) {
@@ -272,6 +285,7 @@ export const CreatorProfilePage: React.FC = () => {
       try {
         const isOwner = Boolean(user && user.uid === creatorId);
         const localListStr =
+          localStorage.getItem(`passdigit_resources_${creatorId}`) ||
           localStorage.getItem(`nullwave_resources_${creatorId}`) ||
           localStorage.getItem(`unlockr_resources_${creatorId}`);
         if (localListStr) {
@@ -295,8 +309,8 @@ export const CreatorProfilePage: React.FC = () => {
     if (navigator.share) {
       try {
         await navigator.share({
-          title: `${creator?.displayName || creator?.username} on NullWave`,
-          text: creator?.headline || `Check out ${creator?.displayName}'s guides and resources on NullWave`,
+          title: `${creator?.displayName || creator?.username} on PassDigit`,
+          text: creator?.headline || `Check out ${creator?.displayName}'s guides and resources on PassDigit`,
           url: profileUrl,
         });
         return;
@@ -311,8 +325,10 @@ export const CreatorProfilePage: React.FC = () => {
     let attempts = 0;
     try {
       const stored =
+        localStorage.getItem(`passdigit_attempts_${cleanUsername}`) ||
         localStorage.getItem(`nullwave_attempts_${cleanUsername}`) ||
         localStorage.getItem(`unlockr_attempts_${cleanUsername}`) ||
+        sessionStorage.getItem(`passdigit_attempts_${cleanUsername}`) ||
         sessionStorage.getItem(`nullwave_attempts_${cleanUsername}`) ||
         sessionStorage.getItem(`unlockr_attempts_${cleanUsername}`);
       attempts = stored ? parseInt(stored, 10) : 0;
@@ -323,12 +339,16 @@ export const CreatorProfilePage: React.FC = () => {
       const cooldownDurationMs = 30000; // 30-second cooldown
       const expiresAt = Date.now() + cooldownDurationMs;
       try {
+        sessionStorage.setItem(`passdigit_cooldown_${cleanUsername}`, expiresAt.toString());
         sessionStorage.setItem(`nullwave_cooldown_${cleanUsername}`, expiresAt.toString());
         sessionStorage.setItem(`unlockr_cooldown_${cleanUsername}`, expiresAt.toString());
+        localStorage.setItem(`passdigit_cooldown_${cleanUsername}`, expiresAt.toString());
         localStorage.setItem(`nullwave_cooldown_${cleanUsername}`, expiresAt.toString());
         localStorage.setItem(`unlockr_cooldown_${cleanUsername}`, expiresAt.toString());
+        sessionStorage.removeItem(`passdigit_attempts_${cleanUsername}`);
         sessionStorage.removeItem(`nullwave_attempts_${cleanUsername}`);
         sessionStorage.removeItem(`unlockr_attempts_${cleanUsername}`);
+        localStorage.removeItem(`passdigit_attempts_${cleanUsername}`);
         localStorage.removeItem(`nullwave_attempts_${cleanUsername}`);
         localStorage.removeItem(`unlockr_attempts_${cleanUsername}`);
       } catch {}
@@ -337,8 +357,10 @@ export const CreatorProfilePage: React.FC = () => {
     }
 
     try {
+      sessionStorage.setItem(`passdigit_attempts_${cleanUsername}`, attempts.toString());
       sessionStorage.setItem(`nullwave_attempts_${cleanUsername}`, attempts.toString());
       sessionStorage.setItem(`unlockr_attempts_${cleanUsername}`, attempts.toString());
+      localStorage.setItem(`passdigit_attempts_${cleanUsername}`, attempts.toString());
       localStorage.setItem(`nullwave_attempts_${cleanUsername}`, attempts.toString());
       localStorage.setItem(`unlockr_attempts_${cleanUsername}`, attempts.toString());
     } catch {}
@@ -347,14 +369,19 @@ export const CreatorProfilePage: React.FC = () => {
 
   const unlockAndNavigate = (targetResource: Resource) => {
     try {
+      sessionStorage.setItem(`passdigit_unlocked_${targetResource.id}`, 'true');
       sessionStorage.setItem(`nullwave_unlocked_${targetResource.id}`, 'true');
       sessionStorage.setItem(`unlockr_unlocked_${targetResource.id}`, 'true');
+      sessionStorage.removeItem(`passdigit_attempts_${cleanUsername}`);
       sessionStorage.removeItem(`nullwave_attempts_${cleanUsername}`);
       sessionStorage.removeItem(`unlockr_attempts_${cleanUsername}`);
+      localStorage.removeItem(`passdigit_attempts_${cleanUsername}`);
       localStorage.removeItem(`nullwave_attempts_${cleanUsername}`);
       localStorage.removeItem(`unlockr_attempts_${cleanUsername}`);
+      sessionStorage.removeItem(`passdigit_cooldown_${cleanUsername}`);
       sessionStorage.removeItem(`nullwave_cooldown_${cleanUsername}`);
       sessionStorage.removeItem(`unlockr_cooldown_${cleanUsername}`);
+      localStorage.removeItem(`passdigit_cooldown_${cleanUsername}`);
       localStorage.removeItem(`nullwave_cooldown_${cleanUsername}`);
       localStorage.removeItem(`unlockr_cooldown_${cleanUsername}`);
     } catch {}
@@ -429,6 +456,7 @@ export const CreatorProfilePage: React.FC = () => {
         let localMatch: Resource | null = null;
         try {
           const localListStr =
+            localStorage.getItem(`passdigit_resources_${creator.uid}`) ||
             localStorage.getItem(`nullwave_resources_${creator.uid}`) ||
             localStorage.getItem(`unlockr_resources_${creator.uid}`);
           if (localListStr) {
@@ -486,6 +514,7 @@ export const CreatorProfilePage: React.FC = () => {
     // 2. Check password protection
     const isOwner = Boolean(user && creator && user.uid === creator.uid);
     const isPwdUnlocked =
+      sessionStorage.getItem(`passdigit_pwd_unlocked_${targetResource.id}`) === 'true' ||
       sessionStorage.getItem(`nullwave_pwd_unlocked_${targetResource.id}`) === 'true' ||
       sessionStorage.getItem(`unlockr_pwd_unlocked_${targetResource.id}`) === 'true';
 
@@ -516,14 +545,19 @@ export const CreatorProfilePage: React.FC = () => {
 
     if (isMatch) {
       try {
+        sessionStorage.setItem(`passdigit_pwd_unlocked_${passwordModalResource.id}`, 'true');
         sessionStorage.setItem(`nullwave_pwd_unlocked_${passwordModalResource.id}`, 'true');
         sessionStorage.setItem(`unlockr_pwd_unlocked_${passwordModalResource.id}`, 'true');
+        sessionStorage.removeItem(`passdigit_attempts_${cleanUsername}`);
         sessionStorage.removeItem(`nullwave_attempts_${cleanUsername}`);
         sessionStorage.removeItem(`unlockr_attempts_${cleanUsername}`);
+        localStorage.removeItem(`passdigit_attempts_${cleanUsername}`);
         localStorage.removeItem(`nullwave_attempts_${cleanUsername}`);
         localStorage.removeItem(`unlockr_attempts_${cleanUsername}`);
+        sessionStorage.removeItem(`passdigit_cooldown_${cleanUsername}`);
         sessionStorage.removeItem(`nullwave_cooldown_${cleanUsername}`);
         sessionStorage.removeItem(`unlockr_cooldown_${cleanUsername}`);
+        localStorage.removeItem(`passdigit_cooldown_${cleanUsername}`);
         localStorage.removeItem(`nullwave_cooldown_${cleanUsername}`);
         localStorage.removeItem(`unlockr_cooldown_${cleanUsername}`);
       } catch {}
@@ -608,7 +642,7 @@ export const CreatorProfilePage: React.FC = () => {
     return (
       <div className="min-h-screen bg-neutral-50 dark:bg-neutral-950 flex flex-col items-center justify-center p-6 text-center">
         <div className="w-12 h-12 rounded-md bg-neutral-200 dark:bg-neutral-800 flex items-center justify-center mb-4 text-neutral-500">
-          <Waves className="w-6 h-6" />
+          <KeyRound className="w-6 h-6" />
         </div>
         <h1 className="text-xl font-bold text-neutral-900 dark:text-neutral-100 mb-2">
           Profile Not Found
@@ -620,7 +654,7 @@ export const CreatorProfilePage: React.FC = () => {
           to="/"
           className="text-sm font-medium text-neutral-900 dark:text-neutral-100 underline hover:no-underline"
         >
-          Return to NullWave home
+          Return to PassDigit home
         </Link>
       </div>
     );
@@ -639,6 +673,7 @@ export const CreatorProfilePage: React.FC = () => {
     if (unlockedResourceIds.has(res.id)) return true;
     try {
       return (
+        sessionStorage.getItem(`passdigit_unlocked_${res.id}`) === 'true' ||
         sessionStorage.getItem(`nullwave_unlocked_${res.id}`) === 'true' ||
         sessionStorage.getItem(`unlockr_unlocked_${res.id}`) === 'true'
       );
@@ -652,6 +687,7 @@ export const CreatorProfilePage: React.FC = () => {
     if (isOwner) return true;
     try {
       return (
+        sessionStorage.getItem(`passdigit_pwd_unlocked_${res.id}`) === 'true' ||
         sessionStorage.getItem(`nullwave_pwd_unlocked_${res.id}`) === 'true' ||
         sessionStorage.getItem(`unlockr_pwd_unlocked_${res.id}`) === 'true' ||
         unlockedResourceIds.has(res.id)
@@ -754,10 +790,10 @@ export const CreatorProfilePage: React.FC = () => {
         <div className="max-w-4xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2">
             <div className="w-6 h-6 rounded-md bg-neutral-900 text-neutral-50 dark:bg-neutral-100 dark:text-neutral-900 flex items-center justify-center">
-              <Waves className="w-3.5 h-3.5" />
+              <KeyRound className="w-3.5 h-3.5" />
             </div>
             <span className="font-bold text-sm tracking-tight text-neutral-900 dark:text-neutral-100">
-              NullWave
+              PassDigit
             </span>
           </Link>
 
@@ -805,7 +841,7 @@ export const CreatorProfilePage: React.FC = () => {
           ) : (
             <div className="w-full h-full bg-gradient-to-br from-neutral-200 via-neutral-300 to-neutral-200 dark:from-neutral-900 dark:via-neutral-800 dark:to-neutral-900 flex items-center justify-center">
               <div className="opacity-10 dark:opacity-20 flex items-center gap-3">
-                <Waves className="w-16 h-16 text-neutral-900 dark:text-neutral-100" />
+                <KeyRound className="w-16 h-16 text-neutral-900 dark:text-neutral-100" />
               </div>
             </div>
           )}

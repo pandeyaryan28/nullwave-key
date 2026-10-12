@@ -70,10 +70,14 @@ export const EditResourcePage: React.FC = () => {
         } else {
           // Check local storage fallback
           try {
+            const passdigitKey = `passdigit_resources_${user.uid}`;
             const nullwaveKey = `nullwave_resources_${user.uid}`;
             const unlockrKey = `unlockr_resources_${user.uid}`;
             const localList = JSON.parse(
-              localStorage.getItem(nullwaveKey) || localStorage.getItem(unlockrKey) || '[]'
+              localStorage.getItem(passdigitKey) ||
+              localStorage.getItem(nullwaveKey) ||
+              localStorage.getItem(unlockrKey) ||
+              '[]'
             ) as Resource[];
             data = localList.find(r => r.id === id) || null;
           } catch {}
@@ -222,12 +226,17 @@ export const EditResourcePage: React.FC = () => {
       // Update local storage cache
       if (user) {
         try {
+          const passdigitKey = `passdigit_resources_${user.uid}`;
           const nullwaveKey = `nullwave_resources_${user.uid}`;
           const unlockrKey = `unlockr_resources_${user.uid}`;
           const localList = JSON.parse(
-            localStorage.getItem(nullwaveKey) || localStorage.getItem(unlockrKey) || '[]'
+            localStorage.getItem(passdigitKey) ||
+            localStorage.getItem(nullwaveKey) ||
+            localStorage.getItem(unlockrKey) ||
+            '[]'
           ) as Resource[];
           const updated = localList.map(r => (r.id === id ? { ...r, ...updatedFields } : r));
+          localStorage.setItem(passdigitKey, JSON.stringify(updated));
           localStorage.setItem(nullwaveKey, JSON.stringify(updated));
           localStorage.setItem(unlockrKey, JSON.stringify(updated));
         } catch {}

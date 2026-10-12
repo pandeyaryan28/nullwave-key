@@ -1,0 +1,1332 @@
+[
+  {
+    "creatorName": "The Social Dork",
+    "handle": "thesocialdork",
+    "platform": "youtube",
+    "email": "thesocialdork@gmail.com",
+    "channelOrProfileUrl": "https://youtube.com/@thesocialdork1133",
+    "resourceTitle": "Beginner Cyber security roadmap.pdf",
+    "currentLinkUrl": "https://drive.google.com/file/d/18Gk0efMBtC63HgyWIvEAvdxIoWs9m2Qn/view?usp=sharing",
+    "currentLinkType": "drive",
+    "status": "dispatched",
+    "notes": "Cybersecurity educator, ~62.3k subscribers, shares Google Drive career roadmap in video descriptions.",
+    "id": "lead_thesocialdork_01",
+    "outreachHistory": [
+      {
+        "sentAt": "2026-10-12T10:40:15.558Z",
+        "subject": "cybersecurity roadmap link on mobile",
+        "mode": "simulated"
+      }
+    ],
+    "createdAt": "2026-10-09T01:15:00.000Z",
+    "updatedAt": "2026-10-12T10:40:15.559Z",
+    "teardownComparison": {
+      "currentSeconds": 28,
+      "currentSteps": 4,
+      "nullwaveSeconds": 0.2,
+      "nullwaveSteps": 1
+    },
+    "teardownGifUrl": "https://passdigit.com/signup?handle=thesocialdork&preview=true",
+    "customizedMessage": {
+      "subject": "cybersecurity roadmap link on mobile",
+      "body": "Hey there,\n\nSaw your Beginner Cybersecurity roadmap video and checked the Google Drive link in your description.\n\nOn mobile YouTube in-app browsers, Google Drive often triggers an account login picker before opening the PDF.\n\nBuilt PassDigit — a lightweight way to share PDFs with a simple 4-digit code (passdigit.com/thesocialdork/code). Loads in 0.2s inside the mobile browser with zero app installs or Google sign-ins.\n\nReserved passdigit.com/thesocialdork for you if you'd like to test it on your next roadmap video. No worries either way, love the channel!\nhttps://passdigit.com/signup?handle=thesocialdork\n\nBest,\nAryan\nPassDigit",
+      "wordCount": 89,
+      "first_name": "there"
+    }
+  },
+  {
+    "creatorName": "Suman Malakar",
+    "handle": "webdevmastery",
+    "platform": "youtube",
+    "email": "malakars041@gmail.com",
+    "channelOrProfileUrl": "https://youtube.com/@webdevmastery18",
+    "resourceTitle": "Full-Stack Developer Notes & Study Roadmap",
+    "currentLinkUrl": "https://drive.google.com/drive/u/0/folders/1-wk8nrebq2jM17T9pOkoXmyp83jk8fNo",
+    "currentLinkType": "drive",
+    "status": "dispatched",
+    "notes": "Web dev tutor, ~19.4k subscribers, provides full stack notes on Google Drive in video descriptions.",
+    "id": "lead_webdevmastery_02",
+    "outreachHistory": [
+      {
+        "sentAt": "2026-10-12T10:40:15.560Z",
+        "subject": "full-stack notes link on web dev mastery",
+        "mode": "simulated"
+      }
+    ],
+    "createdAt": "2026-10-09T01:15:00.000Z",
+    "updatedAt": "2026-10-12T10:40:15.560Z",
+    "teardownComparison": {
+      "currentSeconds": 28,
+      "currentSteps": 4,
+      "nullwaveSeconds": 0.2,
+      "nullwaveSteps": 1
+    },
+    "teardownGifUrl": "https://passdigit.com/signup?handle=webdevmastery&preview=true",
+    "customizedMessage": {
+      "subject": "full-stack notes link on web dev mastery",
+      "body": "Hey Suman,\n\nChecked out your full-stack developer roadmap and study notes on Web Dev Mastery.\n\nThe Google Drive folder works great on desktop, but on phones students hit Google permissions and sign-in prompts before reading.\n\nWe built PassDigit so educators can share notes with a clean 4-digit code (passdigit.com/webdevmastery/code) that opens instantly in 0.2s in-browser.\n\nSaved passdigit.com/webdevmastery for you here if you ever want to try it on a video drop. Keep up the awesome tutorials!\nhttps://passdigit.com/signup?handle=webdevmastery\n\nBest,\nAryan\nPassDigit",
+      "wordCount": 80,
+      "first_name": "Suman"
+    }
+  },
+  {
+    "creatorName": "Akram Sohail",
+    "handle": "knowledge360",
+    "platform": "youtube",
+    "email": "knowledge.360.knowledge@gmail.com",
+    "channelOrProfileUrl": "https://youtube.com/@knowledge360k",
+    "resourceTitle": "PostgreSQL & SQL Complete Study Notes",
+    "currentLinkUrl": "https://drive.google.com/file/d/1VDZ7YyuMvW9dyH9hNkMlvRmFI4vIbQUY/view?usp=sharing",
+    "currentLinkType": "drive",
+    "status": "dispatched",
+    "notes": "Database & SQL tutor, ~82.7k subscribers, shares Google Drive study notes and cheat sheets.",
+    "id": "lead_knowledge360_03",
+    "outreachHistory": [
+      {
+        "sentAt": "2026-10-12T10:40:15.561Z",
+        "subject": "sql notes link on mobile",
+        "mode": "simulated"
+      }
+    ],
+    "createdAt": "2026-10-09T01:15:00.000Z",
+    "updatedAt": "2026-10-12T10:40:15.561Z",
+    "teardownComparison": {
+      "currentSeconds": 28,
+      "currentSteps": 4,
+      "nullwaveSeconds": 0.2,
+      "nullwaveSteps": 1
+    },
+    "teardownGifUrl": "https://passdigit.com/signup?handle=knowledge360&preview=true",
+    "customizedMessage": {
+      "subject": "sql notes link on mobile",
+      "body": "Hey Akram,\n\nReally appreciate your PostgreSQL and SQL complete notes videos on Knowledge 360.\n\nNoticed you share the PDF via Google Drive — on phone webviews, students often run into account selector screens or access prompts.\n\nCreated PassDigit so students can view notes instantly with a 4-digit code (passdigit.com/knowledge360/code) without needing to log in to Google.\n\nPut aside passdigit.com/knowledge360 for you if you'd like to test it on your next SQL drop. No pressure at all!\nhttps://passdigit.com/signup?handle=knowledge360\n\nBest,\nAryan\nPassDigit",
+      "wordCount": 80,
+      "first_name": "Akram"
+    }
+  },
+  {
+    "creatorName": "Priyanka Vergadia",
+    "handle": "pvergadia",
+    "platform": "youtube",
+    "email": "contact@thecloudgirl.dev",
+    "channelOrProfileUrl": "https://youtube.com/@pvergadia",
+    "resourceTitle": "AI-Engineer-Roadmap-2026.pdf",
+    "currentLinkUrl": "https://drive.google.com/file/d/1QiW2KkYkdGyMVPDFz4Knr58KQYUoGfk_/view?usp=sharing",
+    "currentLinkType": "drive",
+    "status": "dispatched",
+    "notes": "The Cloud Girl, 54k subscribers, author and cloud advocate, shares AI Engineer roadmap PDF on Google Drive.",
+    "id": "lead_pvergadia_04",
+    "outreachHistory": [
+      {
+        "sentAt": "2026-10-12T10:40:15.562Z",
+        "subject": "visual ai roadmap link",
+        "mode": "simulated"
+      }
+    ],
+    "createdAt": "2026-10-09T01:15:00.000Z",
+    "updatedAt": "2026-10-12T10:40:15.562Z",
+    "teardownComparison": {
+      "currentSeconds": 28,
+      "currentSteps": 4,
+      "nullwaveSeconds": 0.2,
+      "nullwaveSteps": 1
+    },
+    "teardownGifUrl": "https://passdigit.com/signup?handle=pvergadia&preview=true",
+    "customizedMessage": {
+      "subject": "visual ai roadmap link",
+      "body": "Hey Priyanka,\n\nHuge fan of your visual cloud & AI sketches at The Cloud Girl — your 2026 AI Engineer roadmap is brilliant.\n\nSaw the Google Drive link in the description. On mobile devices, Drive often drops people into Google's app picker or sign-in barrier before rendering the visual PDF.\n\nBuilt PassDigit to give visual creators a 0.2s clean reader using simple 4-digit codes (passdigit.com/pvergadia/code) — zero login walls or third-party cookies.\n\nReserved passdigit.com/pvergadia for you if you ever want to try it for your next visual guide. Keep inspiring!\nhttps://passdigit.com/signup?handle=pvergadia\n\nBest,\nAryan\nPassDigit",
+      "wordCount": 94,
+      "first_name": "Priyanka"
+    }
+  },
+  {
+    "creatorName": "Manoj Chauhan",
+    "handle": "bestapproach",
+    "platform": "youtube",
+    "email": "workwithmanojchauhaniitd@gmail.com",
+    "channelOrProfileUrl": "https://youtube.com/@BestApproach",
+    "resourceTitle": "19 yr JEE Adv Paper QR BOOK.pdf",
+    "currentLinkUrl": "https://drive.google.com/file/d/1I_sazxry8R5BurDRnwkAqyG6VJhqEC2z/view?usp=drivesdk",
+    "currentLinkType": "drive",
+    "status": "dispatched",
+    "notes": "IIT Delhi educator, 153k subscribers, shares QR book study material PDF on Google Drive.",
+    "id": "lead_bestapproach_05",
+    "outreachHistory": [
+      {
+        "sentAt": "2026-10-12T10:40:15.563Z",
+        "subject": "19 yr jee adv qr book link",
+        "mode": "simulated"
+      }
+    ],
+    "createdAt": "2026-10-09T01:15:00.000Z",
+    "updatedAt": "2026-10-12T10:40:15.563Z",
+    "teardownComparison": {
+      "currentSeconds": 28,
+      "currentSteps": 4,
+      "nullwaveSeconds": 0.2,
+      "nullwaveSteps": 1
+    },
+    "teardownGifUrl": "https://passdigit.com/signup?handle=bestapproach&preview=true",
+    "customizedMessage": {
+      "subject": "19 yr jee adv qr book link",
+      "body": "Hey Manoj sir,\n\nRespect for your JEE Advanced mathematics work on Best Approach — the 19-year paper QR book is super helpful for students.\n\nWhen students click the Google Drive link from mobile YouTube, they frequently get stuck on Google Drive app authentication.\n\nBuilt PassDigit so students can access study PDFs instantly with a simple 4-digit code (passdigit.com/bestapproach/code) directly in the browser in 0.2s.\n\nReserved passdigit.com/bestapproach for your channel if you'd like to try it for student notes. Regards!\nhttps://passdigit.com/signup?handle=bestapproach\n\nBest,\nAryan\nPassDigit",
+      "wordCount": 83,
+      "first_name": "Manoj sir"
+    }
+  },
+  {
+    "creatorName": "Penny Barnshaw",
+    "handle": "garagefitnessgirl",
+    "platform": "youtube",
+    "email": "penny@garagefitnessgirl.com",
+    "channelOrProfileUrl": "https://youtube.com/@garagefitnessgirl",
+    "resourceTitle": "GFG_Strong_Reset_Calendar_FREE_White__v2.pdf",
+    "currentLinkUrl": "https://drive.google.com/file/d/1hw-h0esM8ubywz9dgWMFjLIdjNHUp8mC/view?usp=sharing",
+    "currentLinkType": "drive",
+    "status": "dispatched",
+    "notes": "Fitness trainer, ~240k subscribers, distributes monthly workout calendar PDFs via Google Drive.",
+    "id": "lead_garagefitnessgirl_06",
+    "outreachHistory": [
+      {
+        "sentAt": "2026-10-12T10:40:15.564Z",
+        "subject": "strong reset calendar link on mobile",
+        "mode": "simulated"
+      }
+    ],
+    "createdAt": "2026-10-09T01:15:00.000Z",
+    "updatedAt": "2026-10-12T10:40:15.564Z",
+    "teardownComparison": {
+      "currentSeconds": 28,
+      "currentSteps": 4,
+      "nullwaveSeconds": 0.2,
+      "nullwaveSteps": 1
+    },
+    "teardownGifUrl": "https://passdigit.com/signup?handle=garagefitnessgirl&preview=true",
+    "customizedMessage": {
+      "subject": "strong reset calendar link on mobile",
+      "body": "Hey Penny,\n\nLove your workouts on Garage Fitness Girl — your energy and consistent training calendars are so inspiring.\n\nTested your GFG Strong Reset Calendar PDF on a phone; Google Drive webviews can be clumsy on mobile, often asking people to sign in or open the Drive app.\n\nBuilt PassDigit so fitness coaches can share workout calendars with a 4-digit code (passdigit.com/garagefitnessgirl/code) that opens in 0.2s in-browser with zero app installs.\n\nReserved passdigit.com/garagefitnessgirl for you if you'd like to try it for your next monthly calendar drop. Keep crushing it!\nhttps://passdigit.com/signup?handle=garagefitnessgirl\n\nBest,\nAryan\nPassDigit",
+      "wordCount": 94,
+      "first_name": "Penny"
+    }
+  },
+  {
+    "creatorName": "Sergio Orduz",
+    "handle": "sergioorduz",
+    "platform": "youtube",
+    "email": "contactofitnesslegacy@gmail.com",
+    "channelOrProfileUrl": "https://youtube.com/@sergioorduz",
+    "resourceTitle": "RETO 8 SEMANAS.pdf",
+    "currentLinkUrl": "https://drive.google.com/file/d/1P_tVR_G1CK7tweWAq1GLkT2-17vv4g2c/view?usp=sharing",
+    "currentLinkType": "drive",
+    "status": "dispatched",
+    "notes": "Calisthenics coach, ~461k subscribers, provides 8-week routine PDF via Google Drive.",
+    "id": "lead_sergioorduz_07",
+    "outreachHistory": [
+      {
+        "sentAt": "2026-10-12T10:40:15.565Z",
+        "subject": "reto 8 semanas pdf link",
+        "mode": "simulated"
+      }
+    ],
+    "createdAt": "2026-10-09T01:15:00.000Z",
+    "updatedAt": "2026-10-12T10:40:15.565Z",
+    "teardownComparison": {
+      "currentSeconds": 28,
+      "currentSteps": 4,
+      "nullwaveSeconds": 0.2,
+      "nullwaveSteps": 1
+    },
+    "teardownGifUrl": "https://passdigit.com/signup?handle=sergioorduz&preview=true",
+    "customizedMessage": {
+      "subject": "reto 8 semanas pdf link",
+      "body": "Hey Sergio,\n\nGran trabajo con tu contenido de entrenamiento en Fitness Legacy — la rutina 'Reto 8 Semanas' tiene un valor increíble.\n\nProbé el enlace de Google Drive en el móvil; a veces pide inicio de sesión de Google antes de permitir que la gente vea la rutina.\n\nCreamos PassDigit para que los entrenadores compartan PDFs con un código de 4 dígitos (passdigit.com/sergioorduz/code) que abre en 0.2s sin registros ni contraseñas.\n\nReservamos passdigit.com/sergioorduz para ti por si quieres probarlo en tu próximo reto. ¡Mucho éxito!\nhttps://passdigit.com/signup?handle=sergioorduz\n\nBest,\nAryan\nPassDigit",
+      "wordCount": 89,
+      "first_name": "Sergio"
+    }
+  },
+  {
+    "creatorName": "Paul Lyngso",
+    "handle": "paul.lyngso",
+    "platform": "instagram",
+    "email": "paul@lyngsofit.com",
+    "channelOrProfileUrl": "https://www.instagram.com/paul.lyngso/",
+    "resourceTitle": "Golden Ratio Proportions.pdf",
+    "currentLinkUrl": "https://drive.google.com/file/d/1q2m3MLa2lOoObO66Gb-V6Qp_mt8Ke6yW/view",
+    "currentLinkType": "drive",
+    "status": "dispatched",
+    "notes": "Men's Fitness Coach, 11k followers on Instagram, shares proportion guide PDF on Google Drive.",
+    "id": "lead_paullyngso_08",
+    "outreachHistory": [
+      {
+        "sentAt": "2026-10-12T10:40:15.566Z",
+        "subject": "golden ratio proportions guide link",
+        "mode": "simulated"
+      }
+    ],
+    "createdAt": "2026-10-09T01:15:00.000Z",
+    "updatedAt": "2026-10-12T10:40:15.566Z",
+    "teardownComparison": {
+      "currentSeconds": 28,
+      "currentSteps": 4,
+      "nullwaveSeconds": 0.2,
+      "nullwaveSteps": 1
+    },
+    "teardownGifUrl": "https://passdigit.com/signup?handle=paul.lyngso&preview=true",
+    "customizedMessage": {
+      "subject": "golden ratio proportions guide link",
+      "body": "Hey Paul,\n\nLove your evidence-based physique posts on Lyngso Fitness — the Golden Ratio Proportions guide is super clear.\n\nNoticed you share the PDF via Google Drive in your bio; on mobile Instagram browsers, Drive often throws an authentication barrier before displaying the PDF.\n\nBuilt PassDigit so clients can view your fitness guides with a clean 4-digit code (passdigit.com/paul.lyngso/code) that loads in 0.2s inside Instagram's browser.\n\nSaved passdigit.com/paul.lyngso for you if you want to test it on your next bio link drop. Keep posting great physique breakdowns!\nhttps://passdigit.com/signup?handle=paul.lyngso\n\nBest,\nAryan\nPassDigit",
+      "wordCount": 91,
+      "first_name": "Paul"
+    }
+  },
+  {
+    "creatorName": "Dr. Amina Yonis",
+    "handle": "draminayonis",
+    "platform": "youtube",
+    "email": "amina@aminayonis.com",
+    "channelOrProfileUrl": "https://youtube.com/@draminayonis",
+    "resourceTitle": "Academic Productivity & Writing Templates",
+    "currentLinkUrl": "https://linktr.ee/draminayonis",
+    "currentLinkType": "linktree",
+    "status": "dispatched",
+    "notes": "Academic & research entrepreneur, ~484k subscribers, distributes thesis templates via Linktree.",
+    "id": "lead_draminayonis_09",
+    "outreachHistory": [
+      {
+        "sentAt": "2026-10-12T10:40:15.567Z",
+        "subject": "academic productivity templates link",
+        "mode": "simulated"
+      }
+    ],
+    "createdAt": "2026-10-09T01:15:00.000Z",
+    "updatedAt": "2026-10-12T10:40:15.567Z",
+    "teardownComparison": {
+      "currentSeconds": 24,
+      "currentSteps": 3,
+      "nullwaveSeconds": 0.2,
+      "nullwaveSteps": 1
+    },
+    "teardownGifUrl": "https://passdigit.com/signup?handle=draminayonis&preview=true",
+    "customizedMessage": {
+      "subject": "academic productivity templates link",
+      "body": "Hey Dr. Amina,\n\nHuge admirer of your academic productivity content and writing systems — Make S.P.A.C.E is such a helpful framework.\n\nSaw your Linktree on your channel; on mobile, sending students through a multi-button Linktree list often causes drop-off before they reach the templates.\n\nBuilt PassDigit so educators can share writing templates with a clean 4-digit code (passdigit.com/draminayonis/code) that renders in 0.2s in-browser with zero clutter.\n\nReserved passdigit.com/draminayonis for you if you want to try it for your next template release. Warmest regards!\nhttps://passdigit.com/signup?handle=draminayonis\n\nBest,\nAryan\nPassDigit",
+      "wordCount": 87,
+      "first_name": "Dr. Amina"
+    }
+  },
+  {
+    "creatorName": "Alex Berman",
+    "handle": "alexberman",
+    "platform": "youtube",
+    "email": "ABermanManagement@gmail.com",
+    "channelOrProfileUrl": "https://youtube.com/@alexberman",
+    "resourceTitle": "Cold Email Optimization Checklist & Client Contract Template",
+    "currentLinkUrl": "https://linktr.ee/email10K",
+    "currentLinkType": "linktree",
+    "status": "dispatched",
+    "notes": "B2B agency educator, ~110k subscribers, distributes cold email resources via 12-button Linktree.",
+    "id": "lead_alexberman_10",
+    "outreachHistory": [
+      {
+        "sentAt": "2026-10-12T10:40:15.568Z",
+        "subject": "cold email checklist link",
+        "mode": "simulated"
+      }
+    ],
+    "createdAt": "2026-10-09T01:15:00.000Z",
+    "updatedAt": "2026-10-12T10:40:15.568Z",
+    "teardownComparison": {
+      "currentSeconds": 24,
+      "currentSteps": 3,
+      "nullwaveSeconds": 0.2,
+      "nullwaveSteps": 1
+    },
+    "teardownGifUrl": "https://passdigit.com/signup?handle=alexberman&preview=true",
+    "customizedMessage": {
+      "subject": "cold email checklist link",
+      "body": "Hey Alex,\n\nFollow your B2B sales and cold outreach breakdowns — your Cold Email Optimization Checklist is sharp.\n\nChecked your Linktree bio link on mobile; multi-button landing pages on phone browsers have noticeable click drop-off before people reach the actual checklist.\n\nBuilt PassDigit so creators can share resource docs with a 4-digit code (passdigit.com/alexberman/code) that opens in 0.2s with zero redirect friction.\n\nSaved passdigit.com/alexberman for you if you want to test it on your next lead magnet drop. Cheers!\nhttps://passdigit.com/signup?handle=alexberman\n\nBest,\nAryan\nPassDigit",
+      "wordCount": 83,
+      "first_name": "Alex"
+    }
+  },
+  {
+    "creatorName": "Nick Babich",
+    "handle": "101babich",
+    "platform": "x",
+    "email": "babichplace@gmail.com",
+    "channelOrProfileUrl": "https://x.com/101babich",
+    "resourceTitle": "Accessibility checklist",
+    "currentLinkUrl": "https://babich.gumroad.com/l/accessiblity-checklist",
+    "currentLinkType": "gumroad",
+    "status": "dispatched",
+    "notes": "Editor-in-Chief of UX Planet, >20k on X, shares verified $0 free product design checklist on Gumroad.",
+    "id": "lead_nickbabich_11",
+    "outreachHistory": [
+      {
+        "sentAt": "2026-10-12T10:40:15.569Z",
+        "subject": "accessibility checklist link on gumroad",
+        "mode": "simulated"
+      }
+    ],
+    "createdAt": "2026-10-09T01:15:00.000Z",
+    "updatedAt": "2026-10-12T10:40:15.569Z",
+    "teardownComparison": {
+      "currentSeconds": 42,
+      "currentSteps": 5,
+      "nullwaveSeconds": 0.2,
+      "nullwaveSteps": 1
+    },
+    "teardownGifUrl": "https://passdigit.com/signup?handle=101babich&preview=true",
+    "customizedMessage": {
+      "subject": "accessibility checklist link on gumroad",
+      "body": "Hey Nick,\n\nLove your UX articles and checklists on Twitter — your accessibility checklist is an essential bookmark for designers.\n\nSaw it's hosted on Gumroad PWYW; on mobile, asking designers for an email and billing step for a free checklist causes a lot of drop-off.\n\nBuilt PassDigit so design authors can share free checklists with a 4-digit code (passdigit.com/101babich/code) that loads in 0.2s with zero checkout forms.\n\nReserved passdigit.com/101babich for you if you'd like to test it on your next UX checklist. Thanks for all your design insights!\nhttps://passdigit.com/signup?handle=101babich\n\nBest,\nAryan\nPassDigit",
+      "wordCount": 92,
+      "first_name": "Nick"
+    }
+  },
+  {
+    "creatorName": "Kavir Kaycee",
+    "handle": "kavirkaycee",
+    "platform": "x",
+    "email": "kavir@hey.com",
+    "channelOrProfileUrl": "https://x.com/kavirkaycee",
+    "resourceTitle": "Notion Weekly 1:1 Check-in Template",
+    "currentLinkUrl": "https://kavir.gumroad.com/l/notion-weekly-checkin-template",
+    "currentLinkType": "gumroad",
+    "status": "dispatched",
+    "notes": "Product & AI writer (The Discourse), ~3.2k on X, distributes verified $0 Notion template on Gumroad.",
+    "id": "lead_kavirkaycee_12",
+    "outreachHistory": [
+      {
+        "sentAt": "2026-10-12T10:40:15.570Z",
+        "subject": "notion 1:1 check-in template link",
+        "mode": "simulated"
+      }
+    ],
+    "createdAt": "2026-10-09T01:15:00.000Z",
+    "updatedAt": "2026-10-12T10:40:15.570Z",
+    "teardownComparison": {
+      "currentSeconds": 42,
+      "currentSteps": 5,
+      "nullwaveSeconds": 0.2,
+      "nullwaveSteps": 1
+    },
+    "teardownGifUrl": "https://passdigit.com/signup?handle=kavirkaycee&preview=true",
+    "customizedMessage": {
+      "subject": "notion 1:1 check-in template link",
+      "body": "Hey Kavir,\n\nFollow your product and management writing on Twitter — your Notion Weekly 1:1 Check-in template is super clean.\n\nNoticed it's on Gumroad; going through the $0 cart checkout on mobile adds unnecessary friction for a free template.\n\nBuilt PassDigit so creators can distribute free templates with a simple 4-digit code (passdigit.com/kavirkaycee/code) that opens instantly in 0.2s.\n\nSaved passdigit.com/kavirkaycee for you if you want to try it on your next Notion drop. Keep sharing great frameworks!\nhttps://passdigit.com/signup?handle=kavirkaycee\n\nBest,\nAryan\nPassDigit",
+      "wordCount": 81,
+      "first_name": "Kavir"
+    }
+  },
+  {
+    "creatorName": "Swati Chawla",
+    "handle": "swatichawla",
+    "platform": "youtube",
+    "email": "swatichawlaofficial@gmail.com",
+    "channelOrProfileUrl": "https://youtube.com/@SwatiChawlaofficial",
+    "resourceTitle": "List in Python.pdf",
+    "currentLinkUrl": "https://drive.google.com/file/d/1KY2IQD0CUyXBfZHSzVhQtCcg2uKhCIFU/view?usp=sharing",
+    "currentLinkType": "drive",
+    "status": "dispatched",
+    "notes": "Computer Science educator, 131k subscribers. Shares Google Drive study notes in video descriptions.",
+    "id": "lead_swatichawla_13",
+    "outreachHistory": [
+      {
+        "sentAt": "2026-10-12T10:40:15.571Z",
+        "subject": "python list notes link",
+        "mode": "simulated"
+      }
+    ],
+    "createdAt": "2026-10-09T02:50:00.000Z",
+    "updatedAt": "2026-10-12T10:40:15.572Z",
+    "teardownComparison": {
+      "currentSeconds": 28,
+      "currentSteps": 4,
+      "nullwaveSeconds": 0.2,
+      "nullwaveSteps": 1
+    },
+    "teardownGifUrl": "https://passdigit.com/signup?handle=swatichawla&preview=true",
+    "customizedMessage": {
+      "subject": "python list notes link",
+      "body": "Hey Swati,\n\nSaw your Python data structures tutorial and the 'List in Python' PDF notes in the description.\n\nStudents opening Google Drive links from phones often hit login screens or view-only app barriers.\n\nCreated PassDigit so teachers can give students instant PDF access with a 4-digit code (passdigit.com/swatichawla/code) that renders in 0.2s without requiring Google sign-in.\n\nSaved passdigit.com/swatichawla for you if you want to test it on your next class notes. Best wishes!\nhttps://passdigit.com/signup?handle=swatichawla\n\nBest,\nAryan\nPassDigit",
+      "wordCount": 77,
+      "first_name": "Swati"
+    }
+  },
+  {
+    "creatorName": "Arsh Goyal",
+    "handle": "arshgoyal",
+    "platform": "youtube",
+    "email": "arshgoyal98@gmail.com",
+    "channelOrProfileUrl": "https://youtube.com/@ArshGoyal",
+    "resourceTitle": "Hacking Bad_01.pdf",
+    "currentLinkUrl": "https://drive.google.com/file/d/1_XX9a5HisivZeeBtJ6etK2ZwJB7IqnAM/view",
+    "currentLinkType": "drive",
+    "status": "dispatched",
+    "notes": "Senior Software Engineer & Tech Educator, 280k subscribers. Shares interview prep roadmaps on Google Drive.",
+    "id": "lead_arshgoyal_14",
+    "outreachHistory": [
+      {
+        "sentAt": "2026-10-12T10:40:15.572Z",
+        "subject": "quick note on your hacking bad pdf link",
+        "mode": "simulated"
+      }
+    ],
+    "createdAt": "2026-10-09T02:50:00.000Z",
+    "updatedAt": "2026-10-12T10:40:15.573Z",
+    "teardownComparison": {
+      "currentSeconds": 28,
+      "currentSteps": 4,
+      "nullwaveSeconds": 0.2,
+      "nullwaveSteps": 1
+    },
+    "teardownGifUrl": "https://passdigit.com/signup?handle=arshgoyal&preview=true",
+    "customizedMessage": {
+      "subject": "quick note on your hacking bad pdf link",
+      "body": "Hey Arsh,\n\nBeen following your tech career guidance and Hacking Bad series — great work making prep accessible.\n\nChecked the Hacking Bad_01.pdf link on mobile; Google Drive in-app webviews occasionally fail with permissions or slow mobile renders.\n\nBuilt PassDigit so tech creators can share career PDFs and prep sheets with a 4-digit code (passdigit.com/arshgoyal/code) that loads in 0.2s with zero logins or ads.\n\nReserved passdigit.com/arshgoyal for you if you want to test it on your next prep sheet drop. Cheers!\nhttps://passdigit.com/signup?handle=arshgoyal\n\nBest,\nAryan\nPassDigit",
+      "wordCount": 84,
+      "first_name": "Arsh"
+    }
+  },
+  {
+    "creatorName": "Multi Atoms",
+    "handle": "multiatoms",
+    "platform": "youtube",
+    "email": "krishna55623@gmail.com",
+    "channelOrProfileUrl": "https://youtube.com/@multiatoms",
+    "resourceTitle": "SE UNIT 2 Notes.pdf",
+    "currentLinkUrl": "https://drive.google.com/file/d/1ohfcU2iH1EDIn39k4YvS-SJjzsWaH4Yy/view",
+    "currentLinkType": "drive",
+    "status": "dispatched",
+    "notes": "CS Engineering educator, 42.5k subscribers. Shares engineering unit notes on Google Drive.",
+    "id": "lead_multiatoms_15",
+    "outreachHistory": [
+      {
+        "sentAt": "2026-10-12T10:40:15.574Z",
+        "subject": "software engineering notes link on mobile",
+        "mode": "simulated"
+      }
+    ],
+    "createdAt": "2026-10-09T02:50:00.000Z",
+    "updatedAt": "2026-10-12T10:40:15.574Z",
+    "teardownComparison": {
+      "currentSeconds": 28,
+      "currentSteps": 4,
+      "nullwaveSeconds": 0.2,
+      "nullwaveSteps": 1
+    },
+    "teardownGifUrl": "https://passdigit.com/signup?handle=multiatoms&preview=true",
+    "customizedMessage": {
+      "subject": "software engineering notes link on mobile",
+      "body": "Hey Krishna,\n\nSaw your Software Engineering Unit 2 lecture and the handwritten notes link on Multi Atoms.\n\nOpening Google Drive PDF links on phones often forces students through Google account switches before they can study.\n\nBuilt PassDigit so exam notes open in 0.2s using a 4-digit access code (passdigit.com/multiatoms/code) right in the phone's browser.\n\nReserved passdigit.com/multiatoms for your channel if you want to test it. Keep helping engineering students!\nhttps://passdigit.com/signup?handle=multiatoms\n\nBest,\nAryan\nPassDigit",
+      "wordCount": 73,
+      "first_name": "Krishna"
+    }
+  },
+  {
+    "creatorName": "Keel Pilates",
+    "handle": "keelpilates",
+    "platform": "youtube",
+    "email": "keelpilates@gmail.com",
+    "channelOrProfileUrl": "https://youtube.com/@keelpilates",
+    "resourceTitle": "3 Week Workout Plan.pdf",
+    "currentLinkUrl": "https://drive.google.com/file/d/19g5_tqDVzwnOhMwgQ5H6aL-Zs0tyk8LJ/view",
+    "currentLinkType": "drive",
+    "status": "dispatched",
+    "notes": "Mat Pilates instructor, 58.5k subscribers. Shares 3-week workout plan PDF on Google Drive.",
+    "id": "lead_keelpilates_16",
+    "outreachHistory": [
+      {
+        "sentAt": "2026-10-12T10:40:15.575Z",
+        "subject": "3 week workout plan pdf link",
+        "mode": "simulated"
+      }
+    ],
+    "createdAt": "2026-10-09T02:50:00.000Z",
+    "updatedAt": "2026-10-12T10:40:15.575Z",
+    "teardownComparison": {
+      "currentSeconds": 28,
+      "currentSteps": 4,
+      "nullwaveSeconds": 0.2,
+      "nullwaveSteps": 1
+    },
+    "teardownGifUrl": "https://passdigit.com/signup?handle=keelpilates&preview=true",
+    "customizedMessage": {
+      "subject": "3 week workout plan pdf link",
+      "body": "Hey Keel,\n\nReally enjoy your Pilates routines on Keel Pilates — the 3-Week Workout Plan is beautifully structured.\n\nChecked the PDF link on mobile; Google Drive in-app webviews can be slow or prompt users for a Google account login.\n\nCreated PassDigit so clients can open workout schedules with a simple 4-digit code (passdigit.com/keelpilates/code) in 0.2s without downloading any apps or logging in.\n\nReserved passdigit.com/keelpilates for you if you want to try it for your next program schedule. Keep inspiring!\nhttps://passdigit.com/signup?handle=keelpilates\n\nBest,\nAryan\nPassDigit",
+      "wordCount": 83,
+      "first_name": "Keel"
+    }
+  },
+  {
+    "creatorName": "Brad Traversy",
+    "handle": "traversymedia",
+    "platform": "youtube",
+    "email": "brad@traversymedia.com",
+    "channelOrProfileUrl": "https://youtube.com/@TraversyMedia",
+    "resourceTitle": "fullstack-js-developer-roadmap.pdf",
+    "currentLinkUrl": "https://drive.google.com/file/d/1217ZjDuqCwN9sTg8hA8Mx3bKYSTqTM57/view",
+    "currentLinkType": "drive",
+    "status": "dispatched",
+    "notes": "Renowned web dev educator, 2.42M subscribers. Shares fullstack JS roadmap PDF on Google Drive. | Apollo Verified Founder Email: brad@traversymedia.com (prev: traversymedia@gmail.com)",
+    "id": "lead_traversymedia_17",
+    "outreachHistory": [
+      {
+        "sentAt": "2026-10-12T10:40:15.576Z",
+        "subject": "traversy media fullstack roadmap link",
+        "mode": "simulated"
+      }
+    ],
+    "createdAt": "2026-10-09T02:50:00.000Z",
+    "updatedAt": "2026-10-12T10:40:15.578Z",
+    "teardownComparison": {
+      "currentSeconds": 28,
+      "currentSteps": 4,
+      "nullwaveSeconds": 0.2,
+      "nullwaveSteps": 1
+    },
+    "teardownGifUrl": "https://passdigit.com/signup?handle=traversymedia&preview=true",
+    "customizedMessage": {
+      "subject": "traversy media fullstack roadmap link",
+      "body": "Hey Brad,\n\nLongtime follower of Traversy Media — your crash courses and practical roadmaps have helped millions of devs, myself included.\n\nNoticed you still share the fullstack-js-developer-roadmap via Google Drive. On mobile YouTube webviews, Drive often hangs or prompts for a Google account before showing the PDF.\n\nBuilt PassDigit — a minimalist tool where devs grab roadmaps using a 4-digit numeric code (e.g. passdigit.com/traversymedia/2026). Renders in 0.2s with zero auth barriers or signups.\n\nReserved passdigit.com/traversymedia for you here if you ever want to try it on your next course drop. Thanks for everything you do for the dev community!\nhttps://passdigit.com/signup?handle=traversymedia\n\nBest,\nAryan\nPassDigit",
+      "wordCount": 103,
+      "first_name": "Brad"
+    }
+  },
+  {
+    "creatorName": "Love Babbar",
+    "handle": "lovebabbar",
+    "platform": "youtube",
+    "email": "lovebabbar@codehelp.in",
+    "channelOrProfileUrl": "https://youtube.com/@loveBabbar",
+    "resourceTitle": "FINAL450 DSA Sheet.xlsx",
+    "currentLinkUrl": "https://drive.google.com/file/d/1FMdN_OCfOI0iAeDlqswCiC2DZzD4nPsb/view",
+    "currentLinkType": "drive",
+    "status": "dispatched",
+    "notes": "Top software engineering educator, 661k subscribers. Shares landmark 450 DSA Cracker Sheet on Google Drive. | Apollo Verified Founder Email: lovebabbar@codehelp.in (prev: partnerwithbabbar@gmail.com)",
+    "id": "lead_lovebabbar_18",
+    "outreachHistory": [
+      {
+        "sentAt": "2026-10-12T10:40:15.579Z",
+        "subject": "450 dsa sheet link on mobile",
+        "mode": "simulated"
+      }
+    ],
+    "createdAt": "2026-10-09T02:50:00.000Z",
+    "updatedAt": "2026-10-12T10:40:15.579Z",
+    "teardownComparison": {
+      "currentSeconds": 28,
+      "currentSteps": 4,
+      "nullwaveSeconds": 0.2,
+      "nullwaveSteps": 1
+    },
+    "teardownGifUrl": "https://passdigit.com/signup?handle=lovebabbar&preview=true",
+    "customizedMessage": {
+      "subject": "450 dsa sheet link on mobile",
+      "body": "Hey Love bhaiya,\n\nHuge respect for everything you've built with CodeHelp and the famous FINAL450 DSA Sheet.\n\nA lot of students clicking your Drive link from mobile YouTube run into Google Drive authentication or formatting lag on phone screens.\n\nBuilt PassDigit so students can open coding sheets and roadmaps with a simple 4-digit code (passdigit.com/lovebabbar/450) that loads in 0.2s with zero sign-ins.\n\nReserved passdigit.com/lovebabbar for you if you ever want to use it for CodeHelp notes. Keep inspiring!\nhttps://passdigit.com/signup?handle=lovebabbar\n\nBest,\nAryan\nPassDigit",
+      "wordCount": 82,
+      "first_name": "Love bhaiya"
+    }
+  },
+  {
+    "creatorName": "Fitnessa",
+    "handle": "fitnessa1",
+    "platform": "youtube",
+    "email": "fitnesswithjenessa@gmail.com",
+    "channelOrProfileUrl": "https://youtube.com/@fitnessa1",
+    "resourceTitle": "2 Week Fall Fit Workout Program.pdf",
+    "currentLinkUrl": "https://drive.google.com/file/d/1-pxAgpbcJAhhessCF7YbtgC8_T5SBN7-/view?usp=sharing",
+    "currentLinkType": "drive",
+    "status": "dispatched",
+    "notes": "Home fitness coach, 29k subscribers. Shares 2-week workout program PDF on Google Drive.",
+    "id": "lead_fitnessa_19",
+    "outreachHistory": [
+      {
+        "sentAt": "2026-10-12T10:40:15.580Z",
+        "subject": "2 week fall fit program pdf link",
+        "mode": "simulated"
+      }
+    ],
+    "createdAt": "2026-10-09T02:50:00.000Z",
+    "updatedAt": "2026-10-12T10:40:15.580Z",
+    "teardownComparison": {
+      "currentSeconds": 28,
+      "currentSteps": 4,
+      "nullwaveSeconds": 0.2,
+      "nullwaveSteps": 1
+    },
+    "teardownGifUrl": "https://passdigit.com/signup?handle=fitnessa1&preview=true",
+    "customizedMessage": {
+      "subject": "2 week fall fit program pdf link",
+      "body": "Hey Jenessa,\n\nLove your workout programs on Fitnessa — your 2-Week Fall Fit routine is super motivating.\n\nSaw your Google Drive PDF link in the video description; on phone browsers, Google Drive often prompts viewers for account login or permissions.\n\nBuilt PassDigit so fitness creators can share workout PDFs with a quick 4-digit code (passdigit.com/fitnessa1/code) that loads instantly in 0.2s.\n\nSaved passdigit.com/fitnessa1 for you if you'd like to test it on your next seasonal challenge. Keep up the amazing work!\nhttps://passdigit.com/signup?handle=fitnessa1\n\nBest,\nAryan\nPassDigit",
+      "wordCount": 84,
+      "first_name": "Jenessa"
+    }
+  },
+  {
+    "creatorName": "FitVatsav",
+    "handle": "fitvatsav",
+    "platform": "youtube",
+    "email": "Fitvatsav@gmail.com",
+    "channelOrProfileUrl": "https://youtube.com/@FitVatsav",
+    "resourceTitle": "LEAN GAINING.pdf",
+    "currentLinkUrl": "https://drive.google.com/file/d/1IqXKoWHjVNUFJQv3vHACWyx91Z8YVmQ2/view?usp=sharing",
+    "currentLinkType": "drive",
+    "status": "dispatched",
+    "notes": "Strength & fitness coach, 43.6k subscribers. Shares lean gaining workout PDF on Google Drive.",
+    "id": "lead_fitvatsav_20",
+    "outreachHistory": [
+      {
+        "sentAt": "2026-10-12T10:40:15.581Z",
+        "subject": "lean gaining pdf link on mobile",
+        "mode": "simulated"
+      }
+    ],
+    "createdAt": "2026-10-09T02:50:00.000Z",
+    "updatedAt": "2026-10-12T10:40:15.581Z",
+    "teardownComparison": {
+      "currentSeconds": 28,
+      "currentSteps": 4,
+      "nullwaveSeconds": 0.2,
+      "nullwaveSteps": 1
+    },
+    "teardownGifUrl": "https://passdigit.com/signup?handle=fitvatsav&preview=true",
+    "customizedMessage": {
+      "subject": "lean gaining pdf link on mobile",
+      "body": "Hey Vatsav,\n\nGreat fitness guidance and transformation tips on FitVatsav — the Lean Gaining PDF guide is super practical.\n\nChecked the Google Drive link from mobile YouTube; Drive often asks viewers to sign in with their Gmail before letting them read the guide.\n\nCreated PassDigit so coaches can share diet and workout PDFs with a 4-digit code (passdigit.com/fitvatsav/code) that opens directly in-browser in 0.2s.\n\nReserved passdigit.com/fitvatsav for you if you want to try it for your next diet plan drop. Best regards!\nhttps://passdigit.com/signup?handle=fitvatsav\n\nBest,\nAryan\nPassDigit",
+      "wordCount": 86,
+      "first_name": "Vatsav"
+    }
+  },
+  {
+    "creatorName": "Jayanti Khatri Lamba",
+    "handle": "jennyslectures",
+    "platform": "youtube",
+    "email": "info@jennyslectures.com",
+    "channelOrProfileUrl": "https://youtube.com/@JennyslecturesCSIT",
+    "resourceTitle": "history of python.pdf",
+    "currentLinkUrl": "https://drive.google.com/file/d/1WlfZFkT0NQAX53cNmDWPuq7av3PdVAQ2/view?usp=sharing",
+    "currentLinkType": "drive",
+    "status": "dispatched",
+    "notes": "Computer Science educator, 1.5M+ subscribers. Shares lecture notes and slides on Google Drive.",
+    "id": "lead_jennyslectures_21",
+    "outreachHistory": [
+      {
+        "sentAt": "2026-10-12T10:40:15.582Z",
+        "subject": "python lecture notes link on mobile",
+        "mode": "simulated"
+      }
+    ],
+    "createdAt": "2026-10-09T02:50:00.000Z",
+    "updatedAt": "2026-10-12T10:40:15.583Z",
+    "teardownComparison": {
+      "currentSeconds": 28,
+      "currentSteps": 4,
+      "nullwaveSeconds": 0.2,
+      "nullwaveSteps": 1
+    },
+    "teardownGifUrl": "https://passdigit.com/signup?handle=jennyslectures&preview=true",
+    "customizedMessage": {
+      "subject": "python lecture notes link on mobile",
+      "body": "Hey Jayanti ma'am,\n\nThank you for all the incredible computer science lectures on Jenny's Lectures — your teaching clarity is unmatched.\n\nSaw your Python history notes PDF linked via Google Drive. On mobile phones, students often hit Google permission popups before they can see the notes.\n\nCreated PassDigit so students can access study PDFs instantly with a 4-digit code (passdigit.com/jennyslectures/code) that opens directly in their browser in 0.2s.\n\nSaved passdigit.com/jennyslectures for you if you'd like to test it for your class notes. Warm regards!\nhttps://passdigit.com/signup?handle=jennyslectures\n\nBest,\nAryan\nPassDigit",
+      "wordCount": 88,
+      "first_name": "Jayanti ma'am"
+    }
+  },
+  {
+    "creatorName": "Suraj Vishwakarma",
+    "handle": "surajondev",
+    "platform": "x",
+    "email": "surajvishwakarma625@gmail.com",
+    "channelOrProfileUrl": "https://x.com/surajondev",
+    "resourceTitle": "50+ Awesome tools for Web Developers",
+    "currentLinkUrl": "https://surajondev.gumroad.com/l/50-tools-web-developers",
+    "currentLinkType": "gumroad",
+    "status": "dispatched",
+    "notes": "Frontend developer & tech writer, active on X & Dev.to. Shares $0 PWYW developer tools ebook on Gumroad.",
+    "id": "lead_surajondev_22",
+    "outreachHistory": [
+      {
+        "sentAt": "2026-10-12T10:40:15.583Z",
+        "subject": "50+ dev tools guide link",
+        "mode": "simulated"
+      }
+    ],
+    "createdAt": "2026-10-09T02:50:00.000Z",
+    "updatedAt": "2026-10-12T10:40:15.584Z",
+    "teardownComparison": {
+      "currentSeconds": 42,
+      "currentSteps": 5,
+      "nullwaveSeconds": 0.2,
+      "nullwaveSteps": 1
+    },
+    "teardownGifUrl": "https://passdigit.com/signup?handle=surajondev&preview=true",
+    "customizedMessage": {
+      "subject": "50+ dev tools guide link",
+      "body": "Hey Suraj,\n\nLove your dev resources on Twitter and Dev.to — your '50+ Awesome tools for Web Developers' guide is packed with value.\n\nNoticed it's hosted on Gumroad PWYW; on mobile, asking devs for an email and a 3-step checkout just for a free list causes a lot of drop-off.\n\nBuilt PassDigit so devs can grab free toolkits with a simple 4-digit code (passdigit.com/surajondev/code) in 0.2s without going through a checkout form.\n\nReserved passdigit.com/surajondev for you if you want to test it on your next resource drop. Keep sharing great tech content!\nhttps://passdigit.com/signup?handle=surajondev\n\nBest,\nAryan\nPassDigit",
+      "wordCount": 96,
+      "first_name": "Suraj"
+    }
+  },
+  {
+    "creatorName": "Aman Dhattarwal",
+    "handle": "dhattarwalaman",
+    "platform": "youtube",
+    "email": "aman@apnacollege.in",
+    "channelOrProfileUrl": "https://youtube.com/@AmanDhattarwal",
+    "resourceTitle": "shortnotes physics 12 .pdf",
+    "currentLinkUrl": "https://drive.google.com/file/d/12npFWH4IiKue1_hdpE54x1J11pf93SFn/view?usp=drivesdk",
+    "currentLinkType": "drive",
+    "status": "dispatched",
+    "notes": "Education pioneer & founder, 4.3M subscribers. Distributes high-yield short notes on Google Drive. | Apollo Verified Founder Email: aman@apnacollege.in (prev: dhattarwalaman97@gmail.com)",
+    "id": "lead_dhattarwalaman_23",
+    "outreachHistory": [
+      {
+        "sentAt": "2026-10-12T10:40:15.585Z",
+        "subject": "physics shortnotes link on apna college",
+        "mode": "simulated"
+      }
+    ],
+    "createdAt": "2026-10-09T02:50:00.000Z",
+    "updatedAt": "2026-10-12T10:40:15.585Z",
+    "teardownComparison": {
+      "currentSeconds": 28,
+      "currentSteps": 4,
+      "nullwaveSeconds": 0.2,
+      "nullwaveSteps": 1
+    },
+    "teardownGifUrl": "https://passdigit.com/signup?handle=dhattarwalaman&preview=true",
+    "customizedMessage": {
+      "subject": "physics shortnotes link on apna college",
+      "body": "Hey Aman bhaiya,\n\nIncredible energy and impact across Apni Kaksha and Apna College — the Physics Class 12 short notes are legendary among students.\n\nWhen students click the Google Drive link from mobile devices, Google often asks them to pick an account or prompts for app access.\n\nBuilt PassDigit so students can unlock study notes using a simple 4-digit code (passdigit.com/dhattarwalaman/code) that opens cleanly in 0.2s without any login.\n\nReserved passdigit.com/dhattarwalaman for you if you'd like to test it on a notes drop. All the best!\nhttps://passdigit.com/signup?handle=dhattarwalaman\n\nBest,\nAryan\nPassDigit",
+      "wordCount": 90,
+      "first_name": "Aman bhaiya"
+    }
+  },
+  {
+    "creatorName": "Jason Chin",
+    "handle": "heyeaslo",
+    "platform": "x",
+    "email": "jason@easlo.co",
+    "channelOrProfileUrl": "https://x.com/heyeaslo",
+    "resourceTitle": "Portfolio Website Template",
+    "currentLinkUrl": "https://easlo.gumroad.com/l/ncigv",
+    "currentLinkType": "gumroad",
+    "status": "dispatched",
+    "notes": "#1 Notion creator, 300k+ followers on X. Shares $0 PWYW Portfolio Website Template on Gumroad. | Apollo Verified Founder Email: jason@easlo.co (prev: heyeaslo@gmail.com)",
+    "id": "lead_heyeaslo_24",
+    "outreachHistory": [
+      {
+        "sentAt": "2026-10-12T10:40:15.586Z",
+        "subject": "easlo portfolio template link",
+        "mode": "simulated"
+      }
+    ],
+    "createdAt": "2026-10-09T02:50:00.000Z",
+    "updatedAt": "2026-10-12T10:40:15.586Z",
+    "teardownComparison": {
+      "currentSeconds": 42,
+      "currentSteps": 5,
+      "nullwaveSeconds": 0.2,
+      "nullwaveSteps": 1
+    },
+    "teardownGifUrl": "https://passdigit.com/signup?handle=heyeaslo&preview=true",
+    "customizedMessage": {
+      "subject": "easlo portfolio template link",
+      "body": "Hey Jason,\n\nHuge fan of your minimal Notion designs on Easlo — your aesthetic and consistency on X are unmatched.\n\nSaw your free portfolio template on Gumroad; mobile users on Twitter webviews have to go through a 4-step billing modal just to grab a free template.\n\nBuilt PassDigit to give Notion creators a dead-simple link with a 4-digit code (passdigit.com/heyeaslo/code) that opens the template in 0.2s without checkout forms.\n\nReserved passdigit.com/heyeaslo for you if you'd like to test it on your next free template drop. Keep building!\nhttps://passdigit.com/signup?handle=heyeaslo\n\nBest,\nAryan\nPassDigit",
+      "wordCount": 91,
+      "first_name": "Jason"
+    }
+  },
+  {
+    "id": "lead_gatesmashers_25",
+    "creatorName": "Varun Singla",
+    "handle": "gatesmashers",
+    "platform": "youtube",
+    "email": "gatesmashers2018@gmail.com",
+    "channelOrProfileUrl": "https://youtube.com/@GateSmashers",
+    "resourceTitle": "DBMS-File 1.pdf (Complete Database Management Study Notes)",
+    "currentLinkUrl": "https://drive.google.com/file/d/14bXNQ8BRqYj_F5Q0h9kjCu5dBV_-Yc3h/view?usp=sharing",
+    "currentLinkType": "drive",
+    "status": "dispatched",
+    "notes": "Prominent CS educator, ~2.87M subscribers, published 7 hours ago, distributes complete DBMS notes PDF on Google Drive in video descriptions.",
+    "teardownComparison": {
+      "currentSeconds": 28,
+      "currentSteps": 4,
+      "nullwaveSeconds": 0.2,
+      "nullwaveSteps": 1
+    },
+    "teardownGifUrl": "https://passdigit.com/signup?handle=gatesmashers&preview=true",
+    "outreachHistory": [
+      {
+        "sentAt": "2026-10-12T10:40:15.587Z",
+        "subject": "dbms study notes link on gate smashers",
+        "mode": "simulated"
+      }
+    ],
+    "createdAt": "2026-10-09T02:30:00.000Z",
+    "updatedAt": "2026-10-12T10:40:15.588Z",
+    "customizedMessage": {
+      "subject": "dbms study notes link on gate smashers",
+      "body": "Hey Varun sir,\n\nGate Smashers is the go-to channel for every engineering student preparing for exams — your DBMS series is top-tier.\n\nSaw the Google Drive link for DBMS-File 1.pdf; on phone browsers, Google Drive frequently prompts students to sign in before showing the document.\n\nBuilt PassDigit so students can open exam notes with a clean 4-digit code (passdigit.com/gatesmashers/code) that loads in 0.2s in-browser with zero login friction.\n\nReserved passdigit.com/gatesmashers for your channel if you'd like to test it for semester notes. Respect!\nhttps://passdigit.com/signup?handle=gatesmashers\n\nBest,\nAryan\nPassDigit",
+      "wordCount": 87,
+      "first_name": "Varun sir"
+    }
+  },
+  {
+    "id": "lead_apnacollege_26",
+    "creatorName": "Shradha Khapra",
+    "handle": "apnacollege",
+    "platform": "youtube",
+    "email": "partnerships@apnacollege.in",
+    "channelOrProfileUrl": "https://youtube.com/@ApnaCollegeOfficial",
+    "resourceTitle": "11. Pointers - C++ Complete Lecture Notes.pdf",
+    "currentLinkUrl": "https://drive.google.com/file/d/1CEDE30mC1oJUlOXMkX9xqpzph-golv98/view?usp=sharing",
+    "currentLinkType": "drive",
+    "status": "dispatched",
+    "notes": "Apna College co-founder, ~7.95M subscribers, published 7 days ago, distributes C++ pointers and DSA notes PDF via Google Drive.",
+    "teardownComparison": {
+      "currentSeconds": 28,
+      "currentSteps": 4,
+      "nullwaveSeconds": 0.2,
+      "nullwaveSteps": 1
+    },
+    "teardownGifUrl": "https://passdigit.com/signup?handle=apnacollege&preview=true",
+    "outreachHistory": [
+      {
+        "sentAt": "2026-10-12T10:40:15.588Z",
+        "subject": "c++ pointers lecture notes link",
+        "mode": "simulated"
+      }
+    ],
+    "createdAt": "2026-10-09T02:30:00.000Z",
+    "updatedAt": "2026-10-12T10:40:15.589Z",
+    "customizedMessage": {
+      "subject": "c++ pointers lecture notes link",
+      "body": "Hey Shradha,\n\nLove the teaching style and production quality on Apna College — your C++ complete playlist is fantastic.\n\nChecked the C++ lecture notes PDF on mobile; students often face Google Drive permission dialogs or account pickers inside YouTube's mobile browser.\n\nWe built PassDigit so educators can share lecture notes using a 4-digit code (passdigit.com/apnacollege/code) that renders in 0.2s without requiring Google authentication.\n\nReserved passdigit.com/apnacollege for you here if you'd like to test it on your next notes drop. Keep up the great work!\nhttps://passdigit.com/signup?handle=apnacollege\n\nBest,\nAryan\nPassDigit",
+      "wordCount": 88,
+      "first_name": "Shradha"
+    }
+  },
+  {
+    "id": "lead_codewithharry_27",
+    "creatorName": "Haris Ali Khan",
+    "handle": "codewithharry",
+    "platform": "youtube",
+    "email": "harry@codewithharry.com",
+    "channelOrProfileUrl": "https://youtube.com/@CodeWithHarry",
+    "resourceTitle": "Git_Handbook.pdf (Complete Git & GitHub Tutorial Guide)",
+    "currentLinkUrl": "https://drive.google.com/file/d/138dWmjKUqIk9YAahR64CmpRk8xES8io5/view",
+    "currentLinkType": "drive",
+    "status": "dispatched",
+    "notes": "Top software educator, ~10M subscribers, published 8 days ago, distributes comprehensive Git Handbook PDF via Google Drive. | Apollo Verified Founder Email: harry@codewithharry.com (prev: contact@codewithharry.com)",
+    "teardownComparison": {
+      "currentSeconds": 28,
+      "currentSteps": 4,
+      "nullwaveSeconds": 0.2,
+      "nullwaveSteps": 1
+    },
+    "teardownGifUrl": "https://passdigit.com/signup?handle=codewithharry&preview=true",
+    "outreachHistory": [
+      {
+        "sentAt": "2026-10-12T10:40:15.590Z",
+        "subject": "git handbook pdf link in video description",
+        "mode": "simulated"
+      }
+    ],
+    "createdAt": "2026-10-09T02:30:00.000Z",
+    "updatedAt": "2026-10-12T10:40:15.590Z",
+    "customizedMessage": {
+      "subject": "git handbook pdf link in video description",
+      "body": "Hey Harry,\n\nLongtime viewer of CodeWithHarry — learned Git and Python from your tutorials back in college, truly appreciate your work.\n\nChecked the Git_Handbook.pdf in your video description; on phone browsers, Google Drive sometimes throws access warnings or app redirects before displaying the file.\n\nBuilt PassDigit — a fast, lightweight tool where devs unlock documents with a 4-digit code (passdigit.com/codewithharry/code) in 0.2s with zero logins or ads.\n\nSaved passdigit.com/codewithharry for you if you'd like to test it for your next handbook or cheatsheet. No pressure at all, keep making awesome content!\nhttps://passdigit.com/signup?handle=codewithharry\n\nBest,\nAryan\nPassDigit",
+      "wordCount": 95,
+      "first_name": "Harry"
+    }
+  },
+  {
+    "id": "lead_takeuforward_28",
+    "creatorName": "Raj Vikramaditya (Striver)",
+    "handle": "takeuforward",
+    "platform": "youtube",
+    "email": "striver@takeuforward.org",
+    "channelOrProfileUrl": "https://youtube.com/@takeUforward",
+    "resourceTitle": "DSA Checklist TUF+.pdf (Striver A2Z Preparation Sheet)",
+    "currentLinkUrl": "https://drive.google.com/file/d/17Q1W3bvYZy8z5zAiav345Jw3cD-sHRRa/view?usp=drivesdk",
+    "currentLinkType": "drive",
+    "status": "dispatched",
+    "notes": "Founder of takeUforward, ~1.13M subscribers, published 2 weeks ago, distributes TUF+ DSA checklist roadmap PDF via Google Drive. | Apollo Verified Founder Email: striver@takeuforward.org (prev: hello@takeuforward.org)",
+    "teardownComparison": {
+      "currentSeconds": 28,
+      "currentSteps": 4,
+      "nullwaveSeconds": 0.2,
+      "nullwaveSteps": 1
+    },
+    "teardownGifUrl": "https://passdigit.com/signup?handle=takeuforward&preview=true",
+    "outreachHistory": [
+      {
+        "sentAt": "2026-10-12T10:40:15.591Z",
+        "subject": "a2z dsa sheet pdf link on takeuforward",
+        "mode": "simulated"
+      }
+    ],
+    "createdAt": "2026-10-09T02:30:00.000Z",
+    "updatedAt": "2026-10-12T10:40:15.591Z",
+    "customizedMessage": {
+      "subject": "a2z dsa sheet pdf link on takeuforward",
+      "body": "Hey Raj / Striver,\n\nHuge fan of takeUforward — your A2Z DSA sheet and explanation videos are gold standard for placement prep.\n\nSaw the DSA Checklist PDF shared via Google Drive; on mobile YouTube in-app browsers, students often get blocked by Google login popups or Drive app errors.\n\nBuilt PassDigit so students can unlock prep sheets with a simple 4-digit access code (passdigit.com/takeuforward/code) that opens directly in 0.2s in-browser.\n\nReserved passdigit.com/takeuforward for you if you want to test it on your next sheet drop. Keep helping thousands of engineers crack top roles!\nhttps://passdigit.com/signup?handle=takeuforward\n\nBest,\nAryan\nPassDigit",
+      "wordCount": 96,
+      "first_name": "Raj / Striver"
+    }
+  },
+  {
+    "id": "lead_chrisedi_29",
+    "creatorName": "Chris & Edi",
+    "handle": "chrisedi",
+    "platform": "youtube",
+    "email": "edi@ucoaches.com",
+    "channelOrProfileUrl": "https://youtube.com/@ChrisEdi",
+    "resourceTitle": "Build Series 3.0 - Chris & Edi (1).pdf (8-Week Muscle & Strength Program)",
+    "currentLinkUrl": "https://drive.google.com/file/d/1_vrQ4jrlzo2mQCTUxa6pF2TW2qp1ZS5n/view?usp=sharing",
+    "currentLinkType": "drive",
+    "status": "dispatched",
+    "notes": "Strength coaching duo, ~67.9k subscribers, published 2 days ago, shares 8-week Build Series 3.0 hypertrophy program calendar PDF via Google Drive.",
+    "teardownComparison": {
+      "currentSeconds": 28,
+      "currentSteps": 4,
+      "nullwaveSeconds": 0.2,
+      "nullwaveSteps": 1
+    },
+    "teardownGifUrl": "https://passdigit.com/signup?handle=chrisedi&preview=true",
+    "outreachHistory": [
+      {
+        "sentAt": "2026-10-12T10:40:15.592Z",
+        "subject": "build series 3.0 workout pdf link",
+        "mode": "simulated"
+      }
+    ],
+    "createdAt": "2026-10-09T02:30:00.000Z",
+    "updatedAt": "2026-10-12T10:40:15.593Z",
+    "customizedMessage": {
+      "subject": "build series 3.0 workout pdf link",
+      "body": "Hey Chris & Edi,\n\nHuge respect for the strength workouts you put out on Chris & Edi — Build Series 3.0 is a fantastic program.\n\nChecked the PDF link in the description; opening Google Drive files on phone browsers can be clunky and often triggers Google login prompts.\n\nBuilt PassDigit so athletes can access program PDFs with a simple 4-digit code (passdigit.com/chrisedi/code) that loads in 0.2s directly on their phones.\n\nReserved passdigit.com/chrisedi for you if you'd like to test it on your next workout drop. Keep building!\nhttps://passdigit.com/signup?handle=chrisedi\n\nBest,\nAryan\nPassDigit",
+      "wordCount": 91,
+      "first_name": "Chris & Edi"
+    }
+  },
+  {
+    "id": "lead_46outdoors_30",
+    "creatorName": "James Appleton",
+    "handle": "46outdoors",
+    "platform": "youtube",
+    "email": "info@46outdoors.com",
+    "channelOrProfileUrl": "https://youtube.com/@46outdoors",
+    "resourceTitle": "5 Part Hiking Strength Guide.pdf (Mountain-Strength Method)",
+    "currentLinkUrl": "https://drive.google.com/file/d/1aAS26OjWubL-Sf8JSajHyWFu-30AcwcO/view?usp=sharing",
+    "currentLinkType": "drive",
+    "status": "dispatched",
+    "notes": "Trail & mountain coach, ~16.8k subscribers, published 3 days ago, distributes 5-part hiking strength training guide PDF via Google Drive.",
+    "teardownComparison": {
+      "currentSeconds": 28,
+      "currentSteps": 4,
+      "nullwaveSeconds": 0.2,
+      "nullwaveSteps": 1
+    },
+    "teardownGifUrl": "https://passdigit.com/signup?handle=46outdoors&preview=true",
+    "outreachHistory": [
+      {
+        "sentAt": "2026-10-12T10:40:15.594Z",
+        "subject": "hiking strength guide link",
+        "mode": "simulated"
+      }
+    ],
+    "createdAt": "2026-10-09T02:30:00.000Z",
+    "updatedAt": "2026-10-12T10:40:15.594Z",
+    "customizedMessage": {
+      "subject": "hiking strength guide link",
+      "body": "Hey James,\n\nLove your mountain fitness breakdowns on 46 Outdoors — the 5-Part Hiking Strength Guide is spot on.\n\nSaw the Google Drive link for the PDF; on mobile, Google Drive webviews frequently hit users with account chooser screens.\n\nBuilt PassDigit so hikers can pull up training guides with a 4-digit code (passdigit.com/46outdoors/code) in 0.2s without needing a Google account.\n\nSaved passdigit.com/46outdoors for you if you want to test it for your next trail guide. Great trails ahead!\nhttps://passdigit.com/signup?handle=46outdoors\n\nBest,\nAryan\nPassDigit",
+      "wordCount": 82,
+      "first_name": "James"
+    }
+  },
+  {
+    "id": "lead_thakurvaishnaviofficial_31",
+    "creatorName": "Vaishnavi Thakur",
+    "handle": "thakurvaishnaviofficial",
+    "platform": "youtube",
+    "email": "business.vaishnavithakur@gmail.com",
+    "channelOrProfileUrl": "https://youtube.com/@thakurvaishnaviofficial",
+    "resourceTitle": "Weekly Workout Schedule.pdf (77 Hard Fitness Challenge Routine)",
+    "currentLinkUrl": "https://drive.google.com/file/d/1JY3wI_hFk38T_Z9bJqPBFbueg8JrPWHP/view?usp=sharing",
+    "currentLinkType": "drive",
+    "status": "dispatched",
+    "notes": "Fitness & transformation creator, ~345k subscribers, published 2 days ago, provides weekly workout schedule & habit tracker PDF via Google Drive.",
+    "teardownComparison": {
+      "currentSeconds": 28,
+      "currentSteps": 4,
+      "nullwaveSeconds": 0.2,
+      "nullwaveSteps": 1
+    },
+    "teardownGifUrl": "https://passdigit.com/signup?handle=thakurvaishnaviofficial&preview=true",
+    "outreachHistory": [
+      {
+        "sentAt": "2026-10-12T10:40:15.595Z",
+        "subject": "weekly workout schedule pdf link",
+        "mode": "simulated"
+      }
+    ],
+    "createdAt": "2026-10-09T02:30:00.000Z",
+    "updatedAt": "2026-10-12T10:40:15.595Z",
+    "customizedMessage": {
+      "subject": "weekly workout schedule pdf link",
+      "body": "Hey Vaishnavi,\n\nAwesome dedication on your 77 Hard Fitness Challenge — your weekly workout schedule PDF is really helping people stay consistent.\n\nNoticed it's linked on Google Drive; on mobile YouTube, people often face Google app redirects or sign-in prompts before seeing the plan.\n\nBuilt PassDigit so your followers can view workout schedules with a simple 4-digit code (passdigit.com/thakurvaishnaviofficial/code) in 0.2s directly in the browser.\n\nReserved passdigit.com/thakurvaishnaviofficial for you if you want to try it on your next challenge drop. Stay strong!\nhttps://passdigit.com/signup?handle=thakurvaishnaviofficial\n\nBest,\nAryan\nPassDigit",
+      "wordCount": 86,
+      "first_name": "Vaishnavi"
+    }
+  },
+  {
+    "id": "lead_ekanshtaneja_32",
+    "creatorName": "Ekansh Taneja",
+    "handle": "ekanshtaneja",
+    "platform": "youtube",
+    "email": "support@ekanshtanejafitness.in",
+    "channelOrProfileUrl": "https://youtube.com/@EkanshTanejaFitness",
+    "resourceTitle": "2160 NVeg Whey 176g 30g Fibre.pdf (Belly Fat Loss & Calorie Deficit Diet Plan)",
+    "currentLinkUrl": "https://drive.google.com/file/d/1SgMwa7veNj1nqw0bLh7xxYb0N_qlgll5/view?usp=drivesdk",
+    "currentLinkType": "drive",
+    "status": "dispatched",
+    "notes": "Nutrition & recomposition coach, ~560k subscribers, published 3 days ago, distributes fat loss macro & diet plan PDF via Google Drive.",
+    "teardownComparison": {
+      "currentSeconds": 28,
+      "currentSteps": 4,
+      "nullwaveSeconds": 0.2,
+      "nullwaveSteps": 1
+    },
+    "teardownGifUrl": "https://passdigit.com/signup?handle=ekanshtaneja&preview=true",
+    "outreachHistory": [
+      {
+        "sentAt": "2026-10-12T10:40:15.596Z",
+        "subject": "fat loss diet plan pdf link on mobile",
+        "mode": "simulated"
+      }
+    ],
+    "createdAt": "2026-10-09T02:30:00.000Z",
+    "updatedAt": "2026-10-12T10:40:15.598Z",
+    "customizedMessage": {
+      "subject": "fat loss diet plan pdf link on mobile",
+      "body": "Hey Ekansh,\n\nReally appreciate your evidence-based nutrition videos on Ekansh Taneja Fitness — the calorie deficit diet PDF is very detailed.\n\nTested the Google Drive link on a phone; mobile users often get stopped by Google login prompts or permission screens.\n\nBuilt PassDigit so clients can view diet charts with a 4-digit code (passdigit.com/ekanshtaneja/code) that opens instantly in 0.2s with zero sign-ins.\n\nSaved passdigit.com/ekanshtaneja for you if you'd like to test it on your next nutrition drop. Keep helping people transform!\nhttps://passdigit.com/signup?handle=ekanshtaneja\n\nBest,\nAryan\nPassDigit",
+      "wordCount": 85,
+      "first_name": "Ekansh"
+    }
+  },
+  {
+    "id": "lead_liamottley_33",
+    "creatorName": "Liam Ottley",
+    "handle": "liamottley",
+    "platform": "youtube",
+    "email": "info@morningside.ai",
+    "channelOrProfileUrl": "https://youtube.com/@LiamOttley",
+    "resourceTitle": "Liam Ottley's AIOS Starter Kit.zip (Agency Operating System)",
+    "currentLinkUrl": "https://drive.google.com/file/d/10so9l9b81hD9qKHhQfS4_LEdiaXGLYNV/view",
+    "currentLinkType": "drive",
+    "status": "dispatched",
+    "notes": "AI Automation Agency pioneer & founder of Morningside AI, ~858k subscribers, published 3 days ago, provides AIOS agency starter kit zip via Google Drive.",
+    "teardownComparison": {
+      "currentSeconds": 28,
+      "currentSteps": 4,
+      "nullwaveSeconds": 0.2,
+      "nullwaveSteps": 1
+    },
+    "teardownGifUrl": "https://passdigit.com/signup?handle=liamottley&preview=true",
+    "outreachHistory": [
+      {
+        "sentAt": "2026-10-12T10:40:15.599Z",
+        "subject": "aios starter kit link",
+        "mode": "simulated"
+      }
+    ],
+    "createdAt": "2026-10-09T02:30:00.000Z",
+    "updatedAt": "2026-10-12T10:40:15.600Z",
+    "customizedMessage": {
+      "subject": "aios starter kit link",
+      "body": "Hey Liam,\n\nHuge respect for your AI Automation Agency breakdowns on Morningside AI — your AIOS Starter Kit is gold for agency founders.\n\nTested the download link from mobile YouTube; Google Drive links often hit mobile users with account sign-in prompts before downloading.\n\nBuilt PassDigit so AI creators can share agency toolkits with a simple 4-digit code (passdigit.com/liamottley/code) that loads in 0.2s with zero Google login walls.\n\nReserved passdigit.com/liamottley for you if you ever want to test it on your next agency resource drop. Best regards!\nhttps://passdigit.com/signup?handle=liamottley\n\nBest,\nAryan\nPassDigit",
+      "wordCount": 90,
+      "first_name": "Liam"
+    }
+  },
+  {
+    "id": "lead_officialparijain_34",
+    "creatorName": "Pari Jain",
+    "handle": "officialparijain",
+    "platform": "youtube",
+    "email": "Pariwithedit@gmail.com",
+    "channelOrProfileUrl": "https://youtube.com/@official.parijain",
+    "resourceTitle": "Freelancing contract.png (Client Service Agreement Template)",
+    "currentLinkUrl": "https://drive.google.com/file/d/1zOqWGZ4AaQrolDV_RTv3YpDIgaeQhxzt/view?usp=drivesdk",
+    "currentLinkType": "drive",
+    "status": "dispatched",
+    "notes": "Agency operator & freelancing coach, ~12.7k subscribers, published 4 days ago, distributes client freelance service contract via Google Drive.",
+    "teardownComparison": {
+      "currentSeconds": 28,
+      "currentSteps": 4,
+      "nullwaveSeconds": 0.2,
+      "nullwaveSteps": 1
+    },
+    "teardownGifUrl": "https://passdigit.com/signup?handle=officialparijain&preview=true",
+    "outreachHistory": [
+      {
+        "sentAt": "2026-10-12T10:40:15.600Z",
+        "subject": "freelancing contract template link",
+        "mode": "simulated"
+      }
+    ],
+    "createdAt": "2026-10-09T02:30:00.000Z",
+    "updatedAt": "2026-10-12T10:40:15.601Z",
+    "customizedMessage": {
+      "subject": "freelancing contract template link",
+      "body": "Hey Pari,\n\nLove your video editing and freelancing advice on Pari Jain — the client service agreement contract template is so helpful for beginners.\n\nChecked the Google Drive link from mobile; viewers often get stuck on Google Drive permission screens or app prompts.\n\nBuilt PassDigit so creators can share contract templates with a 4-digit code (passdigit.com/officialparijain/code) that opens in 0.2s with zero login required.\n\nReserved passdigit.com/officialparijain for you if you want to test it on your next freelancing resource drop. Keep helping editors grow!\nhttps://passdigit.com/signup?handle=officialparijain\n\nBest,\nAryan\nPassDigit",
+      "wordCount": 88,
+      "first_name": "Pari"
+    }
+  },
+  {
+    "id": "lead_soltwagner_35",
+    "creatorName": "Solt Wagner",
+    "handle": "soltwagner",
+    "platform": "x",
+    "email": "soltwagner@gmail.com",
+    "channelOrProfileUrl": "https://x.com/soltwagner",
+    "resourceTitle": "Notion Invoice and Proposal Manager for Free",
+    "currentLinkUrl": "https://soltwagner.gumroad.com/l/notion-invoice-proposal-template",
+    "currentLinkType": "gumroad",
+    "status": "dispatched",
+    "notes": "Creative Director & Notion designer, ~23k followers on X, distributes verified $0 Notion invoice & agency proposal manager on Gumroad.",
+    "teardownComparison": {
+      "currentSeconds": 42,
+      "currentSteps": 5,
+      "nullwaveSeconds": 0.2,
+      "nullwaveSteps": 1
+    },
+    "teardownGifUrl": "https://passdigit.com/signup?handle=soltwagner&preview=true",
+    "outreachHistory": [
+      {
+        "sentAt": "2026-10-12T10:40:15.602Z",
+        "subject": "notion invoice manager link",
+        "mode": "simulated"
+      }
+    ],
+    "createdAt": "2026-10-09T02:30:00.000Z",
+    "updatedAt": "2026-10-12T10:40:15.602Z",
+    "customizedMessage": {
+      "subject": "notion invoice manager link",
+      "body": "Hey Solt,\n\nReally enjoy your minimal Notion systems on X — the Notion Invoice and Proposal Manager is super clean.\n\nChecked it on Gumroad; on mobile, going through a $0 billing checkout form just to grab a free Notion link creates noticeable drop-off.\n\nBuilt PassDigit so Notion creators can share free templates with a simple 4-digit code (passdigit.com/soltwagner/code) that opens in 0.2s without any checkout steps.\n\nReserved passdigit.com/soltwagner for you if you'd like to test it on your next template release. Keep sharing awesome setups!\nhttps://passdigit.com/signup?handle=soltwagner\n\nBest,\nAryan\nPassDigit",
+      "wordCount": 89,
+      "first_name": "Solt"
+    }
+  },
+  {
+    "id": "lead_typefool_36",
+    "creatorName": "Jen Ditters (Typefool)",
+    "handle": "typefool",
+    "platform": "youtube",
+    "email": "info@typefool.com",
+    "channelOrProfileUrl": "https://youtube.com/@Typefool",
+    "resourceTitle": "Freebie - Design Contract Template",
+    "currentLinkUrl": "https://typefool.gumroad.com/l/DesignContractTemplate",
+    "currentLinkType": "gumroad",
+    "status": "dispatched",
+    "notes": "Design studio & agency educator, ~36.4k subscribers, published 7 days ago, distributes verified $0 freelance design contract agreement on Gumroad.",
+    "teardownComparison": {
+      "currentSeconds": 42,
+      "currentSteps": 5,
+      "nullwaveSeconds": 0.2,
+      "nullwaveSteps": 1
+    },
+    "teardownGifUrl": "https://passdigit.com/signup?handle=typefool&preview=true",
+    "outreachHistory": [
+      {
+        "sentAt": "2026-10-12T10:40:15.603Z",
+        "subject": "design contract template link",
+        "mode": "simulated"
+      }
+    ],
+    "createdAt": "2026-10-09T02:30:00.000Z",
+    "updatedAt": "2026-10-12T10:40:15.604Z",
+    "customizedMessage": {
+      "subject": "design contract template link",
+      "body": "Hey Jen,\n\nLove your brand identity design tutorials on Typefool — your free design contract template is a great resource for freelancers.\n\nSaw it's on Gumroad; having designers fill out name and billing details for a free template on mobile creates unnecessary drop-off.\n\nBuilt PassDigit so designers can share free contracts and checklists with a 4-digit code (passdigit.com/typefool/code) in 0.2s with zero checkout forms.\n\nReserved passdigit.com/typefool for you if you want to test it on your next design freebie. Keep up the clean branding!\nhttps://passdigit.com/signup?handle=typefool\n\nBest,\nAryan\nPassDigit",
+      "wordCount": 88,
+      "first_name": "Jen"
+    }
+  },
+  {
+    "id": "lead_codiesanchez_37",
+    "creatorName": "Codie Sanchez",
+    "handle": "codiesanchez",
+    "platform": "youtube",
+    "email": "codie@contrarianthink.com",
+    "channelOrProfileUrl": "https://youtube.com/@CodieSanchezCT",
+    "resourceTitle": "Contrarian Thinking Small Business & Deal Toolkit",
+    "currentLinkUrl": "https://linktr.ee/codiesanchez",
+    "currentLinkType": "linktree",
+    "status": "dispatched",
+    "notes": "Founder of Contrarian Thinking, ~2.26M subscribers, published 11 days ago, distributes small business playbooks via 21-button Linktree. | Apollo Verified Founder Email: codie@contrarianthink.com (prev: support@contrarianthink.com)",
+    "teardownComparison": {
+      "currentSeconds": 35,
+      "currentSteps": 4,
+      "nullwaveSeconds": 0.2,
+      "nullwaveSteps": 1
+    },
+    "teardownGifUrl": "https://passdigit.com/signup?handle=codiesanchez&preview=true",
+    "outreachHistory": [
+      {
+        "sentAt": "2026-10-12T10:40:15.604Z",
+        "subject": "contrarian toolkits link on mobile",
+        "mode": "simulated"
+      }
+    ],
+    "createdAt": "2026-10-09T02:30:00.000Z",
+    "updatedAt": "2026-10-12T10:40:15.605Z",
+    "customizedMessage": {
+      "subject": "contrarian toolkits link on mobile",
+      "body": "Hey Codie,\n\nHuge fan of Contrarian Thinking — your small business deal teardowns and Main Street playbooks are phenomenal.\n\nTested your Linktree resource links from mobile YouTube/Instagram; multi-button Linktree lists on mobile in-app browsers have noticeable drop-off before users reach the actual toolkit.\n\nBuilt PassDigit so operators can share playbooks and deal toolkits with a simple 4-digit code (passdigit.com/codiesanchez/code) that opens in 0.2s with zero redirect friction.\n\nSaved passdigit.com/codiesanchez for you if you ever want to test it for your next guide drop. Keep building Main Street!\nhttps://passdigit.com/signup?handle=codiesanchez\n\nBest,\nAryan\nPassDigit",
+      "wordCount": 91,
+      "first_name": "Codie"
+    }
+  },
+  {
+    "id": "lead_akshatzayn_38",
+    "creatorName": "Akshat Shrivastava",
+    "handle": "akshatzayn",
+    "platform": "youtube",
+    "email": "akshat@speechimpact.in",
+    "channelOrProfileUrl": "https://youtube.com/@AkshatZayn",
+    "resourceTitle": "Course Outline (Akshat).pdf (Investment & Business Valuation Framework)",
+    "currentLinkUrl": "https://drive.google.com/file/d/1KMQ9oqDwFCw7aEWx1GpB_4c94yRKLMuP/view?usp=sharing",
+    "currentLinkType": "drive",
+    "status": "dispatched",
+    "notes": "Business & macro investing educator, ~2.27M subscribers, published 1 day ago, shares financial frameworks & course syllabus PDF via Google Drive.",
+    "teardownComparison": {
+      "currentSeconds": 28,
+      "currentSteps": 4,
+      "nullwaveSeconds": 0.2,
+      "nullwaveSteps": 1
+    },
+    "teardownGifUrl": "https://passdigit.com/signup?handle=akshatzayn&preview=true",
+    "outreachHistory": [
+      {
+        "sentAt": "2026-10-12T10:40:15.606Z",
+        "subject": "valuation course outline pdf link",
+        "mode": "simulated"
+      }
+    ],
+    "createdAt": "2026-10-09T02:30:00.000Z",
+    "updatedAt": "2026-10-12T10:40:15.606Z",
+    "customizedMessage": {
+      "subject": "valuation course outline pdf link",
+      "body": "Hey Akshat,\n\nReally enjoy your financial analysis and business valuation breakdowns on your channel.\n\nSaw your course outline PDF linked via Google Drive; on mobile phones, Google Drive often triggers an account login picker before rendering the document.\n\nBuilt PassDigit so finance educators can share study frameworks with a 4-digit code (passdigit.com/akshatzayn/code) that opens in 0.2s in-browser with zero login friction.\n\nReserved passdigit.com/akshatzayn for you if you want to test it on your next framework drop. Best regards!\nhttps://passdigit.com/signup?handle=akshatzayn\n\nBest,\nAryan\nPassDigit",
+      "wordCount": 82,
+      "first_name": "Akshat"
+    }
+  }
+]

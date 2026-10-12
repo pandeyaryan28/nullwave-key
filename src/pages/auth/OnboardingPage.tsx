@@ -1,16 +1,22 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../lib/auth/authContext';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
-import { Waves, Check, AlertCircle, Bookmark } from 'lucide-react';
+import { KeyRound, Check, AlertCircle, Bookmark } from 'lucide-react';
 
 export const OnboardingPage: React.FC = () => {
   const { profile, claimUsername, continueAsViewer } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
-  const [username, setUsername] = useState('');
+  const initialHandle = (searchParams.get('handle') || searchParams.get('username') || '')
+    .toLowerCase()
+    .replace(/[^a-z0-9_]/g, '')
+    .slice(0, 20);
+
+  const [username, setUsername] = useState(initialHandle);
   const [displayName, setDisplayName] = useState(profile?.displayName || '');
   const [isLoading, setIsLoading] = useState(false);
   const [isViewerLoading, setIsViewerLoading] = useState(false);
@@ -73,7 +79,7 @@ export const OnboardingPage: React.FC = () => {
       <div className="w-full max-w-md space-y-6">
         <div className="text-center space-y-2">
           <div className="w-12 h-12 rounded-xl bg-neutral-900 text-neutral-50 dark:bg-neutral-100 dark:text-neutral-900 flex items-center justify-center mx-auto mb-3 shadow-clay-sm">
-            <Waves className="w-6 h-6" />
+            <KeyRound className="w-6 h-6" />
           </div>
           <h1 className="text-2xl font-bold tracking-tight text-neutral-900 dark:text-neutral-50">
             Claim Your Profile Handle

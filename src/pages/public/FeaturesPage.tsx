@@ -38,7 +38,7 @@ export const FeaturesPage: React.FC = () => {
           Engineered for zero friction and high-fidelity delivery
         </h1>
         <p className="text-base sm:text-lg text-neutral-600 dark:text-neutral-300 leading-relaxed">
-          Traditional link trees and digital download gates force viewers through complex signup walls, slow email verification flows, and intrusive cookies. NullWave replaces this with a direct 4-digit transmission channel.
+          Traditional link trees and digital download gates force viewers through complex signup walls, slow email verification flows, and intrusive cookies. PassDigit replaces this with a direct 4-digit access channel.
         </p>
       </header>
 
@@ -109,7 +109,7 @@ export const FeaturesPage: React.FC = () => {
               Clean Profile & Document Routing
             </h3>
             <p className="text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed">
-              Clean URLs like <span className="font-mono text-xs text-neutral-900 dark:text-neutral-100">nullwave.com/username/code</span> automatically normalize encoded `@` handles and preserve backwards-compatible deep linking across social bio placements.
+              Clean URLs like <span className="font-mono text-xs text-neutral-900 dark:text-neutral-100">passdigit.com/username/code</span> automatically normalize encoded `@` handles and preserve backwards-compatible deep linking across social bio placements.
             </p>
           </div>
         </Card>
@@ -136,7 +136,7 @@ export const FeaturesPage: React.FC = () => {
             Direct Access vs Traditional Link Tools
           </h2>
           <p className="text-sm text-neutral-500 dark:text-neutral-400">
-            Why audiences abandon traditional link trees and how NullWave restores direct access.
+            Why audiences abandon traditional link trees and how PassDigit restores direct access.
           </p>
         </div>
 
@@ -146,7 +146,7 @@ export const FeaturesPage: React.FC = () => {
               <tr>
                 <th className="px-6 py-4 font-semibold">Capability</th>
                 <th className="px-6 py-4 font-semibold text-neutral-950 dark:text-neutral-50">
-                  NullWave Profile
+                  PassDigit Profile
                 </th>
                 <th className="px-6 py-4 font-semibold">Standard Link Aggregators</th>
                 <th className="px-6 py-4 font-semibold">Email Capture Portals</th>

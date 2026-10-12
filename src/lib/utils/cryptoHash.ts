@@ -1,5 +1,5 @@
 /**
- * NullWave Cryptographic Hashing Utilities
+ * PassDigit Cryptographic Hashing Utilities
  *
  * Provides native Web Crypto API SHA-256 password hashing and verification
  * for protected documents. Maintains backward compatibility with legacy

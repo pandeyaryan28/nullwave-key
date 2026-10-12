@@ -11,7 +11,8 @@ import {
 import { db } from '../firebase/config';
 import { Resource, SavedResource, UserProfile } from '../../types';
 
-const LOCAL_SAVED_PREFIX = 'nullwave_saved_resources_';
+const LOCAL_SAVED_PREFIX = 'passdigit_saved_resources_';
+const NULLWAVE_SAVED_PREFIX = 'nullwave_saved_resources_';
 const LEGACY_SAVED_PREFIX = 'unlockr_saved_resources_';
 
 /**
@@ -50,14 +51,16 @@ export async function saveResource(
   // 1. Save to local storage first for instant feedback & offline capability
   try {
     const key = `${LOCAL_SAVED_PREFIX}${userId}`;
+    const nullwaveKey = `${NULLWAVE_SAVED_PREFIX}${userId}`;
     const legacyKey = `${LEGACY_SAVED_PREFIX}${userId}`;
     const localSaved = JSON.parse(
-      localStorage.getItem(key) || localStorage.getItem(legacyKey) || '[]'
+      localStorage.getItem(key) || localStorage.getItem(nullwaveKey) || localStorage.getItem(legacyKey) || '[]'
     ) as SavedResource[];
 
     const filtered = localSaved.filter(item => item.resourceId !== resource.id);
     const updated = [savedItem, ...filtered];
     localStorage.setItem(key, JSON.stringify(updated));
+    localStorage.setItem(nullwaveKey, JSON.stringify(updated));
     localStorage.setItem(legacyKey, JSON.stringify(updated));
   } catch (err) {
     console.warn('Could not cache saved resource in localStorage:', err);
@@ -87,13 +90,15 @@ export async function removeSavedResource(
   // 1. Remove from local storage
   try {
     const key = `${LOCAL_SAVED_PREFIX}${userId}`;
+    const nullwaveKey = `${NULLWAVE_SAVED_PREFIX}${userId}`;
     const legacyKey = `${LEGACY_SAVED_PREFIX}${userId}`;
     const localSaved = JSON.parse(
-      localStorage.getItem(key) || localStorage.getItem(legacyKey) || '[]'
+      localStorage.getItem(key) || localStorage.getItem(nullwaveKey) || localStorage.getItem(legacyKey) || '[]'
     ) as SavedResource[];
 
     const updated = localSaved.filter(item => item.resourceId !== resourceId);
     localStorage.setItem(key, JSON.stringify(updated));
+    localStorage.setItem(nullwaveKey, JSON.stringify(updated));
     localStorage.setItem(legacyKey, JSON.stringify(updated));
   } catch (err) {
     console.warn('Could not update localStorage on removeSavedResource:', err);
@@ -145,9 +150,10 @@ export async function getSavedResources(userId: string): Promise<SavedResource[]
   // Fallback to localStorage
   try {
     const key = `${LOCAL_SAVED_PREFIX}${userId}`;
+    const nullwaveKey = `${NULLWAVE_SAVED_PREFIX}${userId}`;
     const legacyKey = `${LEGACY_SAVED_PREFIX}${userId}`;
     const localSaved = JSON.parse(
-      localStorage.getItem(key) || localStorage.getItem(legacyKey) || '[]'
+      localStorage.getItem(key) || localStorage.getItem(nullwaveKey) || localStorage.getItem(legacyKey) || '[]'
     ) as SavedResource[];
     return localSaved;
   } catch {
@@ -167,9 +173,10 @@ export async function isResourceSaved(
   // Check local cache first for instant responsiveness
   try {
     const key = `${LOCAL_SAVED_PREFIX}${userId}`;
+    const nullwaveKey = `${NULLWAVE_SAVED_PREFIX}${userId}`;
     const legacyKey = `${LEGACY_SAVED_PREFIX}${userId}`;
     const localSaved = JSON.parse(
-      localStorage.getItem(key) || localStorage.getItem(legacyKey) || '[]'
+      localStorage.getItem(key) || localStorage.getItem(nullwaveKey) || localStorage.getItem(legacyKey) || '[]'
     ) as SavedResource[];
     if (localSaved.some(item => item.resourceId === resourceId)) {
       return true;

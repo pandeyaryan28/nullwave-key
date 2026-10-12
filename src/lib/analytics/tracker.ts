@@ -7,9 +7,11 @@ import {
 } from 'firebase/firestore';
 import { db } from '../firebase/config.ts';
 
-const VISITOR_ID_KEY = 'nullwave_visitor_id';
+const VISITOR_ID_KEY = 'passdigit_visitor_id';
+const NULLWAVE_VISITOR_ID_KEY = 'nullwave_visitor_id';
 const LEGACY_VISITOR_ID_KEY = 'unlockr_visitor_id';
-export const VIEW_HISTORY_PREFIX = 'nullwave_viewed_';
+export const VIEW_HISTORY_PREFIX = 'passdigit_viewed_';
+export const NULLWAVE_VIEW_HISTORY_PREFIX = 'nullwave_viewed_';
 export const LEGACY_VIEW_HISTORY_PREFIX = 'unlockr_viewed_';
 const UNIQUENESS_WINDOW_MS = 24 * 60 * 60 * 1000; // 24-hour uniqueness window
 
@@ -19,10 +21,14 @@ const UNIQUENESS_WINDOW_MS = 24 * 60 * 60 * 1000; // 24-hour uniqueness window
  */
 export function getOrCreateVisitorId(): string {
   try {
-    let visitorId = localStorage.getItem(VISITOR_ID_KEY) || localStorage.getItem(LEGACY_VISITOR_ID_KEY);
+    let visitorId =
+      localStorage.getItem(VISITOR_ID_KEY) ||
+      localStorage.getItem(NULLWAVE_VISITOR_ID_KEY) ||
+      localStorage.getItem(LEGACY_VISITOR_ID_KEY);
     if (!visitorId) {
       visitorId = 'v_' + Math.random().toString(36).substring(2, 12) + Date.now().toString(36);
       localStorage.setItem(VISITOR_ID_KEY, visitorId);
+      localStorage.setItem(NULLWAVE_VISITOR_ID_KEY, visitorId);
     }
     return visitorId;
   } catch {
@@ -58,11 +64,14 @@ export function evaluateUniquenessWindow(
   const now = currentTime ?? Date.now();
   const storage: StorageLike | null = storageOverride ?? (typeof localStorage !== 'undefined' ? localStorage : null);
   const storageKey = `${VIEW_HISTORY_PREFIX}${resourceId}`;
+  const nullwaveKey = `${NULLWAVE_VIEW_HISTORY_PREFIX}${resourceId}`;
   const legacyKey = `${LEGACY_VIEW_HISTORY_PREFIX}${resourceId}`;
 
   let lastViewedStr: string | null = null;
   try {
-    lastViewedStr = storage ? (storage.getItem(storageKey) || storage.getItem(legacyKey)) : null;
+    lastViewedStr = storage
+      ? (storage.getItem(storageKey) || storage.getItem(nullwaveKey) || storage.getItem(legacyKey))
+      : null;
   } catch {}
 
   const previousTimestamp = lastViewedStr;
@@ -74,12 +83,14 @@ export function evaluateUniquenessWindow(
       commit: () => {
         try {
           storage?.setItem(storageKey, now.toString());
+          storage?.setItem(nullwaveKey, now.toString());
           storage?.setItem(legacyKey, now.toString());
         } catch {}
       },
       rollback: () => {
         try {
           storage?.removeItem?.(storageKey);
+          storage?.removeItem?.(nullwaveKey);
           storage?.removeItem?.(legacyKey);
         } catch {}
       },
@@ -94,6 +105,7 @@ export function evaluateUniquenessWindow(
       commit: () => {
         try {
           storage?.setItem(storageKey, now.toString());
+          storage?.setItem(nullwaveKey, now.toString());
           storage?.setItem(legacyKey, now.toString());
         } catch {}
       },
@@ -101,9 +113,11 @@ export function evaluateUniquenessWindow(
         try {
           if (previousTimestamp) {
             storage?.setItem(storageKey, previousTimestamp);
+            storage?.setItem(nullwaveKey, previousTimestamp);
             storage?.setItem(legacyKey, previousTimestamp);
           } else {
             storage?.removeItem?.(storageKey);
+            storage?.removeItem?.(nullwaveKey);
             storage?.removeItem?.(legacyKey);
           }
         } catch {}

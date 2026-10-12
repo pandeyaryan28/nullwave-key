@@ -1,14 +1,18 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../lib/auth/authContext';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
-import { Waves, AlertCircle } from 'lucide-react';
+import { KeyRound, AlertCircle } from 'lucide-react';
 
 export const SignupPage: React.FC = () => {
   const { signUpWithEmail, signInWithGoogle, user, profile } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+
+  const handleParam = searchParams.get('handle') || searchParams.get('username') || '';
+  const onboardingPath = handleParam ? `/onboarding?handle=${encodeURIComponent(handleParam)}` : '/onboarding';
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -23,12 +27,12 @@ export const SignupPage: React.FC = () => {
       if (profile?.accountType === 'viewer' && !profile?.username) {
         navigate('/dashboard/saved');
       } else if (profile && !profile.username) {
-        navigate('/onboarding');
+        navigate(onboardingPath);
       } else {
         navigate('/dashboard');
       }
     }
-  }, [user, profile, navigate]);
+  }, [user, profile, navigate, onboardingPath]);
 
   const handleEmailSignup = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,7 +52,7 @@ export const SignupPage: React.FC = () => {
       if (accountType === 'viewer') {
         navigate('/dashboard/saved');
       } else {
-        navigate('/onboarding');
+        navigate(onboardingPath);
       }
     } catch (err: unknown) {
       console.error('Signup error:', err);
@@ -64,7 +68,7 @@ export const SignupPage: React.FC = () => {
     setError(null);
     try {
       await signInWithGoogle();
-      navigate('/onboarding');
+      navigate(onboardingPath);
     } catch (err: unknown) {
       console.error('Google signup error:', err);
       const e = err as { message?: string };
@@ -79,7 +83,7 @@ export const SignupPage: React.FC = () => {
       <div className="w-full max-w-sm space-y-6">
         <div className="text-center space-y-2">
           <div className="w-12 h-12 rounded-xl bg-neutral-900 text-neutral-50 dark:bg-neutral-100 dark:text-neutral-900 flex items-center justify-center mx-auto mb-3 shadow-clay-sm">
-            <Waves className="w-6 h-6" />
+            <KeyRound className="w-6 h-6" />
           </div>
           <h1 className="text-2xl font-bold tracking-tight text-neutral-900 dark:text-neutral-50">
             Create Your Account

@@ -1,6 +1,6 @@
-# NullWave
+# PassDigit
 
-NullWave is a secure content gating, access control, and digital asset distribution platform built for creators, engineers, and digital operators. It enables creators to lock resources behind access keys, passcodes, or verification requirements with real-time analytics and creator profile hubs.
+PassDigit is a zero-friction creator resource distribution platform. It enables creators to lock resources behind memorable 4-digit access codes or optional passwords with real-time analytics, instant unlocking, and clean creator profile hubs.
 
 ## Overview
 
@@ -47,8 +47,8 @@ src/
 
 ```bash
 # Clone the repository
-git clone https://github.com/pandeyaryan28/nullwave-key.git
-cd nullwave-key
+git clone https://github.com/pandeyaryan28/passdigit.git
+cd passdigit
 
 # Install dependencies
 npm install

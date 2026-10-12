@@ -169,6 +169,7 @@ test('public document 4-digit code verification unlocks document in sessionStora
   const secretCode = '2097';
 
   const isUnlocked = () =>
+    mockStore.get(`passdigit_unlocked_${resourceId}`) === 'true' ||
     mockStore.get(`nullwave_unlocked_${resourceId}`) === 'true' ||
     mockStore.get(`unlockr_unlocked_${resourceId}`) === 'true';
 
@@ -183,7 +184,7 @@ test('public document 4-digit code verification unlocks document in sessionStora
   // Verify with correct code
   const result = verifyAttempt1(secretCode);
   assert.equal(result, true, 'Correct code must pass');
-  mockStore.set(`nullwave_unlocked_${resourceId}`, 'true');
+  mockStore.set(`passdigit_unlocked_${resourceId}`, 'true');
 
   assert.equal(isUnlocked(), true, 'Document must be unlocked in session without user login');
 });
@@ -1271,6 +1272,7 @@ test('document password protection requires credentials for visitors, bypasses f
 
     // 2. Check if already unlocked in session
     if (
+      params.sessionStore.get(`passdigit_pwd_unlocked_${resource.id}`) === 'true' ||
       params.sessionStore.get(`nullwave_pwd_unlocked_${resource.id}`) === 'true' ||
       params.sessionStore.get(`unlockr_pwd_unlocked_${resource.id}`) === 'true'
     ) {
@@ -1279,6 +1281,7 @@ test('document password protection requires credentials for visitors, bypasses f
 
     // 3. Check entered password
     if (params.enteredPassword === resource.password) {
+      params.sessionStore.set(`passdigit_pwd_unlocked_${resource.id}`, 'true');
       params.sessionStore.set(`nullwave_pwd_unlocked_${resource.id}`, 'true');
       params.sessionStore.set(`unlockr_pwd_unlocked_${resource.id}`, 'true');
       return { unlocked: true, reason: 'password_authenticated' };
@@ -1322,6 +1325,7 @@ test('document password protection requires credentials for visitors, bypasses f
   });
   assert.equal(visitorCorrectPass.unlocked, true);
   assert.equal(visitorCorrectPass.reason, 'password_authenticated');
+  assert.equal(sessionStore.get(`passdigit_pwd_unlocked_${resource.id}`), 'true');
   assert.equal(sessionStore.get(`nullwave_pwd_unlocked_${resource.id}`), 'true');
   assert.equal(sessionStore.get(`unlockr_pwd_unlocked_${resource.id}`), 'true');
 
@@ -1371,8 +1375,8 @@ test('creator profile opens documents directly without code prompt and top box a
   assert.match(jumpUnknown.error!, /4-digit access code/);
 });
 
-// Test 38: CodeInput Component default length is 4 and package.json version is 2.6.0
-test('CodeInput default length is 4 and package.json declares version 2.6.0', () => {
+// Test 38: CodeInput Component default length is 4 and package.json version is 2.7.0
+test('CodeInput default length is 4 and package.json declares version 2.7.0', () => {
   const currentDir = path.dirname(fileURLToPath(import.meta.url));
   const codeInputPath = path.resolve(currentDir, '../components/ui/CodeInput.tsx');
   const pkgJsonPath = path.resolve(currentDir, '../../package.json');
@@ -1381,7 +1385,8 @@ test('CodeInput default length is 4 and package.json declares version 2.6.0', ()
   assert.ok(codeInputContent.includes('length = 4'), 'CodeInput default length prop must be 4');
 
   const pkgContent = JSON.parse(fs.readFileSync(pkgJsonPath, 'utf8'));
-  assert.equal(pkgContent.version, '2.6.0', 'package.json version must be 2.6.0');
+  assert.equal(pkgContent.name, 'passdigit', 'package.json name must be passdigit');
+  assert.equal(pkgContent.version, '2.7.0', 'package.json version must be 2.7.0');
 });
 
 // Test 39: Creator Profile document cards & pinned resource badge contract (v2.5.0 Anti-Slop & Direct Open)

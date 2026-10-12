@@ -1,13 +1,22 @@
 {
-  "name": "nullwave",
+  "name": "passdigit",
   "private": true,
-  "version": "2.6.0",
+  "version": "2.7.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
     "test": "node --experimental-strip-types --test src/tests/*.test.ts",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "growth": "node --experimental-strip-types scripts/growth/runner.ts",
+    "growth:status": "node --experimental-strip-types scripts/growth/runner.ts status",
+    "growth:seed": "node --experimental-strip-types scripts/growth/runner.ts seed",
+    "growth:audit": "node --experimental-strip-types scripts/growth/runner.ts audit",
+    "growth:dispatch": "node --experimental-strip-types scripts/growth/runner.ts dispatch",
+    "growth:crawl": "node --experimental-strip-types scripts/growth/runner.ts crawl",
+    "growth:harvest": "node --experimental-strip-types scripts/growth/runner.ts harvest",
+    "growth:export": "node --experimental-strip-types scripts/growth/runner.ts export",
+    "growth:sync": "node --experimental-strip-types scripts/growth/runner.ts sync"
   },
   "dependencies": {
     "clsx": "^2.1.1",
@@ -20,10 +29,12 @@
   },
   "devDependencies": {
     "@types/node": "^22.13.5",
+    "@types/nodemailer": "^8.0.2",
     "@types/react": "^18.3.18",
     "@types/react-dom": "^18.3.5",
     "@vitejs/plugin-react": "^4.3.4",
     "autoprefixer": "^10.4.20",
+    "nodemailer": "^10.0.16",
     "postcss": "^8.5.3",
     "tailwindcss": "^3.4.17",
     "typescript": "^5.7.3",

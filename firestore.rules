@@ -76,7 +76,7 @@ service cloud.firestore {
       allow update, delete: if false;
     }
 
-    // Waitlist submissions for NullWave
+    // Waitlist submissions for PassDigit
     match /waitlist/{entry} {
       allow create: if request.resource.data.email is string
                     && request.resource.data.name is string;

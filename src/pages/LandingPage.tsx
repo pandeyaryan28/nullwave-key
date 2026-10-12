@@ -8,7 +8,7 @@ import { Badge } from '../components/ui/Badge';
 import {
   Upload,
   Hash,
-  Waves,
+  KeyRound,
   ArrowRight,
   Eye,
   Download,
@@ -55,7 +55,7 @@ export const LandingPage: React.FC = () => {
       {/* Hero Section */}
       <section className="text-center max-w-4xl mx-auto px-4 space-y-8">
         <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg bg-white/80 dark:bg-neutral-900/80 border border-slate-200/80 dark:border-white/10 shadow-clay-sm text-xs font-semibold text-neutral-800 dark:text-neutral-200 backdrop-blur-sm">
-          <Waves className="w-3.5 h-3.5" />
+          <KeyRound className="w-3.5 h-3.5" />
           <span>Direct Creator-to-Audience Distribution</span>
         </div>
 
@@ -104,14 +104,14 @@ export const LandingPage: React.FC = () => {
           <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-slate-200/80 dark:border-white/10 gap-2">
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-lg bg-neutral-900 text-neutral-50 dark:bg-neutral-100 dark:text-neutral-900 flex items-center justify-center font-bold shadow-clay-sm">
-                <Waves className="w-4 h-4" />
+                <KeyRound className="w-4 h-4" />
               </div>
               <div>
                 <span className="text-sm font-bold text-neutral-900 dark:text-neutral-100 block">
                   Interactive Code Demo
                 </span>
                 <span className="text-xs text-neutral-500 font-mono">
-                  nullwave.com/demo • 4-Digit Code
+                  passdigit.com/demo • 4-Digit Code
                 </span>
               </div>
             </div>
@@ -217,7 +217,7 @@ export const LandingPage: React.FC = () => {
           <div className="flex items-center justify-center gap-2">
             <span className="w-2 h-2 rounded-sm bg-neutral-900 dark:bg-neutral-100"></span>
             <span className="text-xs uppercase tracking-wider font-semibold text-neutral-600 dark:text-neutral-400">
-              How NullWave Works
+              How PassDigit Works
             </span>
           </div>
           <h2 className="text-2xl sm:text-3xl font-bold text-neutral-900 dark:text-neutral-100">
@@ -238,7 +238,7 @@ export const LandingPage: React.FC = () => {
                 1. Upload PDF Guide
               </h3>
               <p className="text-xs sm:text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed">
-                Upload your document (up to 25 MB). NullWave instantly generates an isolated 4-digit numeric access code.
+                Upload your document (up to 25 MB). PassDigit instantly generates an isolated 4-digit numeric access code.
               </p>
             </div>
           </Card>
@@ -252,7 +252,7 @@ export const LandingPage: React.FC = () => {
                 2. Share Code in Socials
               </h3>
               <p className="text-xs sm:text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed">
-                Direct followers to your permanent profile link <span className="font-mono text-neutral-900 dark:text-neutral-100">nullwave.com/yourhandle</span> and speak or write the 4-digit code in the video caption.
+                Direct followers to your permanent profile link <span className="font-mono text-neutral-900 dark:text-neutral-100">passdigit.com/yourhandle</span> and speak or write the 4-digit code in the video caption.
               </p>
             </div>
           </Card>
@@ -309,7 +309,7 @@ export const LandingPage: React.FC = () => {
               <div className="p-6 rounded-2xl bg-[#e7ecf3]/60 dark:bg-[#131720]/70 border border-slate-200/70 dark:border-white/10 shadow-clay-inset space-y-4">
                 <div className="flex items-center justify-between border-b border-slate-200/80 dark:border-white/10 pb-3">
                   <span className="text-xs font-bold text-neutral-900 dark:text-neutral-100">
-                    Why NullWave Converts
+                    Why PassDigit Converts
                   </span>
                   <Badge variant="neutral">Benchmark</Badge>
                 </div>
@@ -317,7 +317,7 @@ export const LandingPage: React.FC = () => {
                 <div className="space-y-3 text-xs">
                   <div>
                     <div className="flex justify-between mb-1 font-medium">
-                      <span>NullWave Access Conversion</span>
+                      <span>PassDigit Access Conversion</span>
                       <span className="font-mono text-emerald-700 dark:text-emerald-400 font-bold">~48%</span>
                     </div>
                     <div className="w-full h-2 rounded bg-neutral-200 dark:bg-neutral-800 overflow-hidden">
@@ -348,7 +348,7 @@ export const LandingPage: React.FC = () => {
       {/* Bottom CTA */}
       <section className="text-center max-w-xl mx-auto px-4 space-y-4 pb-8">
         <div className="w-12 h-12 rounded-xl bg-neutral-900 text-neutral-50 dark:bg-neutral-100 dark:text-neutral-900 flex items-center justify-center mx-auto mb-2 shadow-clay-btn">
-          <Waves className="w-6 h-6" />
+          <KeyRound className="w-6 h-6" />
         </div>
         <h2 className="text-2xl sm:text-3xl font-bold text-neutral-950 dark:text-neutral-50">
           Ready to distribute without barriers?

@@ -37,7 +37,7 @@ export const HowItWorksPage: React.FC = () => {
           The 3-stage transmission protocol
         </h1>
         <p className="text-base sm:text-lg text-neutral-600 dark:text-neutral-300 leading-relaxed">
-          NullWave operates as a high-speed direct channel between your digital resources and your social audience. Here is exactly how content travels from your local storage to your audience’s devices.
+          PassDigit operates as a high-speed direct channel between your digital resources and your social audience. Here is exactly how content travels from your local storage to your audience’s devices.
         </p>
       </header>
 
@@ -62,7 +62,7 @@ export const HowItWorksPage: React.FC = () => {
                 1. Upload Document
               </h3>
               <p className="text-xs sm:text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed">
-                Drop your PDF handbook, guide, or cheatsheet (up to 25 MB) into your creator dashboard. NullWave automatically generates a cryptographically secure 4-digit wave code.
+                Drop your PDF handbook, guide, or cheatsheet (up to 25 MB) into your creator dashboard. PassDigit automatically generates a cryptographically secure 4-digit access code.
               </p>
             </div>
           </Card>
@@ -76,7 +76,7 @@ export const HowItWorksPage: React.FC = () => {
                 2. Share in Video
               </h3>
               <p className="text-xs sm:text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed">
-                Add your profile link in your bio (<span className="font-mono text-neutral-900 dark:text-neutral-100">nullwave.com/yourhandle</span>) and state your 4-digit code in the Reel, Story, or caption.
+                Add your profile link in your bio (<span className="font-mono text-neutral-900 dark:text-neutral-100">passdigit.com/yourhandle</span>) and state your 4-digit code in the Reel, Story, or caption.
               </p>
             </div>
           </Card>
@@ -122,7 +122,7 @@ export const HowItWorksPage: React.FC = () => {
               When a follower clicks your profile link from Instagram, TikTok, or YouTube, your profile loads in under 250 milliseconds with a dedicated numeric code box front-and-center.
             </p>
             <div className="p-3.5 bg-[#e7ecf3]/80 dark:bg-[#131720]/80 rounded-xl font-mono text-xs text-neutral-700 dark:text-neutral-300 border border-slate-200/60 dark:border-white/5 shadow-clay-inset">
-              Profile: nullwave.com/aryan • Status: Active
+              Profile: passdigit.com/aryan • Status: Active
             </div>
           </Card>
 

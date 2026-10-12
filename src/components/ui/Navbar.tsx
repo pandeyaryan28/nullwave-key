@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Waves, Plus, LogOut, Menu, X, ExternalLink } from 'lucide-react';
+import { KeyRound, Plus, LogOut, Menu, X, ExternalLink } from 'lucide-react';
 import { useAuth } from '../../lib/auth/authContext';
 import { Button } from './Button';
 import { ThemeToggle } from './ThemeToggle';
@@ -48,9 +48,9 @@ export const Navbar: React.FC = () => {
             className="flex items-center gap-2.5 text-neutral-950 dark:text-neutral-50 font-bold text-lg tracking-tight focus-visible:outline-none select-none"
           >
             <div className="w-8 h-8 rounded-lg bg-neutral-900 text-neutral-50 dark:bg-neutral-100 dark:text-neutral-900 flex items-center justify-center shadow-clay-sm">
-              <Waves className="w-4 h-4" />
+              <KeyRound className="w-4 h-4" />
             </div>
-            <span className="font-bold tracking-tight text-neutral-950 dark:text-neutral-50">NullWave</span>
+            <span className="font-bold tracking-tight text-neutral-950 dark:text-neutral-50">PassDigit</span>
           </Link>
 
           {/* Desktop Nav */}

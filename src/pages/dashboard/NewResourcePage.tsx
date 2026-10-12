@@ -248,10 +248,17 @@ export const NewResourcePage: React.FC = () => {
 
       // Cache in localStorage for offline / mock testing resilience
       try {
+        const passdigitKey = `passdigit_resources_${user.uid}`;
         const nullwaveKey = `nullwave_resources_${user.uid}`;
         const unlockrKey = `unlockr_resources_${user.uid}`;
-        const existing = JSON.parse(localStorage.getItem(nullwaveKey) || localStorage.getItem(unlockrKey) || '[]');
+        const existing = JSON.parse(
+          localStorage.getItem(passdigitKey) ||
+          localStorage.getItem(nullwaveKey) ||
+          localStorage.getItem(unlockrKey) ||
+          '[]'
+        );
         const updated = [newResource, ...existing];
+        localStorage.setItem(passdigitKey, JSON.stringify(updated));
         localStorage.setItem(nullwaveKey, JSON.stringify(updated));
         localStorage.setItem(unlockrKey, JSON.stringify(updated));
       } catch {}

@@ -8,10 +8,10 @@ import { Check, ArrowRight, Calculator } from 'lucide-react';
 export const PricingPage: React.FC = () => {
   const [estimatedMonthlyViews, setEstimatedMonthlyViews] = useState<number>(10000);
 
-  // Calculate estimated downloads with NullWave (typical ~45% conversion) vs Linktree/Email forms (~8% conversion)
+  // Calculate estimated downloads with PassDigit (typical ~45% conversion) vs Linktree/Email forms (~8% conversion)
   const traditionalDownloads = Math.round(estimatedMonthlyViews * 0.08);
-  const nullWaveDownloads = Math.round(estimatedMonthlyViews * 0.44);
-  const additionalGained = nullWaveDownloads - traditionalDownloads;
+  const passDigitDownloads = Math.round(estimatedMonthlyViews * 0.44);
+  const additionalGained = passDigitDownloads - traditionalDownloads;
 
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 py-10 sm:py-16 space-y-16">
@@ -36,7 +36,7 @@ export const PricingPage: React.FC = () => {
           Transparent, zero-commission infrastructure
         </h1>
         <p className="text-base sm:text-lg text-neutral-600 dark:text-neutral-300 leading-relaxed">
-          NullWave will never take transaction commissions or gate your content behind revenue taxes. Pick the bandwidth tier that matches your distribution scale.
+          PassDigit will never take transaction commissions or gate your content behind revenue taxes. Pick the bandwidth tier that matches your distribution scale.
         </p>
       </header>
 
@@ -131,7 +131,7 @@ export const PricingPage: React.FC = () => {
               </div>
               <div className="flex items-center gap-2">
                 <Check className="w-4 h-4 text-emerald-600 shrink-0" />
-                <span>Removes NullWave watermark</span>
+                <span>Removes PassDigit watermark</span>
               </div>
             </div>
           </div>
@@ -238,9 +238,9 @@ export const PricingPage: React.FC = () => {
             </div>
 
             <div className="p-4 rounded-xl bg-white dark:bg-[#1a1e28] border border-slate-200/80 dark:border-white/10 shadow-clay-sm space-y-1">
-              <span className="text-xs text-neutral-500">NullWave Transmission (~44%)</span>
+              <span className="text-xs text-neutral-500">PassDigit Transmission (~44%)</span>
               <div className="text-2xl font-bold font-mono text-neutral-950 dark:text-neutral-50">
-                {nullWaveDownloads.toLocaleString()}
+                {passDigitDownloads.toLocaleString()}
               </div>
               <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium">delivered downloads</span>
             </div>

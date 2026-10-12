@@ -1,8 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
-  <rect width="32" height="32" rx="6" fill="#09090b"/>
-  <rect x="6" y="13" width="2.5" height="6" rx="1.25" fill="#38bdf8"/>
-  <rect x="11" y="8" width="2.5" height="16" rx="1.25" fill="#38bdf8"/>
-  <rect x="16" y="5" width="2.5" height="22" rx="1.25" fill="#ffffff"/>
-  <rect x="21" y="9" width="2.5" height="14" rx="1.25" fill="#38bdf8"/>
-  <rect x="26" y="13" width="2.5" height="6" rx="1.25" fill="#38bdf8"/>
+  <rect width="32" height="32" rx="7" fill="#09090b"/>
+  <!-- PassDigit Key & 4-Digit Notches -->
+  <circle cx="16" cy="11.5" r="4.5" stroke="#ffffff" stroke-width="2.5" />
+  <path d="M16 16v9M16 20.5h3.5M16 23.5h2.5" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" />
 </svg>

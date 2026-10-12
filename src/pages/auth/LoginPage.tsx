@@ -4,7 +4,7 @@ import { useAuth } from '../../lib/auth/authContext';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
-import { Waves, AlertCircle } from 'lucide-react';
+import { KeyRound, AlertCircle } from 'lucide-react';
 
 export const LoginPage: React.FC = () => {
   const { signInWithEmail, signInWithGoogle, user, profile } = useAuth();
@@ -68,10 +68,10 @@ export const LoginPage: React.FC = () => {
       <div className="w-full max-w-sm space-y-6">
         <div className="text-center space-y-2">
           <div className="w-12 h-12 rounded-xl bg-neutral-900 text-neutral-50 dark:bg-neutral-100 dark:text-neutral-900 flex items-center justify-center mx-auto mb-3 shadow-clay-sm">
-            <Waves className="w-6 h-6" />
+            <KeyRound className="w-6 h-6" />
           </div>
           <h1 className="text-2xl font-bold tracking-tight text-neutral-900 dark:text-neutral-50">
-            Sign In to NullWave
+            Sign In to PassDigit
           </h1>
           <p className="text-xs text-neutral-500 dark:text-neutral-400">
             Sign in to manage your documents, access codes, and saved library.

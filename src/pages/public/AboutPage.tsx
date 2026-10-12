@@ -25,10 +25,10 @@ export const AboutPage: React.FC = () => {
           </span>
         </div>
         <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-neutral-950 dark:text-neutral-50 leading-[1.15]">
-          Null the friction. Transmit the signal.
+          Direct the access. Enter the digits.
         </h1>
         <p className="text-base sm:text-lg text-neutral-600 dark:text-neutral-300 leading-relaxed">
-          NullWave was built out of frustration with modern link-in-bio tools that act as tollbooths between creators and their audiences.
+          PassDigit was built out of frustration with modern link-in-bio tools that act as tollbooths between creators and their audiences.
         </p>
       </header>
 
@@ -72,7 +72,7 @@ export const AboutPage: React.FC = () => {
               Sub-250ms Mobile Precision
             </h3>
             <p className="text-xs sm:text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed">
-              Every millisecond of latency is a tax on attention. NullWave documents are stripped of heavy marketing trackers and designed to render immediately inside in-app webviews.
+              Every millisecond of latency is a tax on attention. PassDigit documents are stripped of heavy marketing trackers and designed to render immediately inside in-app webviews.
             </p>
           </Card>
 

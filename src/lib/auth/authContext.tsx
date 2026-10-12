@@ -34,7 +34,8 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 // Local fallback user storage keys for development resilience
-const LOCAL_USER_KEY = 'nullwave_local_auth_user';
+const LOCAL_USER_KEY = 'passdigit_local_auth_user';
+const NULLWAVE_LOCAL_USER_KEY = 'nullwave_local_auth_user';
 const LEGACY_LOCAL_USER_KEY = 'unlockr_local_auth_user';
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -60,6 +61,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Check local fallback
     try {
       const local =
+        localStorage.getItem(`passdigit_profile_${uid}`) ||
         localStorage.getItem(`nullwave_profile_${uid}`) ||
         localStorage.getItem(`unlockr_profile_${uid}`);
       if (local) {
@@ -194,6 +196,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         try {
           await setDoc(doc(db, 'users', mockUid), firestoreProfile);
         } catch {}
+        localStorage.setItem(`passdigit_profile_${mockUid}`, JSON.stringify(newProfile));
         localStorage.setItem(`nullwave_profile_${mockUid}`, JSON.stringify(newProfile));
         localStorage.setItem(`unlockr_profile_${mockUid}`, JSON.stringify(newProfile));
         setProfile(newProfile);
@@ -205,6 +208,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signOut = async () => {
     localStorage.removeItem(LOCAL_USER_KEY);
+    localStorage.removeItem(NULLWAVE_LOCAL_USER_KEY);
     localStorage.removeItem(LEGACY_LOCAL_USER_KEY);
     await firebaseSignOut(auth).catch(() => {});
     setUser(null);
@@ -266,6 +270,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         updatedAt: Date.now(),
       };
       setProfile(updatedProfile);
+      localStorage.setItem(`passdigit_profile_${user.uid}`, JSON.stringify(updatedProfile));
+      localStorage.setItem(`passdigit_profile_${username}`, JSON.stringify(updatedProfile));
       localStorage.setItem(`nullwave_profile_${user.uid}`, JSON.stringify(updatedProfile));
       localStorage.setItem(`nullwave_profile_${username}`, JSON.stringify(updatedProfile));
       localStorage.setItem(`unlockr_profile_${user.uid}`, JSON.stringify(updatedProfile));
@@ -330,9 +336,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Ensure the authenticated creator still receives email directly from Firebase Auth
       merged.email = user.email || prev?.email || '';
       try {
+        localStorage.setItem(`passdigit_profile_${user.uid}`, JSON.stringify(merged));
         localStorage.setItem(`nullwave_profile_${user.uid}`, JSON.stringify(merged));
         localStorage.setItem(`unlockr_profile_${user.uid}`, JSON.stringify(merged));
         if (merged.username) {
+          localStorage.setItem(`passdigit_profile_${merged.username}`, JSON.stringify(merged));
           localStorage.setItem(`nullwave_profile_${merged.username}`, JSON.stringify(merged));
           localStorage.setItem(`unlockr_profile_${merged.username}`, JSON.stringify(merged));
         }
